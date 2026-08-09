@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X, BookOpen, GraduationCap, Sparkles, User, LogIn } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-black/60 backdrop-blur-xl border-b border-cyan-electric/20">
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-black/60 backdrop-blur-xl border-b border-slate-200 dark:border-cyan-electric/20 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -18,18 +19,18 @@ export default function Navbar() {
               <GraduationCap className="w-6 h-6 text-black font-extrabold" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-2xl text-chalk tracking-tight flex items-center gap-2">
+              <span className="font-extrabold text-2xl text-slate-900 dark:text-chalk tracking-tight flex items-center gap-2">
                 المهندس
                 <span className="text-cyan-electric text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-electric/15 border border-cyan-electric/30 shadow-sm">
                   منصة الرياضيات
                 </span>
               </span>
-              <span className="text-xs text-chalk-muted font-medium">مع م/ رضا خيرت</span>
+              <span className="text-xs text-slate-500 dark:text-chalk-muted font-medium">مع م/ رضا خيرت</span>
             </div>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-chalk/80">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-700 dark:text-chalk/80">
             <Link href="/" className="text-cyan-electric font-black transition-colors flex items-center gap-1.5">
               الرئيسية
             </Link>
@@ -46,11 +47,12 @@ export default function Navbar() {
             </Link>
           </nav>
 
-          {/* Auth Actions */}
+          {/* Auth Actions & ThemeToggle */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             <Link
               href="/sign-in"
-              className="px-4 py-2.5 rounded-xl text-sm font-bold text-chalk hover:bg-slate-900/80 border border-slate-700/60 transition-all flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-900/80 border border-slate-300 dark:border-slate-700/60 transition-all flex items-center gap-2"
             >
               <LogIn className="w-4 h-4 text-cyan-electric" />
               تسجيل الدخول
@@ -64,11 +66,12 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden">
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center gap-2">
+            <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 rounded-xl text-chalk hover:bg-slate-900 border border-cyan-electric/20"
+              className="p-2.5 rounded-xl text-slate-800 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-900 border border-slate-300 dark:border-cyan-electric/20"
               aria-label="القائمة الحسابية"
             >
               {mobileMenuOpen ? <X className="w-6 h-6 text-cyan-electric" /> : <Menu className="w-6 h-6" />}

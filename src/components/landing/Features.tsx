@@ -37,7 +37,7 @@ const FEATURES = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 bg-transparent border-t border-slate-800/80">
+    <section id="features" className="py-20 bg-transparent border-t border-slate-200 dark:border-slate-800/80 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -47,11 +47,11 @@ export default function Features() {
             <span>لماذا تختار منصة المهندس؟</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-chalk tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-chalk tracking-tight">
             مميزات مصممة خصيصاً لتفوق الطالب
           </h2>
 
-          <p className="text-chalk-muted text-base sm:text-lg">
+          <p className="text-slate-600 dark:text-chalk-muted text-base sm:text-lg">
             كل ما يحتاجه طالب الرياضيات في مكان واحد، لتسهيل الفهم والتدريب والوصول للدرجة النهائية.
           </p>
         </div>
@@ -63,17 +63,17 @@ export default function Features() {
             return (
               <div
                 key={idx}
-                className="chalk-card rounded-2xl p-8 space-y-4 border border-cyan-electric/15 hover:border-cyan-electric/50"
+                className="chalk-card rounded-2xl p-8 space-y-4 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 hover:border-cyan-electric/50"
               >
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black font-extrabold shadow-cyan-glow">
                   <Icon className="w-6 h-6" />
                 </div>
                 
-                <h3 className="text-xl font-bold text-chalk">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-chalk">
                   {feature.title}
                 </h3>
                 
-                <p className="text-sm text-chalk-muted leading-relaxed">
+                <p className="text-sm text-slate-600 dark:text-chalk-muted leading-relaxed">
                   {feature.description}
                 </p>
               </div>

@@ -46,7 +46,7 @@ const STAGES = [
 
 export default function Stages() {
   return (
-    <section id="stages" className="py-20 bg-transparent border-t border-slate-800/80 relative overflow-hidden">
+    <section id="stages" className="py-20 bg-transparent border-t border-slate-200 dark:border-slate-800/80 relative overflow-hidden transition-colors duration-200">
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
@@ -57,11 +57,11 @@ export default function Stages() {
             <span>المناهج والمراحل الدراسية</span>
           </div>
           
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-chalk tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-chalk tracking-tight">
             اختر صفك الدراسي وابدأ رحلة التفوق
           </h2>
           
-          <p className="text-chalk-muted text-base sm:text-lg">
+          <p className="text-slate-600 dark:text-chalk-muted text-base sm:text-lg">
             مناهج منسقة بعناية طبقاً للتحديثات الوزارية الأخيرة، مقسمة لـ (أترم - فروع - وحدات - دروس - اختبارات).
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function Stages() {
           {STAGES.map((stage) => (
             <div
               key={stage.id}
-              className="chalk-card rounded-2xl p-6 flex flex-col justify-between relative group overflow-hidden"
+              className="chalk-card rounded-2xl p-6 flex flex-col justify-between relative group overflow-hidden bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 hover:border-cyan-electric/50"
             >
               
               {/* Top Card Banner */}
@@ -87,18 +87,18 @@ export default function Stages() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-black text-chalk group-hover:text-cyan-electric transition-colors">
+                <h3 className="text-xl font-black text-slate-900 dark:text-chalk group-hover:text-cyan-electric transition-colors">
                   {stage.name}
                 </h3>
 
-                <p className="text-xs text-chalk-muted leading-relaxed line-clamp-3">
+                <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed line-clamp-3">
                   {stage.description}
                 </p>
 
                 {/* Branches Chips */}
                 <div className="pt-2 flex flex-wrap gap-1.5">
                   {stage.branches.map((b, idx) => (
-                    <span key={idx} className="text-[11px] font-semibold text-chalk/80 px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+                    <span key={idx} className="text-[11px] font-semibold text-slate-700 dark:text-chalk/80 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                       • {b}
                     </span>
                   ))}
@@ -106,8 +106,8 @@ export default function Stages() {
               </div>
 
               {/* Card Footer Info */}
-              <div className="pt-6 mt-6 border-t border-slate-800/80 space-y-4">
-                <div className="flex items-center justify-between text-xs font-medium text-chalk-muted">
+              <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800/80 space-y-4">
+                <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-chalk-muted">
                   <span className="flex items-center gap-1">
                     <BookOpen className="w-3.5 h-3.5 text-cyan-electric" />
                     {stage.lessonsCount} درس متاح

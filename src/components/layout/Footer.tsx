@@ -3,9 +3,9 @@ import { GraduationCap, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-black/80 backdrop-blur-2xl border-t border-cyan-electric/20 pt-16 pb-8 text-chalk">
+    <footer className="bg-slate-100/80 dark:bg-black/80 backdrop-blur-2xl border-t border-slate-200 dark:border-cyan-electric/20 pt-16 pb-8 text-slate-800 dark:text-chalk transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-slate-800/80">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-slate-300 dark:border-slate-800/80">
           
           {/* Brand Column */}
           <div className="md:col-span-5 space-y-4">
@@ -13,11 +13,11 @@ export default function Footer() {
               <div className="w-10 h-10 rounded-xl bg-cyan-electric flex items-center justify-center text-black font-extrabold shadow-cyan-glow">
                 <GraduationCap className="w-6 h-6" />
               </div>
-              <span className="font-extrabold text-2xl text-chalk">
+              <span className="font-extrabold text-2xl text-slate-900 dark:text-chalk">
                 المهندس — منصة الرياضيات
               </span>
             </Link>
-            <p className="text-sm text-chalk-muted leading-relaxed max-w-md">
+            <p className="text-sm text-slate-600 dark:text-chalk-muted leading-relaxed max-w-md">
               منصة تعليمية متخصصة تحت إشراف م/ رضا خيرت، لتبسيط مناهج الرياضيات للمرحلة الإعدادية والصف الأول الثانوي بأحدث الوسائل التفاعلية.
             </p>
           </div>
@@ -27,7 +27,7 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-cyan-electric uppercase tracking-wider">
               روابط سريعة
             </h4>
-            <ul className="space-y-2 text-sm text-chalk-muted font-medium">
+            <ul className="space-y-2 text-sm text-slate-600 dark:text-chalk-muted font-medium">
               <li>
                 <Link href="#stages" className="hover:text-cyan-electric transition-colors">
                   المراحل الدراسية
@@ -56,7 +56,7 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-cyan-electric uppercase tracking-wider">
               تواصل مع المدرس
             </h4>
-            <ul className="space-y-2.5 text-sm text-chalk-muted font-medium">
+            <ul className="space-y-2.5 text-sm text-slate-600 dark:text-chalk-muted font-medium">
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-cyan-electric" />
                 <span dir="ltr">+20 100 000 0000</span>
@@ -75,7 +75,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 text-center text-xs text-chalk-muted font-medium">
+        <div className="pt-8 text-center text-xs text-slate-500 dark:text-chalk-muted font-medium">
           <p>© {new Date().getFullYear()} منصة المهندس — جميع الحقوق محفوظة م/ رضا خيرت.</p>
         </div>
 
