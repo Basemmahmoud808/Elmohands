@@ -10,35 +10,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        'cyan-electric': {
+          DEFAULT: '#00CFFF',
+          hover: '#00B3FF',
+          dark: '#0088CC',
+          glow: 'rgba(0, 207, 255, 0.3)',
+        },
         blackboard: {
-          DEFAULT: '#22322A',
-          dark: '#18241E',
-          light: '#2E4238',
+          DEFAULT: '#0A0F1D',
+          dark: '#030712',
+          light: '#1E293B',
         },
         chalk: {
-          DEFAULT: '#E7E2D3',
-          muted: '#B5AF9D',
-          bright: '#FAF8F0',
+          DEFAULT: '#F8FAFC',
+          muted: '#94A3B8',
+          bright: '#FFFFFF',
         },
         'blue-ink': {
-          DEFAULT: '#1F3A5F',
-          hover: '#162A45',
-          light: '#2C5082',
+          DEFAULT: '#0284C7',
+          hover: '#0369A1',
+          light: '#38BDF8',
         },
         'red-pen': {
-          DEFAULT: '#A3402F',
-          light: '#C7513C',
-          dark: '#7D2E21',
+          DEFAULT: '#EF4444',
+          light: '#F87171',
+          dark: '#B91C1C',
         },
         'brass-compass': {
-          DEFAULT: '#AD8A4E',
-          light: '#C9A564',
-          dark: '#8C6C35',
-        },
-        'notebook-paper': {
-          DEFAULT: '#E9E1C8',
-          dark: '#DFD6BA',
-          light: '#F4EFE0',
+          DEFAULT: '#38BDF8',
+          light: '#7DD3FC',
+          dark: '#0284C7',
+          amber: '#F59E0B',
         },
       },
       fontFamily: {
@@ -46,12 +48,13 @@ const config: Config = {
         math: ['KaTeX_Main', 'serif'],
       },
       backgroundImage: {
-        'blackboard-texture': "radial-gradient(circle at 50% 50%, rgba(46, 66, 56, 0.5) 0%, rgba(24, 36, 30, 0.9) 100%)",
-        'grid-pattern': "linear-gradient(to right, rgba(173, 138, 78, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(173, 138, 78, 0.08) 1px, transparent 1px)",
+        'cyan-glow-radial': 'radial-gradient(circle at 50% 50%, rgba(0, 207, 255, 0.15) 0%, transparent 70%)',
+        'dark-glass': 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(3, 7, 18, 0.8) 100%)',
       },
       boxShadow: {
-        'chalk': '0 4px 14px 0 rgba(231, 226, 211, 0.1)',
-        'blackboard': '0 10px 30px -10px rgba(24, 36, 30, 0.8)',
+        'cyan-glow': '0 0 25px -5px rgba(0, 207, 255, 0.3)',
+        'cyan-glow-lg': '0 0 40px -5px rgba(0, 207, 255, 0.4)',
+        'dark-card': '0 10px 30px -10px rgba(0, 0, 0, 0.8)',
       },
     },
   },

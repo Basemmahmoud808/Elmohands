@@ -37,13 +37,13 @@ const FEATURES = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 bg-transparent border-t border-chalk/10">
+    <section id="features" className="py-20 bg-transparent border-t border-slate-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-ink/20 border border-blue-ink/40 text-chalk text-xs font-bold">
-            <CheckCircle className="w-4 h-4 text-brass-compass" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-electric/10 border border-cyan-electric/30 text-cyan-electric text-xs font-bold shadow-cyan-glow">
+            <CheckCircle className="w-4 h-4 text-cyan-electric" />
             <span>لماذا تختار منصة المهندس؟</span>
           </div>
 
@@ -63,9 +63,9 @@ export default function Features() {
             return (
               <div
                 key={idx}
-                className="chalk-card rounded-2xl p-8 space-y-4 border border-chalk/10 hover:border-brass-compass/30"
+                className="chalk-card rounded-2xl p-8 space-y-4 border border-cyan-electric/15 hover:border-cyan-electric/50"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-ink to-blackboard-light flex items-center justify-center text-brass-compass border border-chalk/10">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black font-extrabold shadow-cyan-glow">
                   <Icon className="w-6 h-6" />
                 </div>
                 

@@ -3,14 +3,14 @@ import { GraduationCap, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-black/70 backdrop-blur-md border-t border-chalk/10 pt-16 pb-8 text-chalk">
+    <footer className="bg-black/80 backdrop-blur-2xl border-t border-cyan-electric/20 pt-16 pb-8 text-chalk">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-chalk/10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-slate-800/80">
           
           {/* Brand Column */}
           <div className="md:col-span-5 space-y-4">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brass-compass flex items-center justify-center text-blackboard font-bold">
+              <div className="w-10 h-10 rounded-xl bg-cyan-electric flex items-center justify-center text-black font-extrabold shadow-cyan-glow">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <span className="font-extrabold text-2xl text-chalk">
@@ -24,27 +24,27 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="md:col-span-3 space-y-3">
-            <h4 className="text-sm font-bold text-brass-compass uppercase tracking-wider">
+            <h4 className="text-sm font-bold text-cyan-electric uppercase tracking-wider">
               روابط سريعة
             </h4>
             <ul className="space-y-2 text-sm text-chalk-muted font-medium">
               <li>
-                <Link href="#stages" className="hover:text-chalk transition-colors">
+                <Link href="#stages" className="hover:text-cyan-electric transition-colors">
                   المراحل الدراسية
                 </Link>
               </li>
               <li>
-                <Link href="#features" className="hover:text-chalk transition-colors">
+                <Link href="#features" className="hover:text-cyan-electric transition-colors">
                   مميزات المنصة
                 </Link>
               </li>
               <li>
-                <Link href="/sign-in" className="hover:text-chalk transition-colors">
+                <Link href="/sign-in" className="hover:text-cyan-electric transition-colors">
                   تسجيل الدخول
                 </Link>
               </li>
               <li>
-                <Link href="/sign-up" className="hover:text-chalk transition-colors">
+                <Link href="/sign-up" className="hover:text-cyan-electric transition-colors">
                   إنشاء حساب طالب
                 </Link>
               </li>
@@ -53,20 +53,20 @@ export default function Footer() {
 
           {/* Contact Details */}
           <div className="md:col-span-4 space-y-3">
-            <h4 className="text-sm font-bold text-brass-compass uppercase tracking-wider">
+            <h4 className="text-sm font-bold text-cyan-electric uppercase tracking-wider">
               تواصل مع المدرس
             </h4>
             <ul className="space-y-2.5 text-sm text-chalk-muted font-medium">
               <li className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-brass-compass" />
+                <Phone className="w-4 h-4 text-cyan-electric" />
                 <span dir="ltr">+20 100 000 0000</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-brass-compass" />
+                <Mail className="w-4 h-4 text-cyan-electric" />
                 <span>support@almohands-math.com</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <MapPin className="w-4 h-4 text-brass-compass" />
+                <MapPin className="w-4 h-4 text-cyan-electric" />
                 <span>جمهورية مصر العربية</span>
               </li>
             </ul>

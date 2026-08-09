@@ -4,14 +4,14 @@
 
 @layer base {
   :root {
-    --background: 34 50 42;
-    --foreground: 231 226 211;
+    --background: 0 0 0;
+    --foreground: 248 250 252;
   }
 
   body {
-    background-color: #22322A;
-    color: #E7E2D3;
-    font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #000000;
+    color: #F8FAFC;
+    font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     direction: rtl;
     text-align: right;
     min-height: 100vh;
@@ -19,56 +19,46 @@
   }
 }
 
-/* Blackboard Texture Effect */
-.bg-blackboard-pattern {
-  background-color: #22322A;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(46, 66, 56, 0.4) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(24, 36, 30, 0.6) 0%, transparent 40%),
-    linear-gradient(to right, rgba(173, 138, 78, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(173, 138, 78, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
-}
-
-/* Chalk Text Effect */
-.text-chalk-glow {
-  text-shadow: 0 0 1px rgba(231, 226, 211, 0.7), 0 0 10px rgba(231, 226, 211, 0.2);
-}
-
-.text-brass-glow {
-  text-shadow: 0 0 2px rgba(173, 138, 78, 0.6), 0 0 12px rgba(173, 138, 78, 0.3);
-}
-
-/* Custom Chalk Card Styling */
+/* Glassmorphic Cyber Cards */
 .chalk-card {
-  background: rgba(34, 50, 42, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(231, 226, 211, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 207, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chalk-card:hover {
-  border-color: rgba(173, 138, 78, 0.4);
-  transform: translateY(-3px);
-  box-shadow: 0 14px 40px 0 rgba(0, 0, 0, 0.4), 0 0 20px 0 rgba(173, 138, 78, 0.15);
+  border-color: rgba(0, 207, 255, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 40px 0 rgba(0, 0, 0, 0.6), 0 0 25px 0 rgba(0, 207, 255, 0.25);
 }
 
-/* Custom Scrollbar */
+/* Cyan Glow Text Effects */
+.text-cyan-glow {
+  text-shadow: 0 0 10px rgba(0, 207, 255, 0.6), 0 0 25px rgba(0, 207, 255, 0.3);
+}
+
+.text-chalk-glow {
+  text-shadow: 0 0 8px rgba(248, 250, 252, 0.5);
+}
+
+/* Custom Electric Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #18241E;
+  background: #030712;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1F3A5F;
+  background: #0284C7;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #AD8A4E;
+  background: #00CFFF;
 }
