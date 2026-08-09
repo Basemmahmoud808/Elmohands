@@ -57,13 +57,22 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-slate-100 dark:bg-slate-950;
+  background-color: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: #030712;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-blue-ink rounded-full;
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #0284c7;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-cyan-electric;
+  background-color: #00cfff;
 }

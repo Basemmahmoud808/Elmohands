@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { loginUser } from '@/lib/actions/auth';
-import { GraduationCap, Phone, Lock, ArrowLeft, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { GraduationCap, Phone, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -36,20 +36,6 @@ export default function SignInPage() {
     } else {
       setErrorMsg(res.message || 'فشل تسجيل الدخول. يرجى التثبت وإعادة المحاولة.');
     }
-  };
-
-  const handleQuickAdminLogin = async () => {
-    setLoading(true);
-    const res = await loginUser('01000000000');
-    setLoading(false);
-    if (res.success) router.push('/admin');
-  };
-
-  const handleQuickStudentLogin = async () => {
-    setLoading(true);
-    const res = await loginUser('01012345678');
-    setLoading(false);
-    if (res.success) router.push('/student');
   };
 
   return (
@@ -128,33 +114,8 @@ export default function SignInPage() {
             </button>
           </form>
 
-          {/* Quick Demo Login Triggers */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2 text-center">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-chalk-muted block mb-2">
-              ⚡ الدخول السريع للاختبار والمعاينة الفورية:
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleQuickAdminLogin}
-                className="py-2.5 px-3 rounded-xl text-xs font-bold text-cyan-electric bg-cyan-electric/10 border border-cyan-electric/30 hover:bg-cyan-electric/20 transition-all flex items-center justify-center gap-1"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>دخول كـ مدرس (Admin)</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleQuickStudentLogin}
-                className="py-2.5 px-3 rounded-xl text-xs font-bold text-slate-800 dark:text-chalk bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-1"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>دخول كـ طالب (Student)</span>
-              </button>
-            </div>
-          </div>
-
           {/* Footer Link */}
-          <div className="text-center text-xs text-slate-600 dark:text-chalk-muted font-semibold">
+          <div className="text-center text-xs text-slate-600 dark:text-chalk-muted font-semibold pt-2 border-t border-slate-200 dark:border-slate-800">
             ليس لديك حساب بعد؟{' '}
             <Link href="/sign-up" className="text-cyan-electric hover:underline font-bold">
               أنشئ حساب طالب جديد
