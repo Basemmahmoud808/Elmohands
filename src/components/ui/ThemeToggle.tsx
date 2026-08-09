@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,16 +14,23 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="w-10 h-10 rounded-xl bg-slate-800/40 border border-slate-700/50 animate-pulse" />
+      <button
+        type="button"
+        className="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 opacity-60 cursor-not-allowed"
+        aria-label="تغيير الوضع"
+      >
+        <div className="w-5 h-5" />
+      </button>
     );
   }
 
-  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const isDark = resolvedTheme === 'dark';
 
   return (
     <button
+      type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="p-2.5 rounded-xl border border-slate-700/60 dark:border-cyan-electric/30 bg-slate-100 dark:bg-slate-900/80 text-slate-800 dark:text-cyan-electric hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-200 shadow-sm hover:shadow-cyan-glow flex items-center justify-center group"
+      className="p-2.5 rounded-xl border border-slate-300 dark:border-cyan-electric/30 bg-slate-100 dark:bg-slate-900/80 text-slate-800 dark:text-cyan-electric hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors shadow-sm hover:shadow-cyan-glow flex items-center justify-center cursor-pointer"
       aria-label="تغيير الوضع الداكن/الفاتح"
       title={isDark ? 'التحويل للوضع الفاتح' : 'التحويل للوضع الداكن'}
     >

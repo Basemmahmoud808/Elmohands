@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardSidebar } from '@/components/ui/dashboard-sidebar';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
+import { generateVoucherCodes, getAllVouchers, VoucherCode } from '@/lib/actions/vouchers';
+import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/lessons';
 import {
   Users,
-  BookOpen,
   Video,
   FileQuestion,
   KeyRound,
@@ -14,33 +15,69 @@ import {
   Plus,
   Search,
   CheckCircle2,
-  AlertCircle,
   Download,
   UploadCloud,
-  FileText,
-  HelpCircle,
-  TrendingUp,
-  Layers,
   Sparkles,
+  BookOpen,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState('dashboard');
   
   // Voucher Generator State
-  const [planType, setPlanType] = useState('1month');
+  const [planType, setPlanType] = useState<'1month' | 'term' | 'year'>('1month');
   const [codeCount, setCodeCount] = useState(5);
-  const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
+  const [vouchers, setVouchers] = useState<VoucherCode[]>([]);
+  const [recentGenerated, setRecentGenerated] = useState<VoucherCode[]>([]);
 
-  const handleGenerateCodes = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newCodes: string[] = [];
-    const prefix = planType === '1month' ? 'ALM-M1-' : planType === 'term' ? 'ALM-TR-' : 'ALM-YR-';
-    for (let i = 0; i < codeCount; i++) {
-      const randStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-      newCodes.push(`${prefix}${randStr}`);
+  // Lesson Upload Modal State
+  const [lessonTitle, setLessonTitle] = useState('');
+  const [lessonDesc, setLessonDesc] = useState('');
+  const [lessonGrade, setLessonGrade] = useState('الصف الأول الإعدادي');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [lessons, setLessons] = useState<LessonItem[]>([]);
+  const [uploadMessage, setUploadMessage] = useState('');
+
+  useEffect(() => {
+    async function loadData() {
+      const vList = await getAllVouchers();
+      setVouchers(vList);
+      const lList = await getLessonsList();
+      setLessons(lList);
     }
-    setGeneratedCodes(newCodes);
+    loadData();
+  }, []);
+
+  const handleGenerateCodes = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await generateVoucherCodes(planType, codeCount);
+    if (res.success) {
+      setRecentGenerated(res.codes);
+      const updatedVouchers = await getAllVouchers();
+      setVouchers(updatedVouchers);
+    }
+  };
+
+  const handleUploadLesson = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lessonTitle.trim()) return;
+
+    const fd = new FormData();
+    fd.append('title', lessonTitle);
+    fd.append('description', lessonDesc);
+    fd.append('gradeName', lessonGrade);
+    if (videoUrl) fd.append('videoUrl', videoUrl);
+    if (pdfUrl) fd.append('pdfUrl', pdfUrl);
+
+    const res = await createLessonAction(fd);
+    if (res.success && res.lesson) {
+      setUploadMessage('تم رفع الدرس بنجاح وإتاحته للطلاب!');
+      setLessonTitle('');
+      setLessonDesc('');
+      const updatedLessons = await getLessonsList();
+      setLessons(updatedLessons);
+    }
   };
 
   return (
@@ -95,39 +132,37 @@ export default function AdminDashboard() {
                 <CreditCard className="w-6 h-6" />
                 <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/10">نشط</span>
               </div>
-              <div className="text-3xl font-black text-slate-900 dark:text-chalk">1,240</div>
-              <div className="text-xs text-slate-500 dark:text-chalk-muted font-medium">اشتراك فعال بأكواد الشحن</div>
+              <div className="text-3xl font-black text-slate-900 dark:text-chalk">{vouchers.length} كارت</div>
+              <div className="text-xs text-slate-500 dark:text-chalk-muted font-medium">أكواد الشحن المتوفرة</div>
             </div>
 
             <div className="chalk-card rounded-2xl p-5 space-y-2 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15">
               <div className="flex items-center justify-between text-amber-500">
                 <Video className="w-6 h-6" />
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/10">4 صفوف</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/10">مرفوع</span>
               </div>
-              <div className="text-3xl font-black text-slate-900 dark:text-chalk">120</div>
+              <div className="text-3xl font-black text-slate-900 dark:text-chalk">{lessons.length} درس</div>
               <div className="text-xs text-slate-500 dark:text-chalk-muted font-medium">درساً مرفوعاً (فيديو + PDF)</div>
             </div>
 
             <div className="chalk-card rounded-2xl p-5 space-y-2 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15">
               <div className="flex items-center justify-between text-blue-500">
                 <FileQuestion className="w-6 h-6" />
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10">MCQ + KaTeX</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10">MCQ</span>
               </div>
               <div className="text-3xl font-black text-slate-900 dark:text-chalk">850</div>
               <div className="text-xs text-slate-500 dark:text-chalk-muted font-medium">سؤالاً في بنك الأسئلة</div>
             </div>
           </div>
 
-          {/* Conditional Content by Active Tab */}
-
-          {/* TAB 1: OVERVIEW & RECENT ACTIVATIONS */}
+          {/* TAB 1: OVERVIEW */}
           {(selectedTab === 'dashboard' || selectedTab === 'students') && (
             <div className="space-y-6">
               <div className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div>
                     <h3 className="text-lg font-black text-slate-900 dark:text-chalk">آخر تفعيلات الأكواد والطلاب الجدد</h3>
-                    <p className="text-xs text-slate-500 dark:text-chalk-muted">متابعة لحظية لاشتراكات الطلاب وتفعيل الأكواد</p>
+                    <p className="text-xs text-slate-500 dark:text-chalk-muted">متابعة لحظية لااشتراكات الطلاب وتفعيل الأكواد</p>
                   </div>
                   <div className="relative">
                     <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
@@ -154,10 +189,9 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 font-medium text-slate-800 dark:text-chalk">
                       {[
-                        { name: 'أحمد محمود العبد', phone: '01012345678', grade: 'الصف الأول الإعدادي', plan: 'اشتراك شهر', code: 'ALM-M1-8K9X', date: 'منذ 10 دقائق', status: 'نشط' },
-                        { name: 'محمد مصطفى كامل', phone: '01223456789', grade: 'الصف الثالث الإعدادي', plan: 'اشتراك ترم', code: 'ALM-TR-4L2P', date: 'منذ ساعتين', status: 'نشط' },
-                        { name: 'سارة إبراهيم حسن', phone: '01112223334', grade: 'الصف الأول الثانوي', plan: 'اشتراك شهر', code: 'ALM-M1-9Y7W', date: 'منذ 5 ساعات', status: 'نشط' },
-                        { name: 'عمر خالد فؤاد', phone: '01099887766', grade: 'الصف الثاني الإعدادي', plan: 'اشتراك ترم', code: 'ALM-TR-1Z3A', date: 'أمس', status: 'نشط' },
+                        { name: 'أحمد محمود العبد', phone: '01012345678', grade: 'الصف الأول الإعدادي', plan: 'اشتراك شهر', code: 'ALM-M1-8K9X2P', date: 'منذ 10 دقائق', status: 'نشط' },
+                        { name: 'محمد مصطفى كامل', phone: '01223456789', grade: 'الصف الثالث الإعدادي', plan: 'اشتراك ترم', code: 'ALM-TR-4L2P9A', date: 'منذ ساعتين', status: 'نشط' },
+                        { name: 'سارة إبراهيم حسن', phone: '01112223334', grade: 'الصف الأول الثانوي', plan: 'اشتراك شهر', code: 'ALM-M1-9Y7W1M', date: 'منذ 5 ساعات', status: 'نشط' },
                       ].map((st, i) => (
                         <tr key={i} className="hover:bg-slate-100/50 dark:hover:bg-slate-900/50 transition-colors">
                           <td className="py-3 px-4 font-bold text-slate-900 dark:text-chalk">{st.name}</td>
@@ -199,7 +233,7 @@ export default function AdminDashboard() {
                     <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">نوع الخطة (Plan)</label>
                     <select
                       value={planType}
-                      onChange={(e) => setPlanType(e.target.value)}
+                      onChange={(e: any) => setPlanType(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-sm outline-none focus:border-cyan-electric"
                     >
                       <option value="1month">اشتراك شهر (30 يوماً)</option>
@@ -233,64 +267,120 @@ export default function AdminDashboard() {
               {/* Generated Codes Preview */}
               <div className="lg:col-span-7 chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">الأكواد المنشأة حديثاً</h3>
-                  {generatedCodes.length > 0 && (
-                    <button
-                      onClick={() => alert('تم نسخ الأكواد للحافظة!')}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-electric bg-cyan-electric/10 border border-cyan-electric/30 flex items-center gap-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>تصدير للأكسل / طباعة</span>
-                    </button>
-                  )}
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">الأكواد الفعالة المنشأة</h3>
+                  <button
+                    onClick={() => alert('تم تصدير قائمة كروت الشحن!')}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-electric bg-cyan-electric/10 border border-cyan-electric/30 flex items-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>طباعة / تصدير الأكواد</span>
+                  </button>
                 </div>
 
-                {generatedCodes.length === 0 ? (
-                  <div className="py-12 text-center text-slate-500 dark:text-chalk-muted text-xs space-y-2">
-                    <KeyRound className="w-12 h-12 mx-auto text-slate-400 opacity-50" />
-                    <p>قم باختيار الخطة والعدد واضغط على "توليد الأكواد" لعرض قائمة الكروت المجهزة للطباعة.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {generatedCodes.map((c, i) => (
-                      <div key={i} className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 flex items-center justify-between">
-                        <span className="font-mono font-bold text-sm text-cyan-electric tracking-widest">{c}</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500">UNUSED</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-1">
+                  {vouchers.map((c) => (
+                    <div key={c.id} className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 flex items-center justify-between">
+                      <div>
+                        <span className="font-mono font-bold text-sm text-cyan-electric tracking-widest block">{c.code}</span>
+                        <span className="text-[10px] text-slate-500">{c.planName}</span>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                        c.status === 'UNUSED' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500'
+                      }`}>
+                        {c.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* TAB 3: LESSONS & COURSES CMS */}
           {(selectedTab === 'courses' || selectedTab === 'lessons') && (
-            <div className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">إدارة المناهج والدروس (Upload Center)</h3>
-                  <p className="text-xs text-slate-500 dark:text-chalk-muted">رفع مقاطع الفيديو والمذكرات لجميع الصفوف الدراسية</p>
+            <div className="space-y-8">
+              {/* Form Upload */}
+              <div className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">رفع وتجهيز درس جديد (Video & PDF Upload)</h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted">إضافة عنوان الدرس، وصفه، رابط الفيديو والمذكرة وتحديد الصف الدراسي</p>
                 </div>
-                <button className="px-4 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-2">
-                  <UploadCloud className="w-4 h-4" />
-                  <span>رفع درس جديد</span>
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['الصف الأول الإعدادي', 'الصف الثاني الإعدادي', 'الصف الثالث الإعدادي', 'الصف الأول الثانوي'].map((g, i) => (
-                  <div key={i} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-slate-900 dark:text-chalk">{g}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-electric/10 text-cyan-electric">30 درس</span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-chalk-muted">الجبر، الإحصاء، الهندسة وحساب المثلثات</p>
-                    <button className="w-full py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-chalk border border-slate-300 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-900">
-                      إدارة محتوى الصف
+                {uploadMessage && (
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{uploadMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleUploadLesson} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عنوان الدرس</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: الدرس الثالث: تحليل الفرق بين المربعين"
+                      value={lessonTitle}
+                      onChange={(e) => setLessonTitle(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">الصف الدراسي</label>
+                    <select
+                      value={lessonGrade}
+                      onChange={(e) => setLessonGrade(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    >
+                      <option value="الصف الأول الإعدادي">الصف الأول الإعدادي</option>
+                      <option value="الصف الثاني الإعدادي">الصف الثاني الإعدادي</option>
+                      <option value="الصف الثالث الإعدادي">الصف الثالث الإعدادي</option>
+                      <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">رابط الفيديو المستضاف (Video Stream URL)</label>
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs font-mono outline-none focus:border-cyan-electric"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                    >
+                      <UploadCloud className="w-4 h-4" />
+                      <span>حفظ ونشر الدرس للطلاب</span>
                     </button>
                   </div>
-                ))}
+                </form>
+              </div>
+
+              {/* Lessons List */}
+              <div className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-4">
+                <h3 className="text-lg font-black text-slate-900 dark:text-chalk border-b border-slate-200 dark:border-slate-800 pb-3">الدروس المرفوعة حالياً</h3>
+                
+                <div className="space-y-3">
+                  {lessons.map((les) => (
+                    <div key={les.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div className="space-y-1">
+                        <span className="font-bold text-sm text-slate-900 dark:text-chalk">{les.title}</span>
+                        <p className="text-xs text-slate-500 dark:text-chalk-muted">{les.gradeName} • {les.branchName} • {les.durationMinutes} دقيقة</p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20">
+                        منشور
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -305,8 +395,8 @@ export default function AdminDashboard() {
 
               <div className="space-y-3 text-xs">
                 {[
-                  { action: 'CODE_ACTIVATED', user: 'أحمد محمود', details: 'قام بتفعيل كود ALM-M1-8K9X (اشتراك شهر)', time: 'منذ 10 دقائق' },
-                  { action: 'LESSON_CREATED', user: 'م/ رضا خيرت (Admin)', details: 'تم رفع درس: هندسة الدائرة - الصف الثالث الإعدادي', time: 'منذ ساعتين' },
+                  { action: 'CODE_ACTIVATED', user: 'أحمد محمود', details: 'قام بتفعيل كود ALM-M1-8K9X2P (اشتراك شهر)', time: 'منذ 10 دقائق' },
+                  { action: 'LESSON_CREATED', user: 'م/ رضا خيرت (Admin)', details: 'تم رفع درس: مجموعات الأعداد والعمليات الأساسية', time: 'منذ ساعتين' },
                   { action: 'QUIZ_SUBMITTED', user: 'سارة إبراهيم', details: 'أكملت اختبار الجبر بدرجة 90%', time: 'منذ 3 ساعات' },
                 ].map((log, i) => (
                   <div key={i} className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">

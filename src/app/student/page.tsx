@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DashboardSidebar } from '@/components/ui/dashboard-sidebar';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
+import { getCurrentUser, UserSession } from '@/lib/actions/auth';
+import { redeemVoucherCode } from '@/lib/actions/vouchers';
+import { getLessonsList, LessonItem } from '@/lib/actions/lessons';
 import {
   PlayCircle,
   KeyRound,
@@ -11,33 +16,45 @@ import {
   BookOpen,
   Award,
   TrendingUp,
-  Sparkles,
-  Search,
-  ChevronLeft,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [user, setUser] = useState<UserSession | null>(null);
+  const [lessons, setLessons] = useState<LessonItem[]>([]);
+  
   const [voucherInput, setVoucherInput] = useState('');
   const [voucherStatus, setVoucherStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [subDays, setSubDays] = useState(28);
 
-  const handleActivateVoucher = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function loadData() {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+      }
+      const lList = await getLessonsList();
+      setLessons(lList);
+    }
+    loadData();
+  }, []);
+
+  const handleActivateVoucher = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!voucherInput.trim()) return;
     
-    // Simulate server action code check
-    if (voucherInput.toUpperCase().startsWith('ALM-')) {
-      setVoucherStatus({
-        success: true,
-        message: 'تم تفعيل كود الشحن بنجاح! تم تمديد اشتراكك لمدة 30 يوماً.',
-      });
+    const res = await redeemVoucherCode(voucherInput);
+    setVoucherStatus({
+      success: res.success,
+      message: res.message,
+    });
+
+    if (res.success && res.durationDays) {
+      setSubDays((prev) => prev + (res.durationDays || 0));
       setVoucherInput('');
-    } else {
-      setVoucherStatus({
-        success: false,
-        message: 'كود الشحن غير صحيح أو تم استخدامه سابقاً. يرجى التثبت وإعادة المحاولة.',
-      });
     }
   };
 
@@ -46,7 +63,7 @@ export default function StudentDashboard() {
       <div className="flex min-h-screen w-full font-arabic">
         <DashboardSidebar
           role="STUDENT"
-          userFullName="أحمد محمود"
+          userFullName={user?.fullName || 'أحمد محمود'}
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
         />
@@ -58,10 +75,10 @@ export default function StudentDashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
             <div>
               <h1 className="text-3xl font-black text-slate-900 dark:text-chalk">
-                أهلاً يا أحمد 👋
+                أهلاً يا {user?.fullName || 'طالب'} 👋
               </h1>
               <p className="text-slate-600 dark:text-chalk-muted text-sm mt-1">
-                الصف الأول الإعدادي — الترم الأول (جبر وهندسة)
+                {user?.gradeName || 'الصف الأول الإعدادي'} — الترم الأول (جبر وهندسة)
               </p>
             </div>
 
@@ -74,7 +91,7 @@ export default function StudentDashboard() {
                     اشتراكك الحالي: نشط
                   </span>
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                    ينتهي خلال 28 يوم (اشتراك شهر)
+                    ينتهي خلال {subDays} يوماً
                   </span>
                 </div>
               </div>
@@ -87,15 +104,15 @@ export default function StudentDashboard() {
               <div className="lg:col-span-8 space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric text-xs font-bold">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>تابع دراستك (موقف المشاهدة الأخير)</span>
+                  <span>تابع دراستك (الدرس المتاح حالياً)</span>
                 </div>
                 
                 <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">
-                  الدرس الثاني: الأعداد النسبية والعمليات عليها
+                  {lessons[0]?.title || 'الدرس الأول: مجموعات الأعداد والعمليات الأساسية'}
                 </h2>
                 
                 <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed max-w-xl">
-                  وحدة الجبر والأعداد — الصف الأول الإعدادي. متبقي 12 دقيقة لإكمال الدرس واجتياز الاختبار النهائي.
+                  {lessons[0]?.description || 'وحدة الجبر والأعداد — شرح فيديو عالي الجودة وملاحظات مبرهنة للحل مع م/ رضا خيرت.'}
                 </p>
 
                 {/* Progress Bar */}
@@ -111,10 +128,13 @@ export default function StudentDashboard() {
               </div>
 
               <div className="lg:col-span-4 flex justify-end">
-                <button className="px-6 py-3.5 rounded-2xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2">
+                <Link
+                  href="/lessons/les-1"
+                  className="px-6 py-3.5 rounded-2xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
+                >
                   <PlayCircle className="w-5 h-5" />
-                  <span>متابعة الدرس الآن</span>
-                </button>
+                  <span>تشغيل المشغل وتتبع الدرس</span>
+                </Link>
               </div>
             </div>
           </div>
@@ -158,7 +178,7 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Two-Column Section: Voucher Activation & Upcoming Exams */}
+          {/* Two-Column Section: Voucher Activation & Available Lessons */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* Activate Voucher Card */}
@@ -168,7 +188,7 @@ export default function StudentDashboard() {
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">تفعيل كود الشحن</h3>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">تفعيل كود الشحن الفعلي</h3>
                   <p className="text-xs text-slate-500 dark:text-chalk-muted">أدخل الكود المكون من 12 حرفاً المكتوب على كارت الشحن</p>
                 </div>
               </div>
@@ -178,7 +198,7 @@ export default function StudentDashboard() {
                   <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">رمز التفعيل (Voucher Code)</label>
                   <input
                     type="text"
-                    placeholder="مثال: ALM-2026-X7K9"
+                    placeholder="مثال: ALM-M1-8K9X2P"
                     value={voucherInput}
                     onChange={(e) => setVoucherInput(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-center tracking-widest text-base uppercase focus:border-cyan-electric outline-none transition-colors"
@@ -205,33 +225,28 @@ export default function StudentDashboard() {
               </form>
             </div>
 
-            {/* Upcoming Quizzes */}
+            {/* Lessons List */}
             <div className="lg:col-span-6 chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                <h3 className="text-lg font-black text-slate-900 dark:text-chalk">الاختبارات المتاحة لك</h3>
-                <span className="text-xs font-bold text-cyan-electric">2 اختبار متاح</span>
+                <h3 className="text-lg font-black text-slate-900 dark:text-chalk">دروس المنهج المتاحة لك</h3>
+                <span className="text-xs font-bold text-cyan-electric">{lessons.length} درس متاح</span>
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">اختبار درس الأعداد النسبية (MCQ)</h4>
-                    <p className="text-xs text-slate-500 dark:text-chalk-muted">10 أسئلة • الزمن: 15 دقيقة • محاولة واحدة</p>
+                {lessons.map((les) => (
+                  <div key={les.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">{les.title}</h4>
+                      <p className="text-xs text-slate-500 dark:text-chalk-muted">{les.gradeName} • {les.durationMinutes} دقيقة</p>
+                    </div>
+                    <Link
+                      href={`/lessons/${les.id}`}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-sm"
+                    >
+                      مشاهدة الدرس
+                    </Link>
                   </div>
-                  <button className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-sm">
-                    بدء الاختبار
-                  </button>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">اختبار تجميعي: مفاهيم الهندسة الأولى</h4>
-                    <p className="text-xs text-slate-500 dark:text-chalk-muted">15 سؤالاً • الزمن: 20 دقيقة • محاولة واحدة</p>
-                  </div>
-                  <button className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-sm">
-                    بدء الاختبار
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
 

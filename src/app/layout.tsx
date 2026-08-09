@@ -30,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
-      <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black">
+      <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>
