@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sigma, Calculator, Compass } from 'lucide-react';
+import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center bg-blackboard-pattern py-16 lg:py-24 overflow-hidden">
+    <DarkGradientBg className="min-h-[90vh] flex items-center justify-center py-16 lg:py-24">
+      <section className="w-full relative">
       
       {/* Decorative Blackboard Math Symbols Floating Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-10 select-none overflow-hidden font-math">
@@ -136,9 +138,9 @@ export default function Hero() {
 
             </div>
           </div>
-
         </div>
       </div>
-    </section>
+      </section>
+    </DarkGradientBg>
   );
 }
