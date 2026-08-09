@@ -44,7 +44,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        arabic: ['var(--font-cairo)', 'sans-serif'],
+        arabic: ['var(--font-cairo)', 'system-ui', 'sans-serif'],
         math: ['KaTeX_Main', 'serif'],
       },
       backgroundImage: {

@@ -15,6 +15,7 @@
 
   body {
     @apply bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased font-arabic min-h-screen overflow-x-hidden transition-colors duration-300;
+    font-family: var(--font-cairo), 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
 }
 

@@ -32,7 +32,7 @@ export default function Hero() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-chalk leading-tight tracking-tight">
               منصتك الأولى لتعلم
               <br />
-              و فهم <span className="text-cyan-electric text-cyan-glow underline decoration-cyan-electric/40 decoration-wavy underline-offset-8">الرياضيات</span> بأسلوب
+              و فهم <span className="text-cyan-electric text-cyan-glow">الرياضيات</span> بأسلوب
               <br />
               بسيط وممتع
             </h1>
