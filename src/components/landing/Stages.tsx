@@ -50,7 +50,7 @@ const STAGES = [
 
 export default function Stages() {
   return (
-    <section id="stages" className="py-20 bg-blackboard border-t border-chalk/10 relative overflow-hidden">
+    <section id="stages" className="py-20 bg-transparent border-t border-chalk/10 relative overflow-hidden">
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         

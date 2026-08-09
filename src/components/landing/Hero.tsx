@@ -2,12 +2,10 @@
 
 import Link from 'next/link';
 import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sigma, Calculator, Compass } from 'lucide-react';
-import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 
 export default function Hero() {
   return (
-    <DarkGradientBg className="min-h-[90vh] flex items-center justify-center py-16 lg:py-24">
-      <section className="w-full relative">
+    <section className="relative min-h-[90vh] flex items-center justify-center py-16 lg:py-24 overflow-hidden">
       
       {/* Decorative Blackboard Math Symbols Floating Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-10 select-none overflow-hidden font-math">
@@ -60,7 +58,7 @@ export default function Hero() {
               </Link>
               <Link
                 href="#stages"
-                className="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-bold text-chalk bg-blackboard-light hover:bg-blackboard-dark border border-chalk/20 transition-all flex items-center justify-center gap-3"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-bold text-chalk bg-black/40 hover:bg-black/60 border border-chalk/20 transition-all flex items-center justify-center gap-3"
               >
                 <PlayCircle className="w-5 h-5 text-brass-compass" />
                 <span>استكشف المنهج والمراحل</span>
@@ -93,7 +91,7 @@ export default function Hero() {
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-brass-compass/20 via-blue-ink/30 to-red-pen/20 blur-xl animate-pulse"></div>
 
               {/* Main Card Container */}
-              <div className="relative rounded-3xl bg-blackboard-dark border-2 border-brass-compass/40 p-6 shadow-2xl overflow-hidden text-center space-y-6">
+              <div className="relative rounded-3xl bg-black/70 backdrop-blur-xl border-2 border-brass-compass/40 p-6 shadow-2xl overflow-hidden text-center space-y-6">
                 
                 {/* Chalk Board Decorative Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-chalk/10 text-xs font-semibold text-chalk-muted">
@@ -107,7 +105,7 @@ export default function Hero() {
                 </div>
 
                 {/* Teacher Graphic Avatar Area */}
-                <div className="relative w-44 h-44 mx-auto rounded-full bg-gradient-to-b from-blue-ink to-blackboard border-4 border-brass-compass flex items-center justify-center shadow-inner overflow-hidden">
+                <div className="relative w-44 h-44 mx-auto rounded-full bg-gradient-to-b from-blue-ink to-black/80 border-4 border-brass-compass flex items-center justify-center shadow-inner overflow-hidden">
                   <div className="text-center space-y-1">
                     <Sigma className="w-16 h-16 mx-auto text-brass-compass animate-bounce" />
                     <span className="block text-sm font-extrabold text-chalk">م/ رضا خيرت</span>
@@ -124,11 +122,11 @@ export default function Hero() {
 
                 {/* Badges */}
                 <div className="flex items-center justify-center gap-2 pt-2">
-                  <span className="px-3 py-1 rounded-lg bg-blackboard-light text-xs font-bold text-chalk border border-chalk/10 flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-lg bg-black/50 text-xs font-bold text-chalk border border-chalk/10 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-brass-compass" />
                     فيديوهات فائقة الجودة
                   </span>
-                  <span className="px-3 py-1 rounded-lg bg-blackboard-light text-xs font-bold text-chalk border border-chalk/10 flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-lg bg-black/50 text-xs font-bold text-chalk border border-chalk/10 flex items-center gap-1">
                     <Award className="w-3.5 h-3.5 text-brass-compass" />
                     مذكرات PDF متميزة
                   </span>
@@ -138,9 +136,9 @@ export default function Hero() {
 
             </div>
           </div>
+
         </div>
       </div>
-      </section>
-    </DarkGradientBg>
+    </section>
   );
 }

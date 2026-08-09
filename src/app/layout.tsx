@@ -29,7 +29,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body className="bg-blackboard text-chalk antialiased selection:bg-blue-ink selection:text-chalk">
+      <body className="bg-black text-chalk antialiased selection:bg-blue-ink selection:text-chalk">
         {children}
       </body>
     </html>
