@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GraduationCap, Phone, Mail, MapPin, Heart } from 'lucide-react';
+import { GraduationCap, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -75,11 +75,8 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-chalk-muted font-medium">
+        <div className="pt-8 text-center text-xs text-chalk-muted font-medium">
           <p>© {new Date().getFullYear()} منصة المهندس — جميع الحقوق محفوظة م/ رضا خيرت.</p>
-          <p className="flex items-center gap-1">
-            صنعت بـ <Heart className="w-3.5 h-3.5 text-red-pen fill-red-pen" /> لطلاب مصر الكرام
-          </p>
         </div>
 
       </div>
