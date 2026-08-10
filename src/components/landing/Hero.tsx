@@ -30,8 +30,8 @@ export default function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           
-          {/* Right Column: Hero Text & Main CTAs (Appears on right in RTL) */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-right order-1 lg:order-1">
+          {/* Right Column: Hero Text & Main CTAs (Appears on right in RTL desktop, 2nd on mobile) */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-right order-2 lg:order-1">
             
             {/* Main Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-chalk leading-[1.25] tracking-tight">
@@ -99,8 +99,8 @@ export default function Hero() {
 
           </div>
 
-          {/* Left Column: Teacher Portrait Card (Appears on left in RTL) */}
-          <div className="lg:col-span-5 flex justify-center order-2 lg:order-2">
+          {/* Left Column: Teacher Portrait Card (Appears 1st on mobile, left/2nd on RTL desktop) */}
+          <div className="lg:col-span-5 flex justify-center order-1 lg:order-2">
             <div className="relative w-full max-w-sm text-center space-y-5">
               
               {/* Outer Cyan Glow Effect */}
