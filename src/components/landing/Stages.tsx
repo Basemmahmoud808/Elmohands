@@ -1,12 +1,15 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, ChevronLeft, Layers, CheckCircle2 } from 'lucide-react';
+import { SlideTabs } from '@/components/ui/slide-tabs';
 
 const STAGES = [
   {
     id: 'prep-1',
     name: 'الصف الأول الإعدادي',
+    stageCategory: 'prep',
     stage: 'المرحلة الإعدادية',
     description: 'تأسيس متين في الجبر والهندسة، دراسة الأعداد النسبية والإنشاءات الهندسية الأساسية.',
     branches: ['جبر وإحصاء', 'هندسة وقياس'],
@@ -16,6 +19,7 @@ const STAGES = [
   {
     id: 'prep-2',
     name: 'الصف الثاني الإعدادي',
+    stageCategory: 'prep',
     stage: 'المرحلة الإعدادية',
     description: 'تعمق في الأعداد الحقيقية والتحليل الرياضي ونظريات المثلثات والمتوازيات.',
     branches: ['جبر وإحصاء', 'هندسة وتحليل'],
@@ -25,6 +29,7 @@ const STAGES = [
   {
     id: 'prep-3',
     name: 'الصف الثالث الإعدادي',
+    stageCategory: 'prep',
     stage: 'المرحلة الإعدادية',
     description: 'الشهادة الإعدادية: دراسة العلاقات والدوال، حساب المثلثات، والهندسة التحليلية.',
     branches: ['جبر وحساب مثلثات', 'هندسة تحليلية'],
@@ -35,6 +40,7 @@ const STAGES = [
   {
     id: 'sec-1',
     name: 'الصف الأول الثانوي',
+    stageCategory: 'sec',
     stage: 'المرحلة الثانوية',
     description: 'الانتقال للرياضيات المتقدمة: الأعداد المركبة، المصفوفات، وتطبيقات الهندسة المستوية.',
     branches: ['جبر وأعداد مركبة', 'حساب مثلثات', 'هندسة مستوية'],
@@ -45,13 +51,21 @@ const STAGES = [
 ];
 
 export default function Stages() {
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  const filteredStages = STAGES.filter((s) => {
+    if (activeFilter === 'prep') return s.stageCategory === 'prep';
+    if (activeFilter === 'sec') return s.stageCategory === 'sec';
+    return true;
+  });
+
   return (
     <section id="stages" className="py-20 bg-transparent border-t border-slate-200 dark:border-slate-800/80 relative overflow-hidden transition-colors duration-200">
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
         
         {/* Section Header */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
+        <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-electric/10 border border-cyan-electric/30 text-cyan-electric text-xs font-bold shadow-cyan-glow">
             <Layers className="w-4 h-4" />
             <span>المناهج والمراحل الدراسية</span>
@@ -64,11 +78,24 @@ export default function Stages() {
           <p className="text-slate-600 dark:text-chalk-muted text-base sm:text-lg">
             مناهج منسقة بعناية طبقاً للتحديثات الوزارية الأخيرة، مقسمة لـ (أترم - فروع - وحدات - دروس - اختبارات).
           </p>
+
+          {/* Framer Motion Sliding Tabs */}
+          <div className="pt-4">
+            <SlideTabs
+              tabs={[
+                { id: 'all', label: 'جميع المراحل' },
+                { id: 'prep', label: 'المرحلة الإعدادية' },
+                { id: 'sec', label: 'المرحلة الثانوية' },
+              ]}
+              activeId={activeFilter}
+              onChange={(id) => setActiveFilter(id)}
+            />
+          </div>
         </div>
 
         {/* Stages Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {STAGES.map((stage) => (
+          {filteredStages.map((stage) => (
             <div
               key={stage.id}
               className="chalk-card rounded-2xl p-6 flex flex-col justify-between relative group overflow-hidden bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 hover:border-cyan-electric/50"
