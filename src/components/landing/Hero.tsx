@@ -1,9 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sigma, Compass, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sparkles, LayoutDashboard } from 'lucide-react';
+import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 
 export default function Hero() {
+  const [user, setUser] = useState<UserSession | null>(null);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    }
+    checkAuth();
+  }, []);
+
   return (
     <section className="relative min-h-[85vh] flex items-center justify-center py-12 lg:py-20 overflow-hidden">
       
@@ -50,11 +62,20 @@ export default function Hero() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <Link
-                href="/sign-up"
+                href={user ? (user.role === 'ADMIN' ? '/admin' : '/student') : '/sign-up'}
                 className="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all duration-200 flex items-center justify-center gap-3 group"
               >
-                <span>ابدأ الآن مجاناً</span>
-                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                {user ? (
+                  <>
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span>الانتقال إلى لوحتي التعليمية ({user.fullName.split(' ')[0]})</span>
+                  </>
+                ) : (
+                  <>
+                    <span>ابدأ الآن مجاناً</span>
+                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                  </>
+                )}
               </Link>
               <Link
                 href="#stages"

@@ -1,0 +1,18 @@
+{
+  "01000000000": {
+    "id": "adm_01000000000",
+    "fullName": "م/ رضا خيرت",
+    "phone": "01000000000",
+    "email": "reda.kheyrat@almohands.com",
+    "role": "ADMIN",
+    "createdAt": "2026-08-10T02:56:58.679Z"
+  },
+  "student@gmail.com": {
+    "id": "std_1786330683698_fteaz",
+    "fullName": "طالب (.com)",
+    "phone": "student@gmail.com",
+    "role": "STUDENT",
+    "gradeName": "الصف الأول الإعدادي",
+    "createdAt": "2026-08-10T02:58:03.698Z"
+  }
+}
