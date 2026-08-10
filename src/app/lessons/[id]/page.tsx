@@ -118,16 +118,30 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
       <div className="min-h-screen flex flex-col font-arabic">
         
         {/* Top Player Header */}
-        <header className="bg-white/80 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <Link href="/student" className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-chalk hover:text-cyan-electric transition-colors">
-              <ArrowRight className="w-4 h-4" />
-              <span>العودة للوحة الطالب</span>
-            </Link>
+        <header className="bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-3 sm:p-4 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center justify-between w-full sm:w-auto">
+              <Link href="/student" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-chalk hover:text-cyan-electric transition-colors">
+                <ArrowRight className="w-4 h-4 text-cyan-electric" />
+                <span>رجوع للوحة التحكم</span>
+              </Link>
 
-            <div className="text-center truncate px-4">
-              <h1 className="text-base font-black text-slate-900 dark:text-chalk truncate">{lesson.title}</h1>
-              <span className="text-xs text-cyan-electric font-semibold">{lesson.gradeName} • {lesson.branchName}</span>
+              {lesson.pdfPath && (
+                <a
+                  href={lesson.pdfPath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sm:hidden px-3 py-1.5 rounded-xl bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 text-xs font-bold flex items-center gap-1"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>PDF المذكرة</span>
+                </a>
+              )}
+            </div>
+
+            <div className="text-center truncate max-w-xl">
+              <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-chalk truncate">{lesson.title}</h1>
+              <span className="text-[11px] sm:text-xs text-cyan-electric font-semibold">{lesson.gradeName} • {lesson.branchName}</span>
             </div>
 
             {lesson.pdfPath && (
@@ -135,7 +149,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                 href={lesson.pdfPath}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 text-xs font-bold flex items-center gap-1.5 hover:bg-cyan-electric/25 transition-all"
+                className="hidden sm:flex px-3.5 py-2 rounded-xl bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 text-xs font-bold items-center gap-1.5 hover:bg-cyan-electric/25 transition-all shrink-0"
               >
                 <FileText className="w-4 h-4" />
                 <span>تحميل مذكرة PDF</span>

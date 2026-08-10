@@ -241,7 +241,7 @@ export default function AdminDashboard() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-6 lg:p-10 overflow-y-auto space-y-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 pt-20 md:pt-6 overflow-y-auto space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden">
           
           {/* Top Admin Header Banner */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
