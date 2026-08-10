@@ -100,9 +100,6 @@ export default function Hero() {
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 text-center">
                     <span className="text-sm font-black text-chalk block">م/ رضا خيرت</span>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/40 inline-block mt-0.5">
-                      كبير معلمي الرياضيات
-                    </span>
                   </div>
                 </div>
               </div>
