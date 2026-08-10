@@ -51,7 +51,7 @@ const STAGES = [
 ];
 
 export default function Stages() {
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('prep');
 
   const filteredStages = STAGES.filter((s) => {
     if (activeFilter === 'prep') return s.stageCategory === 'prep';
@@ -74,16 +74,11 @@ export default function Stages() {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-chalk tracking-tight">
             اختر صفك الدراسي وابدأ رحلة التفوق
           </h2>
-          
-          <p className="text-slate-600 dark:text-chalk-muted text-base sm:text-lg">
-            مناهج منسقة بعناية طبقاً للتحديثات الوزارية الأخيرة، مقسمة لـ (ترم - فروع - وحدات - دروس - اختبارات).
-          </p>
 
           {/* Framer Motion Sliding Tabs */}
           <div className="pt-4">
             <SlideTabs
               tabs={[
-                { id: 'all', label: 'جميع المراحل' },
                 { id: 'prep', label: 'المرحلة الإعدادية' },
                 { id: 'sec', label: 'المرحلة الثانوية' },
               ]}
