@@ -19,9 +19,6 @@ import {
   FileText,
   Layers,
   Sparkles,
-  Check,
-  Calendar,
-  Zap,
 } from 'lucide-react';
 
 const DEFAULT_LESSONS: LessonItem[] = [
@@ -141,7 +138,6 @@ export default function StudentDashboard() {
     setQuizResult(calculatedScore);
   };
 
-  // Group lessons by branchName
   const activeLessons = lessons.length > 0 ? lessons : DEFAULT_LESSONS;
 
   const filteredLessons = activeLessons.filter((les) => {
@@ -162,7 +158,7 @@ export default function StudentDashboard() {
       <div className="flex min-h-screen w-full font-arabic">
         <DashboardSidebar
           role="STUDENT"
-          userFullName={user?.fullName || 'أحمد محمود'}
+          userFullName={user?.fullName || 'باسم محمود'}
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
         />
@@ -330,7 +326,7 @@ export default function StudentDashboard() {
           {/* ==================================================== */}
           {/* TAB 2: CURRICULUM & LESSONS (مناهجي والدروس) */}
           {/* ==================================================== */}
-          {selectedTab === 'curriculum' && (
+          {selectedTab === 'my-courses' && (
             <div className="space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -416,7 +412,7 @@ export default function StudentDashboard() {
           {/* ==================================================== */}
           {/* TAB 3: QUIZZES (الاختبارات المتاحة) */}
           {/* ==================================================== */}
-          {selectedTab === 'quizzes' && (
+          {selectedTab === 'my-quizzes' && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">الاختبارات والتأهيلات المتاحة</h2>
@@ -457,7 +453,7 @@ export default function StudentDashboard() {
           {/* ==================================================== */}
           {/* TAB 4: GRADES & PROGRESS (نتائجي وتقييماتي) */}
           {/* ==================================================== */}
-          {selectedTab === 'grades' && (
+          {selectedTab === 'my-results' && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">نتائجي وتقييماتي الدراسية</h2>
@@ -502,7 +498,7 @@ export default function StudentDashboard() {
           {/* ==================================================== */}
           {/* TAB 5: DEDICATED VOUCHER TAB (تفعيل كود شحن) */}
           {/* ==================================================== */}
-          {selectedTab === 'voucher' && (
+          {selectedTab === 'activate-code' && (
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="text-center space-y-2">
                 <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">تفعيل كارت الشحن (Voucher Code)</h2>
