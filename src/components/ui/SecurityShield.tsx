@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ShieldAlert, Lock } from 'lucide-react';
+import { checkActiveSessionStatus, logoutUser } from '@/lib/actions/auth';
 
 export function SecurityShield() {
+  const router = useRouter();
   const [warningMsg, setWarningMsg] = useState<string | null>(null);
+  const [sessionLockTerminated, setSessionLockTerminated] = useState<string | null>(null);
 
   const triggerWarning = (msg: string) => {
     setWarningMsg(msg);
@@ -13,14 +17,31 @@ export function SecurityShield() {
     }, 3000);
   };
 
+  // 1. Real-time Heartbeat Polling to prevent account sharing
   useEffect(() => {
-    // 1. Disable Right Click Context Menu
+    const checkInterval = setInterval(async () => {
+      const status = await checkActiveSessionStatus();
+      if (!status.valid && status.reason) {
+        setSessionLockTerminated(status.reason);
+        await logoutUser();
+        setTimeout(() => {
+          window.location.href = '/sign-in';
+        }, 3000);
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(checkInterval);
+  }, [router]);
+
+  // 2. Event Protections (Mouse, Keyboard, DevTools)
+  useEffect(() => {
+    // Disable Right Click Context Menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       triggerWarning('عفواً، تفعيل حماية المحتوى يمنع النقر بالأزرار الإضافية 🛡️');
     };
 
-    // 2. Prevent Developer Tools & Screenshot Key Combinations
+    // Prevent Developer Tools & Screenshot Key Combinations
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
@@ -63,7 +84,7 @@ export function SecurityShield() {
       }
     };
 
-    // 3. Image Dragging Prevention
+    // Image Dragging Prevention
     const handleDragStart = (e: DragEvent) => {
       if ((e.target as HTMLElement).tagName === 'IMG') {
         e.preventDefault();
@@ -83,7 +104,7 @@ export function SecurityShield() {
 
   return (
     <>
-      {/* Global CSS Anti-Copy Shield */}
+      {/* Global CSS Anti-Copy Shield & Video Protection */}
       <style jsx global>{`
         body {
           -webkit-user-select: none;
@@ -98,7 +119,31 @@ export function SecurityShield() {
           -o-user-drag: none;
           pointer-events: auto;
         }
+        video {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -khtml-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
       `}</style>
+
+      {/* Account Session Terminated Modal */}
+      {sessionLockTerminated && (
+        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center space-y-4 text-chalk animate-in fade-in duration-300">
+          <div className="w-16 h-16 rounded-3xl bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center text-red-500 shadow-lg animate-pulse">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-black text-red-400">تنبيه أمان منصة المهندس 🛡️</h2>
+          <p className="text-sm font-bold text-slate-300 max-w-md leading-relaxed">
+            {sessionLockTerminated}
+          </p>
+          <div className="pt-2 text-xs font-mono text-cyan-electric animate-pulse">
+            جاري توجيهك لصفحة الدخول خلال 3 ثواني...
+          </div>
+        </div>
+      )}
 
       {/* Floating Warning Toast */}
       {warningMsg && (

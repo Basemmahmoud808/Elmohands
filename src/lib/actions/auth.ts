@@ -171,6 +171,14 @@ export async function getAllRegisteredUsers(): Promise<UserSession[]> {
   return Object.values(usersDb);
 }
 
+export async function checkActiveSessionStatus(): Promise<{ valid: boolean; reason?: string }> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { valid: false, reason: 'تم فتح حسابك من متصفح أو جهاز آخر في نفس الوقت 🛡️' };
+  }
+  return { valid: true };
+}
+
 export async function logoutUser() {
   cookies().delete('almohands_session');
 }

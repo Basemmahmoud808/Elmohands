@@ -50,7 +50,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
     loadData();
   }, [params.id, router]);
 
-  // Moving watermark timer every 15 seconds & Screen capture focus blur protection
+  // Moving watermark timer every 5 seconds & Screen capture focus blur protection
   const [isWindowBlurred, setIsWindowBlurred] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
       const randomTop = Math.floor(Math.random() * 70) + 10;
       const randomRight = Math.floor(Math.random() * 70) + 10;
       setWatermarkPos({ top: randomTop, right: randomRight });
-    }, 15000);
+    }, 5000);
 
     const handleBlur = () => setIsWindowBlurred(true);
     const handleFocus = () => setIsWindowBlurred(false);
@@ -187,15 +187,15 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
               </div>
             )}
 
-            {/* MOVING WATERMARK OVERLAY (Security Deterrent) */}
+            {/* MOVING WATERMARK OVERLAY (Anti-Recording Deterrent) */}
             <div
-              className="absolute pointer-events-none z-30 select-none transition-all duration-1000 ease-in-out px-3 py-1.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-white/40 text-xs font-mono font-bold"
+              className="absolute pointer-events-none z-30 select-none transition-all duration-700 ease-in-out px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-cyan-electric/30 text-cyan-electric text-xs font-mono font-bold shadow-cyan-glow"
               style={{
                 top: `${watermarkPos.top}%`,
                 right: `${watermarkPos.right}%`,
               }}
             >
-              <span>{user.fullName}</span> • <span>{user.phone}</span>
+              <span>طالب: {user.fullName}</span> • <span>هاتف: {user.phone}</span> • <span className="text-chalk-muted">محمي م/ رضا خيرت</span>
             </div>
 
             {/* Video Element or Google Drive / YouTube Iframe */}
@@ -215,7 +215,10 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                   poster={lesson.thumbnailPath}
                   onTimeUpdate={handleTimeUpdate}
                   onEnded={() => setIsPlaying(false)}
-                  className="w-full aspect-video object-contain bg-black cursor-pointer"
+                  onContextMenu={(e) => e.preventDefault()}
+                  controlsList="nodownload noremoteplayback"
+                  disablePictureInPicture
+                  className="w-full aspect-video object-contain bg-black cursor-pointer select-none"
                   onClick={togglePlay}
                 />
 
