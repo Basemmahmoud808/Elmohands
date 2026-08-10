@@ -6,7 +6,7 @@ import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { generateVoucherCodes, getAllVouchers, VoucherCode } from '@/lib/actions/vouchers';
 import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/lessons';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser } from '@/lib/actions/auth';
+import { getCurrentUser, getAllRegisteredUsers } from '@/lib/actions/auth';
 import {
   Users,
   Video,
@@ -89,11 +89,7 @@ export default function AdminDashboard() {
 
   // Student Search & Filter
   const [searchStudent, setSearchStudent] = useState('');
-  const [studentsList, setStudentsList] = useState([
-    { id: 'st-1', name: 'أحمد محمود العبد', phone: '01012345678', parentPhone: '01223456789', grade: 'الصف الأول الإعدادي', gov: 'القاهرة', status: 'نشط', subExpire: '28 يوماً' },
-    { id: 'st-2', name: 'محمد مصطفى كامل', phone: '01223456789', parentPhone: '01099887766', grade: 'الصف الثالث الإعدادي', gov: 'الجيزة', status: 'نشط', subExpire: '90 يوماً' },
-    { id: 'st-3', name: 'سارة إبراهيم حسن', phone: '01112223334', parentPhone: '01011223344', grade: 'الصف الأول الثانوي', gov: 'الإسكندرية', status: 'نشط', subExpire: '120 يوماً' },
-  ]);
+  const [studentsList, setStudentsList] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -110,6 +106,24 @@ export default function AdminDashboard() {
       setVouchers(vList);
       const lList = await getLessonsList();
       setLessons(lList);
+
+      const registeredUsers = await getAllRegisteredUsers();
+      const realStudents = registeredUsers
+        .filter((u) => u.role === 'STUDENT')
+        .map((u) => ({
+          id: u.id,
+          name: u.fullName,
+          phone: u.phone,
+          parentPhone: u.parentPhone || 'غير محدد',
+          grade: u.gradeName || 'الصف الأول الإعدادي',
+          gov: u.governorate || 'القاهرة',
+          status: 'نشط',
+          subExpire: '30 يوماً',
+        }));
+
+      if (realStudents.length > 0) {
+        setStudentsList(realStudents);
+      }
     }
     loadData();
   }, [router]);

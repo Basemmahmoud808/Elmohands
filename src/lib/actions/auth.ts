@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { supabase } from '@/lib/supabase/client';
+import { readJSON, writeJSON } from '@/lib/store/db';
 
 export interface UserSession {
   id: string;
@@ -23,7 +24,7 @@ const COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === 'production',
 };
 
-const DEMO_USERS: Record<string, UserSession> = {
+const INITIAL_USERS: Record<string, UserSession> = {
   '01000000000': {
     id: 'adm_01000000000',
     fullName: 'م/ رضا خيرت',
@@ -34,20 +35,37 @@ const DEMO_USERS: Record<string, UserSession> = {
   },
 };
 
+function getUsersDb(): Record<string, UserSession> {
+  return readJSON<Record<string, UserSession>>('users.json', INITIAL_USERS);
+}
+
+function saveUsersDb(users: Record<string, UserSession>): void {
+  writeJSON('users.json', users);
+}
+
 export async function loginUser(phone: string): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = phone.trim();
     if (!cleanPhone) return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
 
+    const usersDb = getUsersDb();
     const isDedicatedAdmin = cleanPhone === '01000000000';
-    let user: UserSession = DEMO_USERS[cleanPhone] ?? {
-      id: `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      fullName: `طالب (${cleanPhone.slice(-4)})`,
-      phone: cleanPhone,
-      role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
-      gradeName: 'الصف الأول الإعدادي',
-      createdAt: new Date().toISOString(),
-    };
+
+    let user: UserSession;
+    if (usersDb[cleanPhone]) {
+      user = usersDb[cleanPhone];
+    } else {
+      user = {
+        id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        fullName: isDedicatedAdmin ? 'م/ رضا خيرت' : `طالب (${cleanPhone.slice(-4)})`,
+        phone: cleanPhone,
+        role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
+        gradeName: 'الصف الأول الإعدادي',
+        createdAt: new Date().toISOString(),
+      };
+      usersDb[cleanPhone] = user;
+      saveUsersDb(usersDb);
+    }
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
       const { data } = await supabase.from('profiles').select('*').eq('phone', cleanPhone).single();
@@ -74,7 +92,11 @@ export async function registerUser(data: {
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = data.phone.trim();
+    if (!cleanPhone) return { success: false, message: 'يرجى إدخال رقم الهاتف بشكل صحيح' };
+
     const isDedicatedAdmin = cleanPhone === '01000000000';
+    const usersDb = getUsersDb();
+
     const newUser: UserSession = {
       id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       fullName: data.fullName.trim(),
@@ -86,11 +108,13 @@ export async function registerUser(data: {
       createdAt: new Date().toISOString(),
     };
 
+    usersDb[cleanPhone] = newUser;
+    saveUsersDb(usersDb);
+
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
       await supabase.from('profiles').insert([{ id: newUser.id, full_name: newUser.fullName, phone: newUser.phone, parent_phone: newUser.parentPhone, governorate: newUser.governorate, role: newUser.role }]);
     }
 
-    DEMO_USERS[cleanPhone] = newUser;
     cookies().set('almohands_session', JSON.stringify(newUser), COOKIE_OPTIONS);
     return { success: true, user: newUser };
   } catch (error: any) {
@@ -106,6 +130,11 @@ export async function getCurrentUser(): Promise<UserSession | null> {
   } catch {
     return null;
   }
+}
+
+export async function getAllRegisteredUsers(): Promise<UserSession[]> {
+  const usersDb = getUsersDb();
+  return Object.values(usersDb);
 }
 
 export async function logoutUser() {
