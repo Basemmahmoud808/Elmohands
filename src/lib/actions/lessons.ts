@@ -6,6 +6,8 @@ export interface LessonItem {
   id: string;
   unitId: string;
   unitTitle: string;
+  courseName?: string;
+  sequenceOrder?: number;
   title: string;
   description: string;
   videoPath?: string;
@@ -42,18 +44,20 @@ export async function parseMediaUrl(url: string): Promise<{ type: 'video' | 'ifr
   return { type: 'video', src: url };
 }
 
-// Structured lesson store grouped by grade, branch, and unit
+// Structured lesson store grouped by grade, course, branch, and unit
 const LESSON_STORE: LessonItem[] = [
   {
     id: 'les-1',
     unitId: 'u-algebra-1',
     unitTitle: 'الوحدة الأولى: الأعداد النسبية والعمليات عليها',
-    title: 'الدرس الأول: مجموعات الأعداد والعمليات الأساسية',
-    description: 'شرح مبسط ومفصل لمفهوم الأعداد النسبية وتطبيقاتها في الحياة العملية.',
+    courseName: 'كورس الجبر الشامل (الترم الأول)',
+    sequenceOrder: 1,
+    title: 'الدرس الأول: مجموعات الأعداد والعمليات الأساسية (محاضرة كاملة 60 دقيقة)',
+    description: 'شرح مبسط ومفصل لمفهوم الأعداد النسبية وتطبيقاتها في الحياة العملية مع التمارين المحلولة.',
     videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     pdfPath: '/sample-lesson-notes.pdf',
     thumbnailPath: '/teacher_reda_kheyrat.jpg',
-    durationMinutes: 45,
+    durationMinutes: 60,
     gradeName: 'الصف الأول الإعدادي',
     branchName: 'فرع الجبر والإحصاء',
     createdAt: new Date().toISOString(),
@@ -62,12 +66,14 @@ const LESSON_STORE: LessonItem[] = [
     id: 'les-2',
     unitId: 'u-algebra-1',
     unitTitle: 'الوحدة الأولى: الأعداد النسبية والعمليات عليها',
+    courseName: 'كورس الجبر الشامل (الترم الأول)',
+    sequenceOrder: 2,
     title: 'الدرس الثاني: التحليل بتقسيم الأعداد وإكمال المربع',
     description: 'تمارين ومسائل مبرهنة على التحليل وإكمال المربع وطرق الحل المتعددة.',
     videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     pdfPath: '/sample-lesson-notes.pdf',
     thumbnailPath: '/teacher_reda_kheyrat.jpg',
-    durationMinutes: 38,
+    durationMinutes: 45,
     gradeName: 'الصف الأول الإعدادي',
     branchName: 'فرع الجبر والإحصاء',
     createdAt: new Date().toISOString(),
@@ -76,12 +82,14 @@ const LESSON_STORE: LessonItem[] = [
     id: 'les-3',
     unitId: 'u-geometry-1',
     unitTitle: 'الوحدة الأولى: العلاقات والمفاهيم الهندسية والإنشاءات',
-    title: 'الدرس الأول: مفاهيم هندسية أساسية والإنشاءات والزوايا',
+    courseName: 'كورس الهندسة والإنشاءات الأساسية',
+    sequenceOrder: 1,
+    title: 'الدرس الأول: مفاهيم هندسية أساسية والإنشاءات والزوايا (محاضرة مكثفة 75 دقيقة)',
     description: 'تطبيق عملي ونظري لمفاهيم العلاقات بين الزوايا والمستقيمات المتوازية والإنشاءات الهندسية.',
     videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
     pdfPath: '/sample-lesson-notes.pdf',
     thumbnailPath: '/teacher_reda_kheyrat.jpg',
-    durationMinutes: 42,
+    durationMinutes: 75,
     gradeName: 'الصف الأول الإعدادي',
     branchName: 'فرع الهندسة والقياس',
     createdAt: new Date().toISOString(),
@@ -95,6 +103,10 @@ export async function createLessonAction(formData: FormData): Promise<{ success:
     const gradeName = (formData.get('gradeName') as string) || 'الصف الأول الإعدادي';
     const branchName = (formData.get('branchName') as string) || 'فرع الجبر والإحصاء';
     const unitTitle = (formData.get('unitTitle') as string) || 'الوحدة الأولى: المفاهيم الأساسية';
+    const courseName = (formData.get('courseName') as string) || 'كورس الرياضيات الشامل';
+    const sequenceOrder = Number(formData.get('sequenceOrder')) || (LESSON_STORE.length + 1);
+    const durationMinutes = Number(formData.get('durationMinutes')) || 60;
+    const thumbnailPath = (formData.get('thumbnailPath') as string) || '/teacher_reda_kheyrat.jpg';
     const rawVideoUrl = (formData.get('videoUrl') as string) || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
     const pdfUrl = (formData.get('pdfUrl') as string) || '/sample-notes.pdf';
 
@@ -104,12 +116,14 @@ export async function createLessonAction(formData: FormData): Promise<{ success:
       id: `les-${Date.now()}`,
       unitId: `u-${Date.now()}`,
       unitTitle,
+      courseName,
+      sequenceOrder,
       title: title.trim(),
       description: description ? description.trim() : 'شرح مفصل وتمارين محلولة باحترافية مع م/ رضا خيرت',
       videoPath: parsedMedia.src,
       pdfPath: pdfUrl,
-      thumbnailPath: '/teacher_reda_kheyrat.jpg',
-      durationMinutes: Math.floor(Math.random() * 20) + 25,
+      thumbnailPath,
+      durationMinutes,
       gradeName,
       branchName,
       createdAt: new Date().toISOString(),

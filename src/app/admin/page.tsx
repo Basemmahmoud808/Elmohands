@@ -26,6 +26,9 @@ import {
   Layers,
   FileUp,
   Link2,
+  Image as ImageIcon,
+  Clock,
+  FolderGit2,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -43,13 +46,18 @@ export default function AdminDashboard() {
   const [lessonGrade, setLessonGrade] = useState('الصف الأول الإعدادي');
   const [lessonBranch, setLessonBranch] = useState('فرع الجبر والإحصاء');
   const [lessonUnit, setLessonUnit] = useState('الوحدة الأولى: الأعداد النسبية والعمليات عليها');
+  const [lessonCourse, setLessonCourse] = useState('كورس الجبر الشامل (الترم الأول)');
+  const [sequenceOrder, setSequenceOrder] = useState(1);
+  const [durationMinutes, setDurationMinutes] = useState(60);
   
   // Media Input Mode: 'file' (direct device upload) or 'url' (Google Drive/YouTube/HTTP)
   const [videoSourceMode, setVideoSourceMode] = useState<'file' | 'url'>('file');
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
+  const [selectedThumbnailFile, setSelectedThumbnailFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
 
   const [lessons, setLessons] = useState<LessonItem[]>([]);
   const [uploadMsg, setUploadMsg] = useState('');
@@ -129,24 +137,35 @@ export default function AdminDashboard() {
       finalPdfPath = URL.createObjectURL(selectedPdfFile);
     }
 
+    let finalThumbnailPath = thumbnailUrl || '/teacher_reda_kheyrat.jpg';
+    if (selectedThumbnailFile) {
+      finalThumbnailPath = URL.createObjectURL(selectedThumbnailFile);
+    }
+
     const fd = new FormData();
     fd.append('title', lessonTitle);
     fd.append('description', lessonDesc);
     fd.append('gradeName', lessonGrade);
     fd.append('branchName', lessonBranch);
     fd.append('unitTitle', lessonUnit);
+    fd.append('courseName', lessonCourse);
+    fd.append('sequenceOrder', String(sequenceOrder));
+    fd.append('durationMinutes', String(durationMinutes));
+    fd.append('thumbnailPath', finalThumbnailPath);
     if (finalVideoPath) fd.append('videoUrl', finalVideoPath);
     if (finalPdfPath) fd.append('pdfUrl', finalPdfPath);
 
     const res = await createLessonAction(fd);
     if (res.success && res.lesson) {
-      setUploadMsg('تم حفظ ونشر الدرس بنجاح في الفرع المحدد للطلاب!');
+      setUploadMsg(`تم نشر المحاضرة (${durationMinutes} دقيقة) بنجاح في ${lessonCourse}!`);
       setLessonTitle('');
       setLessonDesc('');
       setSelectedVideoFile(null);
       setSelectedPdfFile(null);
+      setSelectedThumbnailFile(null);
       setVideoUrl('');
       setPdfUrl('');
+      setThumbnailUrl('');
       const updatedLessons = await getLessonsList();
       setLessons(updatedLessons);
     }
@@ -271,7 +290,7 @@ export default function AdminDashboard() {
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10">مرفوع</span>
                   </div>
                   <div className="text-3xl font-black text-slate-900 dark:text-chalk">{lessons.length} درس</div>
-                  <div className="text-xs text-slate-500 dark:text-chalk-muted font-bold">درساً مرفوعاً (فيديو + PDF)</div>
+                  <div className="text-xs text-slate-500 dark:text-chalk-muted font-bold">درساً ومحاضرة طويلة</div>
                 </button>
 
                 <button
@@ -296,7 +315,7 @@ export default function AdminDashboard() {
                     className="p-4 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 text-cyan-electric hover:bg-cyan-electric/20 font-extrabold text-xs flex items-center justify-center gap-2"
                   >
                     <UploadCloud className="w-4 h-4" />
-                    <span>رفع درس جديد من الجهاز</span>
+                    <span>رفع محاضرة طويلة / كورس</span>
                   </button>
                   <button
                     onClick={() => setSelectedTab('quizzes')}
@@ -418,14 +437,14 @@ export default function AdminDashboard() {
           )}
 
           {/* ==================================================== */}
-          {/* TAB 4: LESSONS MANAGEMENT (DEVICE VIDEO UPLOAD) */}
+          {/* TAB 4: LESSONS MANAGEMENT (LONG VIDEO & COURSE CMS) */}
           {/* ==================================================== */}
           {selectedTab === 'lessons' && (
             <div className="space-y-8">
               <div className="chalk-card rounded-3xl p-6 bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
                 <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">رفع وتجهيز درس جديد (من الجهاز أو Google Drive)</h3>
-                  <p className="text-xs text-slate-500 dark:text-chalk-muted">اختر ملف الفيديو مباشرة من جهازك أو ضع رابط Google Drive / YouTube</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">رفع وتخصيص فيديو طويل / كورس وصورة مصغرة</h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted">دعم المحاضرات الطويلة (ساعة فأكثر)، تعيين الكورس المحدد، ترتيب الحلقات والصورة المصغرة</p>
                 </div>
 
                 {uploadMsg && (
@@ -436,18 +455,51 @@ export default function AdminDashboard() {
                 )}
 
                 <form onSubmit={handleUploadLesson} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عنوان الدرس</label>
+                  {/* Lesson Title */}
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عنوان المحاضرة أو الدرس</label>
                     <input
                       type="text"
                       required
-                      placeholder="مثال: الدرس الثالث: تحليل الفرق بين المربعين"
+                      placeholder="مثال: الشرح الكامل والشامل للوحدة الأولى في الجبر (محاضرة 60 دقيقة)"
                       value={lessonTitle}
                       onChange={(e) => setLessonTitle(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
                     />
                   </div>
 
+                  {/* Course Name */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
+                      <FolderGit2 className="w-3.5 h-3.5 text-cyan-electric" />
+                      اسم الكورس / التتابع
+                    </label>
+                    <select
+                      value={lessonCourse}
+                      onChange={(e) => setLessonCourse(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    >
+                      <option value="كورس الجبر الشامل (الترم الأول)">كورس الجبر الشامل (الترم الأول)</option>
+                      <option value="كورس الهندسة وحساب المثلثات">كورس الهندسة وحساب المثلثات</option>
+                      <option value="كورس المراجعة النهائية والليالي الامتحانية">كورس المراجعة النهائية والليالي الامتحانية</option>
+                      <option value="كورس التأسيس المباشر للرياضيات">كورس التأسيس المباشر للرياضيات</option>
+                    </select>
+                  </div>
+
+                  {/* Sequence Order */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">ترتيب الدرس / الحلقة رقم</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={sequenceOrder}
+                      onChange={(e) => setSequenceOrder(Number(e.target.value))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    />
+                  </div>
+
+                  {/* Grade Level */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">الصف الدراسي</label>
                     <select
@@ -462,6 +514,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
 
+                  {/* Branch */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">فرع المادة</label>
                     <select
@@ -475,6 +528,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
 
+                  {/* Unit Title */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عنوان الوحدة</label>
                     <input
@@ -486,10 +540,69 @@ export default function AdminDashboard() {
                     />
                   </div>
 
+                  {/* Video Duration (Minutes / Long Video) */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-cyan-electric" />
+                      مدة المحاضرة (بالدقائق)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="300"
+                        value={durationMinutes}
+                        onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDurationMinutes(60)}
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 hover:bg-cyan-electric/25 whitespace-nowrap"
+                      >
+                        60 دقيقة
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDurationMinutes(90)}
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 hover:bg-cyan-electric/25 whitespace-nowrap"
+                      >
+                        90 دقيقة
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Image Picker & Preview */}
+                  <div className="md:col-span-2 space-y-2 p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-cyan-electric" />
+                      الصورة المصغرة للمحاضرة (Thumbnail Image):
+                    </label>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setSelectedThumbnailFile(e.target.files?.[0] || null)}
+                        className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-cyan-electric file:text-black hover:file:bg-cyan-electric-hover cursor-pointer"
+                      />
+                      
+                      {(selectedThumbnailFile || thumbnailUrl) && (
+                        <div className="w-24 h-14 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 shrink-0 bg-slate-900">
+                          <img
+                            src={selectedThumbnailFile ? URL.createObjectURL(selectedThumbnailFile) : thumbnailUrl}
+                            alt="معاينة الصورة المصغرة"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Video Source Switcher */}
                   <div className="md:col-span-2 space-y-3 p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-chalk">مصدر ملف الفيديو:</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk">مصدر ملف الفيديو (يدعم الفيديوهات الطويلة 1hr+):</label>
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -523,7 +636,7 @@ export default function AdminDashboard() {
                           className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-cyan-electric file:text-black hover:file:bg-cyan-electric-hover cursor-pointer"
                         />
                         {selectedVideoFile && (
-                          <p className="text-[11px] font-mono text-emerald-500 font-bold">تم اختيار: {selectedVideoFile.name} ({(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB)</p>
+                          <p className="text-[11px] font-mono text-emerald-500 font-bold">تم اختيار فيديو من الجهاز: {selectedVideoFile.name} ({(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB)</p>
                         )}
                       </div>
                     ) : (
@@ -555,7 +668,7 @@ export default function AdminDashboard() {
                       className="w-full py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
                     >
                       <UploadCloud className="w-4 h-4" />
-                      <span>حفظ ونشر الدرس للطلاب</span>
+                      <span>حفظ ونشر المحاضرة الكنسية للطلاب</span>
                     </button>
                   </div>
                 </form>
@@ -563,14 +676,19 @@ export default function AdminDashboard() {
 
               {/* Lessons List */}
               <div className="chalk-card rounded-3xl p-6 bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-4">
-                <h3 className="text-lg font-black text-slate-900 dark:text-chalk border-b border-slate-200 dark:border-slate-800 pb-3">الدروس المرفوعة حالياً ({lessons.length})</h3>
+                <h3 className="text-lg font-black text-slate-900 dark:text-chalk border-b border-slate-200 dark:border-slate-800 pb-3">الدروس والمحاضرات المرفوعة ({lessons.length})</h3>
                 
                 <div className="space-y-3">
                   {lessons.map((les) => (
                     <div key={les.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="font-bold text-sm text-slate-900 dark:text-chalk">{les.title}</span>
-                        <p className="text-xs text-slate-500 dark:text-chalk-muted">{les.gradeName} • {les.branchName} • {les.durationMinutes} دقيقة</p>
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-10 rounded-lg overflow-hidden bg-slate-900 shrink-0 border border-slate-700">
+                          <img src={les.thumbnailPath || '/teacher_reda_kheyrat.jpg'} alt={les.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="space-y-1">
+                          <span className="font-bold text-sm text-slate-900 dark:text-chalk">{les.title}</span>
+                          <p className="text-xs text-slate-500 dark:text-chalk-muted">{les.gradeName} • {les.courseName || les.branchName} • مدة المحاضرة: {les.durationMinutes} دقيقة</p>
+                        </div>
                       </div>
                       <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20">
                         منشور
