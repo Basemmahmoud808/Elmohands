@@ -90,14 +90,20 @@ export default function Hero() {
               {/* Outer Geometric Glow */}
               <div className="absolute -inset-4 rounded-full bg-gradient-to-tr from-cyan-electric/20 via-blue-ink/30 to-cyan-electric/20 blur-3xl animate-pulse"></div>
 
-              {/* Clean Avatar Ring */}
-              <div className="relative w-56 h-56 mx-auto rounded-full bg-gradient-to-b from-cyan-electric to-blue-ink p-1.5 shadow-cyan-glow">
-                <div className="w-full h-full rounded-full bg-slate-900 dark:bg-black border-4 border-slate-950 flex flex-col items-center justify-center space-y-2 text-center p-4">
-                  <Sigma className="w-16 h-16 text-cyan-electric animate-bounce" />
-                  <span className="text-lg font-black text-chalk">م/ رضا خيرت</span>
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                    كبير معلمي الرياضيات
-                  </span>
+              {/* Clean Avatar Ring with Official Teacher Photo */}
+              <div className="relative w-64 h-80 mx-auto rounded-3xl bg-gradient-to-b from-cyan-electric to-blue-ink p-1 shadow-cyan-glow overflow-hidden">
+                <div className="w-full h-full rounded-[22px] bg-slate-900 border-2 border-slate-950 overflow-hidden relative group">
+                  <img
+                    src="/teacher_reda_kheyrat.jpg"
+                    alt="م/ رضا خيرت — معلم الرياضيات"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 text-center">
+                    <span className="text-sm font-black text-chalk block">م/ رضا خيرت</span>
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/40 inline-block mt-0.5">
+                      كبير معلمي الرياضيات
+                    </span>
+                  </div>
                 </div>
               </div>
 
