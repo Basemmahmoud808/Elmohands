@@ -35,9 +35,9 @@ export default function Hero() {
             
             {/* Main Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-chalk leading-[1.25] tracking-tight">
-              و فهم <span className="text-cyan-electric">الرياضيات بأسلوب</span>
+              منصتك الأولى <span className="text-cyan-electric">لتعلم وفهم الرياضيات</span>
               <br />
-              بسيط وممتع
+              بأسلوب بسيط وممتع
             </h1>
 
             {/* Subtitle */}
