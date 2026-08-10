@@ -77,7 +77,7 @@ export default function SignInPage() {
               <input
                 type="tel"
                 required
-                placeholder="01000000000"
+                placeholder="01008901896"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-left outline-none focus:border-cyan-electric transition-colors"

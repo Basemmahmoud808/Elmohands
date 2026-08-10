@@ -59,15 +59,19 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm text-slate-600 dark:text-chalk-muted font-medium">
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-cyan-electric" />
-                <span dir="ltr">+20 100 000 0000</span>
+                <a href="tel:01008901896" dir="ltr" className="hover:text-cyan-electric transition-colors">
+                  01008901896
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-cyan-electric" />
-                <span>support@almohands-math.com</span>
+                <a href="mailto:Khyratreda@gmail.com" className="hover:text-cyan-electric transition-colors">
+                  Khyratreda@gmail.com
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <MapPin className="w-4 h-4 text-cyan-electric" />
-                <span>جمهورية مصر العربية</span>
+                <span>الدقهلية - منية النصر - النزل</span>
               </li>
             </ul>
           </div>

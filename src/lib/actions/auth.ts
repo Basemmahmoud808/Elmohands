@@ -26,11 +26,22 @@ const COOKIE_OPTIONS = {
 };
 
 const INITIAL_USERS: Record<string, UserSession> = {
+  '01008901896': {
+    id: 'adm_01008901896',
+    fullName: 'م/ رضا خيرت',
+    phone: '01008901896',
+    email: 'Khyratreda@gmail.com',
+    governorate: 'الدقهلية - منية النصر - النزل',
+    role: 'ADMIN',
+    activeSessionId: 'sess_admin_fixed',
+    createdAt: new Date().toISOString(),
+  },
   '01000000000': {
     id: 'adm_01000000000',
     fullName: 'م/ رضا خيرت',
     phone: '01000000000',
-    email: 'reda.kheyrat@almohands.com',
+    email: 'Khyratreda@gmail.com',
+    governorate: 'الدقهلية - منية النصر - النزل',
     role: 'ADMIN',
     activeSessionId: 'sess_admin_fixed',
     createdAt: new Date().toISOString(),
@@ -51,7 +62,7 @@ export async function loginUser(phone: string): Promise<{ success: boolean; user
     if (!cleanPhone) return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
 
     const usersDb = getUsersDb();
-    const isDedicatedAdmin = cleanPhone === '01000000000';
+    const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === '01000000000';
     const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     let user: UserSession;
@@ -102,7 +113,7 @@ export async function registerUser(data: {
     const cleanPhone = data.phone.trim();
     if (!cleanPhone) return { success: false, message: 'يرجى إدخال رقم الهاتف بشكل صحيح' };
 
-    const isDedicatedAdmin = cleanPhone === '01000000000';
+    const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === '01000000000';
     const usersDb = getUsersDb();
     const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
