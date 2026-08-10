@@ -49,11 +49,8 @@ export default function Navbar() {
               <GraduationCap className="w-6 h-6 text-black font-extrabold" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-2xl text-slate-900 dark:text-chalk tracking-tight flex items-center gap-2">
+              <span className="font-extrabold text-2xl text-slate-900 dark:text-chalk tracking-tight">
                 المهندس
-                <span className="text-cyan-electric text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-electric/15 border border-cyan-electric/30 shadow-sm">
-                  منصة الرياضيات
-                </span>
               </span>
               <span className="text-xs text-slate-500 dark:text-chalk-muted font-medium">مع م/ رضا خيرت</span>
             </div>

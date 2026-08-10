@@ -14,7 +14,7 @@ export default function Footer() {
                 <GraduationCap className="w-6 h-6" />
               </div>
               <span className="font-extrabold text-2xl text-slate-900 dark:text-chalk">
-                المهندس — منصة الرياضيات
+                المهندس
               </span>
             </Link>
             <p className="text-sm text-slate-600 dark:text-chalk-muted leading-relaxed max-w-md">
