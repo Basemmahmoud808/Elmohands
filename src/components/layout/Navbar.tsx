@@ -2,14 +2,28 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, BookOpen, GraduationCap, Sparkles, User, LogIn } from 'lucide-react';
+import { Menu, X, GraduationCap, LogIn, User } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { SlideTabs } from '@/components/ui/slide-tabs';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState('home');
+
+  const handleNavChange = (id: string) => {
+    setActiveNav(id);
+    if (id === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 dark:bg-black/60 backdrop-blur-xl border-b border-slate-200 dark:border-cyan-electric/20 transition-colors duration-200">
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-slate-200 dark:border-cyan-electric/20 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -29,22 +43,18 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-700 dark:text-chalk/80">
-            <Link href="/" className="text-cyan-electric font-black transition-colors flex items-center gap-1.5">
-              الرئيسية
-            </Link>
-            <Link href="#stages" className="hover:text-cyan-electric transition-colors flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4 text-cyan-electric" />
-              المراحل الدراسية
-            </Link>
-            <Link href="#features" className="hover:text-cyan-electric transition-colors flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-cyan-electric" />
-              المميزات
-            </Link>
-            <Link href="#about" className="hover:text-cyan-electric transition-colors">
-              عن المدرس
-            </Link>
+          {/* Desktop Nav Links using Sliding Cursor Tabs */}
+          <nav className="hidden md:block">
+            <SlideTabs
+              tabs={[
+                { id: 'home', label: 'الرئيسية' },
+                { id: 'stages', label: 'المراحل الدراسية' },
+                { id: 'features', label: 'المميزات' },
+                { id: 'about', label: 'عن المدرس' },
+              ]}
+              activeId={activeNav}
+              onChange={handleNavChange}
+            />
           </nav>
 
           {/* Auth Actions & ThemeToggle */}
