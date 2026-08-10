@@ -82,8 +82,8 @@ export default function Navbar() {
                   href={user.role === 'ADMIN' ? '/admin' : '/student'}
                   className="px-5 py-2.5 rounded-xl text-sm font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>لوحتي التعليمة ({user.fullName.split(' ')[0]})</span>
+                  <User className="w-4 h-4" />
+                  <span>حسابي ({user.fullName.split(' ')[0]})</span>
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -161,7 +161,7 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full py-3 text-center rounded-xl text-sm font-black text-black bg-cyan-electric shadow-cyan-glow"
                 >
-                  لوحتي التعليمية ({user.fullName})
+                  حسابي ({user.fullName})
                 </Link>
                 <button
                   onClick={() => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sparkles, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sparkles, LayoutDashboard, User } from 'lucide-react';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 
 export default function Hero() {
@@ -67,8 +67,8 @@ export default function Hero() {
               >
                 {user ? (
                   <>
-                    <LayoutDashboard className="w-5 h-5" />
-                    <span>الانتقال إلى لوحتي التعليمية ({user.fullName.split(' ')[0]})</span>
+                    <User className="w-5 h-5" />
+                    <span>الانتقال إلى حسابي ({user.fullName.split(' ')[0]})</span>
                   </>
                 ) : (
                   <>
