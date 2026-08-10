@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PlayCircle, CheckCircle2, LayoutDashboard, BookOpen } from 'lucide-react';
+import { ArrowLeft, PlayCircle, CheckCircle2, LayoutDashboard } from 'lucide-react';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 
 export default function Hero() {
@@ -104,31 +104,28 @@ export default function Hero() {
             <div className="relative w-full max-w-sm text-center space-y-5">
               
               {/* Outer Cyan Glow Effect */}
-              <div className="absolute -inset-3 rounded-[32px] bg-cyan-electric/20 blur-2xl animate-pulse pointer-events-none"></div>
+              <div className="absolute -inset-4 rounded-full bg-gradient-to-tr from-cyan-electric/20 via-blue-ink/30 to-cyan-electric/20 blur-3xl animate-pulse"></div>
 
-              {/* Chalkboard Framed Photo */}
-              <div className="relative w-72 sm:w-80 h-96 mx-auto rounded-3xl bg-slate-900 border-4 border-cyan-electric p-2 shadow-cyan-glow overflow-hidden">
-                <div className="w-full h-full rounded-2xl bg-[#0a1120] relative overflow-hidden flex flex-col justify-between p-3">
+              {/* High Quality Portrait Ring Frame */}
+              <div className="relative w-64 sm:w-72 h-80 sm:h-96 mx-auto rounded-3xl bg-gradient-to-b from-cyan-electric to-blue-ink p-1 shadow-cyan-glow overflow-hidden">
+                <div className="w-full h-full rounded-[22px] bg-slate-900 border-2 border-slate-950 overflow-hidden relative group">
                   
-                  {/* Top Chalkboard Watermark Text */}
-                  <div className="text-left font-arabic">
-                    <span className="text-xs font-bold text-slate-400 border border-slate-700/80 px-2.5 py-1 rounded-lg bg-slate-950/60 inline-block">
+                  {/* Top Chalkboard Badge */}
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="text-[11px] font-extrabold text-chalk border border-slate-700/80 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur-md inline-block">
                       دروس الرياضيات
                     </span>
                   </div>
 
-                  {/* High Quality Teacher Portrait Photo */}
-                  <div className="absolute inset-0 top-8 bottom-8 flex items-center justify-center">
-                    <img
-                      src="/teacher_reda_kheyrat.jpg"
-                      alt="م/ رضا خيرت"
-                      className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
+                  <img
+                    src="/teacher_reda_kheyrat.jpg"
+                    alt="م/ رضا خيرت — معلم الرياضيات"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  />
 
-                  {/* Bottom Teacher Name Tag */}
-                  <div className="relative z-10 text-center bg-slate-950/90 border border-slate-800 rounded-xl py-1.5 px-4 mx-auto max-w-[200px] shadow-lg">
-                    <span className="text-xs font-black text-chalk">م/ رضا خيرت</span>
+                  {/* Bottom Teacher Name Badge */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 text-center">
+                    <span className="text-sm font-black text-chalk block">م/ رضا خيرت</span>
                   </div>
                 </div>
               </div>
