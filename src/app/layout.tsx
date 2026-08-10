@@ -34,12 +34,21 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: `
           :root { --background: 255 255 255; --foreground: 15 23 42; }
           .dark { --background: 0 0 0; --foreground: 248 250 252; }
-          body { font-family: var(--font-cairo), 'Cairo', system-ui, -apple-system, sans-serif; min-height: 100vh; overflow-x: hidden; }
+          body { font-family: var(--font-cairo), 'Cairo', system-ui, -apple-system, sans-serif; min-height: 100vh; overflow-x: hidden; margin: 0; padding: 0; }
           .chalk-card { background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(226, 232, 240, 0.9); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
           .dark .chalk-card { background-color: rgba(15, 23, 42, 0.8); border-color: rgba(0, 207, 255, 0.15); box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.4); }
           .bg-cyan-electric { background-color: #00CFFF !important; }
           .text-cyan-electric { color: #00CFFF !important; }
           .dark body { background-color: #000000 !important; color: #f8fafc !important; }
+          header { display: flex; align-items: center; justify-content: space-between; }
+          .flex { display: flex; }
+          .flex-col { flex-direction: column; }
+          .items-center { align-items: center; }
+          .justify-between { justify-content: space-between; }
+          .gap-3 { gap: 0.75rem; }
+          .gap-4 { gap: 1rem; }
+          ul { list-style: none; padding: 0; margin: 0; }
+          a { text-decoration: none; color: inherit; }
         ` }} />
       </head>
       <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black" suppressHydrationWarning>
