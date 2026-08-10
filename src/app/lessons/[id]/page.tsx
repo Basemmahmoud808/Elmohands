@@ -176,16 +176,6 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
           
           <div className="relative rounded-3xl overflow-hidden bg-black border-2 border-slate-800 shadow-2xl group">
             
-            {/* Window Blur / Screen Recording Protection Overlay */}
-            {isWindowBlurred && (
-              <div className="absolute inset-0 z-40 bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center space-y-3 text-chalk animate-in fade-in duration-200">
-                <ShieldCheck className="w-12 h-12 text-cyan-electric animate-bounce" />
-                <h3 className="text-lg font-black text-cyan-electric">حماية فيديو م/ رضا خيرت مشغلة 🛡️</h3>
-                <p className="text-xs text-slate-400 max-w-md font-bold">
-                  تم تعليق الشاشة أوتوماتيكياً للحد من تصوير وتسريب الشرح عند التبديل بين البرامج والتطبيقات.
-                </p>
-              </div>
-            )}
 
             {/* MOVING WATERMARK OVERLAY (Anti-Recording Deterrent) */}
             <div

@@ -2,20 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldAlert, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { checkActiveSessionStatus, logoutUser } from '@/lib/actions/auth';
 
 export function SecurityShield() {
   const router = useRouter();
-  const [warningMsg, setWarningMsg] = useState<string | null>(null);
   const [sessionLockTerminated, setSessionLockTerminated] = useState<string | null>(null);
-
-  const triggerWarning = (msg: string) => {
-    setWarningMsg(msg);
-    setTimeout(() => {
-      setWarningMsg(null);
-    }, 3000);
-  };
 
   // 1. Real-time Heartbeat Polling to prevent account sharing
   useEffect(() => {
@@ -33,12 +25,11 @@ export function SecurityShield() {
     return () => clearInterval(checkInterval);
   }, [router]);
 
-  // 2. Event Protections (Mouse, Keyboard, DevTools)
+  // 2. Event Protections (Silent protection without warning toasts)
   useEffect(() => {
     // Disable Right Click Context Menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      triggerWarning('عفواً، تفعيل حماية المحتوى يمنع النقر بالأزرار الإضافية 🛡️');
     };
 
     // Prevent Developer Tools & Screenshot Key Combinations
@@ -49,35 +40,30 @@ export function SecurityShield() {
       // F12
       if (e.key === 'F12') {
         e.preventDefault();
-        triggerWarning('تأمين المنصة: أدوات التطوير معطلة لمنع تسريب الفيديو 🛡️');
         return;
       }
 
       // Ctrl+Shift+I / J / C (DevTools)
       if (ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
         e.preventDefault();
-        triggerWarning('تأمين المنصة: أدوات التفتيش معطلة لحماية المحتوى 🛡️');
         return;
       }
 
       // Ctrl+U (View Source)
       if (ctrlKey && (e.key === 'u' || e.key === 'U')) {
         e.preventDefault();
-        triggerWarning('تأمين المنصة: عرض المصدر معطل 🛡️');
         return;
       }
 
       // Ctrl+S / Ctrl+P (Save / Print)
       if (ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
-        triggerWarning('تأمين المنصة: الحفظ والطباعة معطلة لحماية المذكرات 🛡️');
         return;
       }
 
       // PrintScreen Key
       if (e.key === 'PrintScreen') {
         e.preventDefault();
-        triggerWarning('تأمين المنصة: تصوير الشاشة معطل 🛡️');
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText('محتوى محمي - منصة المهندس م/ رضا خيرت');
         }
@@ -142,14 +128,6 @@ export function SecurityShield() {
           <div className="pt-2 text-xs font-mono text-cyan-electric animate-pulse">
             جاري توجيهك لصفحة الدخول خلال 3 ثواني...
           </div>
-        </div>
-      )}
-
-      {/* Floating Warning Toast */}
-      {warningMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-2xl bg-slate-950/95 text-chalk border border-cyan-electric/40 shadow-cyan-glow flex items-center gap-3 text-xs font-black animate-in fade-in slide-in-from-bottom duration-200">
-          <ShieldAlert className="w-5 h-5 text-cyan-electric shrink-0" />
-          <span>{warningMsg}</span>
         </div>
       )}
     </>
