@@ -31,6 +31,22 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
       <head>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script dangerouslySetInnerHTML={{ __html: `
+          tailwind.config = {
+            darkMode: 'class',
+            theme: {
+              extend: {
+                colors: {
+                  'cyan-electric': '#00CFFF',
+                  'cyan-electric-hover': '#00B8E6',
+                  'blue-ink': '#0A192F',
+                  chalk: '#F8FAFC',
+                }
+              }
+            }
+          }
+        ` }} />
         <style dangerouslySetInnerHTML={{ __html: `
           :root { --background: 255 255 255; --foreground: 15 23 42; }
           .dark { --background: 0 0 0; --foreground: 248 250 252; }
@@ -40,15 +56,6 @@ export default function RootLayout({
           .bg-cyan-electric { background-color: #00CFFF !important; }
           .text-cyan-electric { color: #00CFFF !important; }
           .dark body { background-color: #000000 !important; color: #f8fafc !important; }
-          header { display: flex; align-items: center; justify-content: space-between; }
-          .flex { display: flex; }
-          .flex-col { flex-direction: column; }
-          .items-center { align-items: center; }
-          .justify-between { justify-content: space-between; }
-          .gap-3 { gap: 0.75rem; }
-          .gap-4 { gap: 1rem; }
-          ul { list-style: none; padding: 0; margin: 0; }
-          a { text-decoration: none; color: inherit; }
         ` }} />
       </head>
       <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black" suppressHydrationWarning>
