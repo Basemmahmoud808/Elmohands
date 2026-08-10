@@ -13,6 +13,7 @@ export interface UserSession {
   email?: string;
   role: 'ADMIN' | 'STUDENT';
   gradeName?: string;
+  activeSessionId?: string;
   createdAt: string;
 }
 
@@ -31,6 +32,7 @@ const INITIAL_USERS: Record<string, UserSession> = {
     phone: '01000000000',
     email: 'reda.kheyrat@almohands.com',
     role: 'ADMIN',
+    activeSessionId: 'sess_admin_fixed',
     createdAt: new Date().toISOString(),
   },
 };
@@ -50,10 +52,14 @@ export async function loginUser(phone: string): Promise<{ success: boolean; user
 
     const usersDb = getUsersDb();
     const isDedicatedAdmin = cleanPhone === '01000000000';
+    const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     let user: UserSession;
     if (usersDb[cleanPhone]) {
-      user = usersDb[cleanPhone];
+      user = {
+        ...usersDb[cleanPhone],
+        activeSessionId: newSessionId,
+      };
     } else {
       user = {
         id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -61,11 +67,13 @@ export async function loginUser(phone: string): Promise<{ success: boolean; user
         phone: cleanPhone,
         role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
         gradeName: 'الصف الأول الإعدادي',
+        activeSessionId: newSessionId,
         createdAt: new Date().toISOString(),
       };
-      usersDb[cleanPhone] = user;
-      saveUsersDb(usersDb);
     }
+
+    usersDb[cleanPhone] = user;
+    saveUsersDb(usersDb);
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
       const { data } = await supabase.from('profiles').select('*').eq('phone', cleanPhone).single();
@@ -96,6 +104,7 @@ export async function registerUser(data: {
 
     const isDedicatedAdmin = cleanPhone === '01000000000';
     const usersDb = getUsersDb();
+    const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const newUser: UserSession = {
       id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -105,6 +114,7 @@ export async function registerUser(data: {
       governorate: data.governorate,
       role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
       gradeName: data.gradeId || 'الصف الأول الإعدادي',
+      activeSessionId: newSessionId,
       createdAt: new Date().toISOString(),
     };
 
@@ -126,7 +136,20 @@ export async function getCurrentUser(): Promise<UserSession | null> {
   const sessionCookie = cookies().get('almohands_session');
   if (!sessionCookie?.value) return null;
   try {
-    return JSON.parse(sessionCookie.value) as UserSession;
+    const cookieUser = JSON.parse(sessionCookie.value) as UserSession;
+    const usersDb = getUsersDb();
+    const serverUser = usersDb[cookieUser.phone];
+
+    // Single Device Session Lock Check
+    if (serverUser && serverUser.activeSessionId && cookieUser.activeSessionId) {
+      if (serverUser.activeSessionId !== cookieUser.activeSessionId) {
+        // Logged in on another device! Terminate current session
+        cookies().delete('almohands_session');
+        return null;
+      }
+    }
+
+    return cookieUser;
   } catch {
     return null;
   }

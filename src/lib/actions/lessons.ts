@@ -22,6 +22,24 @@ export interface LessonItem {
 export async function parseMediaUrl(url: string): Promise<{ type: 'video' | 'iframe'; src: string }> {
   if (!url) return { type: 'video', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' };
 
+  // BunnyStream / Encrypted DRM Stream
+  if (url.includes('b-cdn.net') || url.includes('bunnycdn.com') || url.includes('iframe.mediadelivery.net')) {
+    return { type: 'iframe', src: url };
+  }
+
+  // Wistia Protected Player
+  if (url.includes('wistia.com') || url.includes('wistia.net')) {
+    return { type: 'iframe', src: url };
+  }
+
+  // Vimeo Protected Player
+  if (url.includes('vimeo.com')) {
+    const vimeoId = url.split('vimeo.com/')[1]?.split('?')[0];
+    if (vimeoId) {
+      return { type: 'iframe', src: `https://player.vimeo.com/video/${vimeoId}?autoplay=1` };
+    }
+  }
+
   if (url.includes('drive.google.com')) {
     const fileIdMatch = url.match(/\/file\/d\/([^\/]+)/);
     if (fileIdMatch && fileIdMatch[1]) {

@@ -50,14 +50,27 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
     loadData();
   }, [params.id, router]);
 
-  // Moving watermark timer every 15 seconds
+  // Moving watermark timer every 15 seconds & Screen capture focus blur protection
+  const [isWindowBlurred, setIsWindowBlurred] = useState(false);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const randomTop = Math.floor(Math.random() * 70) + 10;
       const randomRight = Math.floor(Math.random() * 70) + 10;
       setWatermarkPos({ top: randomTop, right: randomRight });
     }, 15000);
-    return () => clearInterval(interval);
+
+    const handleBlur = () => setIsWindowBlurred(true);
+    const handleFocus = () => setIsWindowBlurred(false);
+
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const togglePlay = () => {
@@ -163,6 +176,17 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
           
           <div className="relative rounded-3xl overflow-hidden bg-black border-2 border-slate-800 shadow-2xl group">
             
+            {/* Window Blur / Screen Recording Protection Overlay */}
+            {isWindowBlurred && (
+              <div className="absolute inset-0 z-40 bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center space-y-3 text-chalk animate-in fade-in duration-200">
+                <ShieldCheck className="w-12 h-12 text-cyan-electric animate-bounce" />
+                <h3 className="text-lg font-black text-cyan-electric">حماية فيديو م/ رضا خيرت مشغلة 🛡️</h3>
+                <p className="text-xs text-slate-400 max-w-md font-bold">
+                  تم تعليق الشاشة أوتوماتيكياً للحد من تصوير وتسريب الشرح عند التبديل بين البرامج والتطبيقات.
+                </p>
+              </div>
+            )}
+
             {/* MOVING WATERMARK OVERLAY (Security Deterrent) */}
             <div
               className="absolute pointer-events-none z-30 select-none transition-all duration-1000 ease-in-out px-3 py-1.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-white/40 text-xs font-mono font-bold"
