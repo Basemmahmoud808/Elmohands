@@ -110,12 +110,7 @@ export default function Hero() {
               <div className="relative w-64 sm:w-72 h-80 sm:h-96 mx-auto rounded-3xl bg-gradient-to-b from-cyan-electric to-blue-ink p-1 shadow-cyan-glow overflow-hidden">
                 <div className="w-full h-full rounded-[22px] bg-slate-900 border-2 border-slate-950 overflow-hidden relative group">
                   
-                  {/* Top Chalkboard Badge */}
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="text-[11px] font-extrabold text-chalk border border-slate-700/80 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur-md inline-block">
-                      دروس الرياضيات
-                    </span>
-                  </div>
+
 
                   <img
                     src="/teacher_reda_kheyrat.jpg"
