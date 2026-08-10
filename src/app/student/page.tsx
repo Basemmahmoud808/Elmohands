@@ -18,19 +18,13 @@ import {
   TrendingUp,
   AlertCircle,
   FileText,
-  HelpCircle,
-  BarChart3,
-  Calendar,
-  Check,
-  ChevronLeft,
-  Search,
-  Zap,
+  Layers,
 } from 'lucide-react';
 
 const MOCK_QUIZZES = [
-  { id: 'q-1', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', duration: '20 دقيقة', questionsCount: 15, maxScore: 30, isCompleted: true, studentScore: 28 },
-  { id: 'q-2', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', duration: '25 دقيقة', questionsCount: 20, maxScore: 40, isCompleted: true, studentScore: 38 },
-  { id: 'q-3', title: 'الاختبار الشامل على نصر الترم الأول (جبر وهندسة)', duration: '45 دقيقة', questionsCount: 30, maxScore: 60, isCompleted: false, studentScore: 0 },
+  { id: 'q-1', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', duration: '20 دقيقة', questionsCount: 15, maxScore: 30, isCompleted: true, studentScore: 28, branch: 'فرع الجبر والإحصاء' },
+  { id: 'q-2', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', duration: '25 دقيقة', questionsCount: 20, maxScore: 40, isCompleted: true, studentScore: 38, branch: 'فرع الهندسة والقياس' },
+  { id: 'q-3', title: 'الاختبار الشامل على نصر الترم الأول (جبر وهندسة)', duration: '45 دقيقة', questionsCount: 30, maxScore: 60, isCompleted: false, studentScore: 0, branch: 'امتحان شامل' },
 ];
 
 export default function StudentDashboard() {
@@ -90,6 +84,14 @@ export default function StudentDashboard() {
     const calculatedScore = Math.floor(Math.random() * 5) + (activeQuizModal.maxScore - 4);
     setQuizResult(calculatedScore);
   };
+
+  // Group lessons by branchName
+  const groupedLessons = lessons.reduce((acc, les) => {
+    const bName = les.branchName || 'دروس المنهج العامة';
+    if (!acc[bName]) acc[bName] = [];
+    acc[bName].push(les);
+    return acc;
+  }, {} as Record<string, LessonItem[]>);
 
   return (
     <DarkGradientBg>
@@ -214,10 +216,10 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Two-Column Section: Voucher Activation & Available Lessons */}
+              {/* Two-Column Section: Voucher Activation & Grouped Lessons */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Activate Voucher Card */}
-                <div className="lg:col-span-6 chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
+                <div className="lg:col-span-5 chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
                   <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-cyan-electric/15 flex items-center justify-center text-cyan-electric">
                       <KeyRound className="w-5 h-5" />
@@ -260,26 +262,38 @@ export default function StudentDashboard() {
                   </form>
                 </div>
 
-                {/* Lessons List */}
-                <div className="lg:col-span-6 chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
+                {/* Lessons Grouped by Branch */}
+                <div className="lg:col-span-7 chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                    <h3 className="text-lg font-black text-slate-900 dark:text-chalk">دروس المنهج المتاحة لك</h3>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-chalk">دروس المنهج مقسمة بالفروع</h3>
                     <span className="text-xs font-bold text-cyan-electric">{lessons.length} درس متاح</span>
                   </div>
 
-                  <div className="space-y-4">
-                    {lessons.map((les) => (
-                      <div key={les.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                        <div className="space-y-1">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">{les.title}</h4>
-                          <p className="text-xs text-slate-500 dark:text-chalk-muted">{les.gradeName} • {les.durationMinutes} دقيقة</p>
+                  <div className="space-y-6">
+                    {Object.entries(groupedLessons).map(([branchName, branchLessons]) => (
+                      <div key={branchName} className="space-y-3">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-electric/10 border border-cyan-electric/20 text-cyan-electric text-xs font-bold w-fit">
+                          <Layers className="w-3.5 h-3.5" />
+                          <span>{branchName}</span>
                         </div>
-                        <Link
-                          href={`/lessons/${les.id}`}
-                          className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-sm"
-                        >
-                          مشاهدة الدرس
-                        </Link>
+
+                        <div className="space-y-3">
+                          {branchLessons.map((les) => (
+                            <div key={les.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-chalk-muted block">{les.unitTitle}</span>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">{les.title}</h4>
+                              </div>
+                              <Link
+                                href={`/lessons/${les.id}`}
+                                className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-sm flex items-center gap-1 shrink-0"
+                              >
+                                <PlayCircle className="w-3.5 h-3.5" />
+                                <span>مشاهدة</span>
+                              </Link>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -288,12 +302,12 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* TAB 2: CURRICULUM & LESSONS */}
+          {/* TAB 2: CURRICULUM & LESSONS (GROUPED BY BRANCH & UNIT) */}
           {selectedTab === 'curriculum' && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">مناهجي والدروس الدراسية</h2>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">مناهجي والدروس الدراسية مقسمة بالفروع</h2>
                   <p className="text-xs text-slate-500 dark:text-chalk-muted">استعرض وحدات المنهج وشاهد شرح الفيديو وملاحظات PDF لكل درس</p>
                 </div>
                 <span className="px-3.5 py-1.5 rounded-full bg-cyan-electric/10 text-cyan-electric text-xs font-bold border border-cyan-electric/30">
@@ -301,37 +315,47 @@ export default function StudentDashboard() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {lessons.map((les, index) => (
-                  <div key={les.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="w-12 h-12 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-center text-cyan-electric font-black text-lg">
-                        0{index + 1}
-                      </div>
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk/80">
-                        {les.durationMinutes} دقيقة فيديو
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{les.title}</h3>
-                    <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed">{les.description}</p>
-
-                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-chalk-muted">
-                        <FileText className="w-4 h-4 text-cyan-electric" />
-                        <span>يتضمن ملف PDF للتمارين</span>
-                      </div>
-                      <Link
-                        href={`/lessons/${les.id}`}
-                        className="px-5 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-1.5"
-                      >
-                        <PlayCircle className="w-4 h-4" />
-                        <span>فتح مشغل الدرس</span>
-                      </Link>
-                    </div>
+              {Object.entries(groupedLessons).map(([branchName, branchLessons]) => (
+                <div key={branchName} className="space-y-4">
+                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-cyan-electric/20 text-slate-900 dark:text-chalk text-base font-black w-fit">
+                    <Layers className="w-5 h-5 text-cyan-electric" />
+                    <span>{branchName}</span>
                   </div>
-                ))}
-              </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {branchLessons.map((les, index) => (
+                      <div key={les.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="w-10 h-10 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-center text-cyan-electric font-black text-sm">
+                            0{index + 1}
+                          </div>
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk/80">
+                            {les.durationMinutes} دقيقة فيديو
+                          </span>
+                        </div>
+
+                        <span className="text-xs font-bold text-cyan-electric block">{les.unitTitle}</span>
+                        <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{les.title}</h3>
+                        <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed">{les.description}</p>
+
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-chalk-muted">
+                            <FileText className="w-4 h-4 text-cyan-electric" />
+                            <span>يتضمن ملف PDF للتمارين</span>
+                          </div>
+                          <Link
+                            href={`/lessons/${les.id}`}
+                            className="px-5 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-1.5"
+                          >
+                            <PlayCircle className="w-4 h-4" />
+                            <span>فتح مشغل الدرس</span>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -340,7 +364,7 @@ export default function StudentDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">الاختبارات والتأهيلات المتاحة</h2>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">الاختبارات والتأهيلات مقسمة بالمواد</h2>
                   <p className="text-xs text-slate-500 dark:text-chalk-muted">اختبر فهمك للمواد بعد كل وحدة واحصل على درجات فورية</p>
                 </div>
               </div>
@@ -351,7 +375,7 @@ export default function StudentDashboard() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
-                          {quiz.duration}
+                          {quiz.branch}
                         </span>
                         {quiz.isCompleted && (
                           <span className="text-xs font-bold text-emerald-500 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30">
@@ -361,7 +385,7 @@ export default function StudentDashboard() {
                       </div>
 
                       <h3 className="text-lg font-extrabold text-slate-900 dark:text-chalk">{quiz.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-chalk-muted">{quiz.questionsCount} سؤال اختياري (MCQ) • التقييم فوري</p>
+                      <p className="text-xs text-slate-500 dark:text-chalk-muted">{quiz.questionsCount} سؤال اختياري (MCQ) • المدة: {quiz.duration}</p>
                     </div>
 
                     <button
@@ -390,6 +414,7 @@ export default function StudentDashboard() {
                 <table className="w-full text-right border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-chalk-muted">
+                      <th className="py-3 px-4">الفرع / المادة</th>
                       <th className="py-3 px-4">اسم الاختبار</th>
                       <th className="py-3 px-4">تاريخ الإنجاز</th>
                       <th className="py-3 px-4">الدرجة الحاصل عليها</th>
@@ -399,6 +424,7 @@ export default function StudentDashboard() {
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold text-slate-800 dark:text-chalk/90">
                     <tr>
+                      <td className="py-4 px-4 font-bold text-cyan-electric">فرع الجبر والإحصاء</td>
                       <td className="py-4 px-4 font-bold">اختبار الوحدة الأولى: الجبر والأعداد النسبية</td>
                       <td className="py-4 px-4">02 أغسطس 2026</td>
                       <td className="py-4 px-4 font-extrabold text-cyan-electric">28 / 30</td>
@@ -406,6 +432,7 @@ export default function StudentDashboard() {
                       <td className="py-4 px-4"><span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-500 font-bold">ممتاز</span></td>
                     </tr>
                     <tr>
+                      <td className="py-4 px-4 font-bold text-cyan-electric">فرع الهندسة والقياس</td>
                       <td className="py-4 px-4 font-bold">اختبار هندسة: الإنشاءات الهندسية والتناظر</td>
                       <td className="py-4 px-4">07 أغسطس 2026</td>
                       <td className="py-4 px-4 font-extrabold text-cyan-electric">38 / 40</td>
