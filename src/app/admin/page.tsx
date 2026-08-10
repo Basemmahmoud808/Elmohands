@@ -7,7 +7,6 @@ import { generateVoucherCodes, getAllVouchers, VoucherCode } from '@/lib/actions
 import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/lessons';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getAllRegisteredUsers } from '@/lib/actions/auth';
-import { LogoSearchInput } from '@/components/ui/LogoSearchInput';
 import {
   Users,
   Video,
@@ -358,20 +357,9 @@ export default function AdminDashboard() {
           {/* ==================================================== */}
           {selectedTab === 'students' && (
             <div className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-chalk">إدارة حسابات الطلاب المسجلين</h3>
-                  <p className="text-xs text-slate-500 dark:text-chalk-muted">البحث باسم الطالب أو المحافظة أو رقم ولي الأمر</p>
-                </div>
-                <div className="w-full sm:w-72">
-                  <LogoSearchInput
-                    value={searchStudent}
-                    onChange={(e) => setSearchStudent(e.target.value)}
-                    onClear={() => setSearchStudent('')}
-                    placeholder="بحث باسم الطالب أو رقم الهاتف..."
-                    size="sm"
-                  />
-                </div>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+                <h3 className="text-xl font-black text-slate-900 dark:text-chalk">إدارة حسابات الطلاب المسجلين</h3>
+                <p className="text-xs text-slate-500 dark:text-chalk-muted">قائمة جميع الطلاب المسجلين بالمنصة وبيانات تواصل أولياء الأمور</p>
               </div>
 
               <div className="overflow-x-auto">

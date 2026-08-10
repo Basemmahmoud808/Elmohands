@@ -7,7 +7,6 @@ import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 import { redeemVoucherCode } from '@/lib/actions/vouchers';
 import { getLessonsList, LessonItem } from '@/lib/actions/lessons';
-import { LogoSearchInput } from '@/components/ui/LogoSearchInput';
 import {
   PlayCircle,
   KeyRound,
@@ -92,7 +91,6 @@ export default function StudentDashboard() {
   const [user, setUser] = useState<UserSession | null>(null);
   const [lessons, setLessons] = useState<LessonItem[]>(DEFAULT_LESSONS);
   const [branchFilter, setBranchFilter] = useState('all');
-  const [lessonSearch, setLessonSearch] = useState('');
 
   const [voucherInput, setVoucherInput] = useState('');
   const [voucherStatus, setVoucherStatus] = useState<{ success?: boolean; message?: string } | null>(null);
@@ -144,18 +142,11 @@ export default function StudentDashboard() {
 
   const filteredLessons = React.useMemo(() => {
     return activeLessons.filter((les) => {
-      const matchesBranch =
-        branchFilter === 'all' ||
-        (branchFilter === 'algebra' && les.branchName.includes('جبر')) ||
-        (branchFilter === 'geometry' && les.branchName.includes('هندسة'));
-      const matchesSearch =
-        !lessonSearch ||
-        les.title.includes(lessonSearch) ||
-        les.description.includes(lessonSearch) ||
-        les.unitTitle.includes(lessonSearch);
-      return matchesBranch && matchesSearch;
+      if (branchFilter === 'algebra') return les.branchName.includes('جبر');
+      if (branchFilter === 'geometry') return les.branchName.includes('هندسة');
+      return true;
     });
-  }, [activeLessons, branchFilter, lessonSearch]);
+  }, [activeLessons, branchFilter]);
 
   const groupedLessons = React.useMemo(() => {
     return filteredLessons.reduce((acc, les) => {
@@ -347,44 +338,32 @@ export default function StudentDashboard() {
                   <p className="text-xs text-slate-500 dark:text-chalk-muted">استعرض وحدات المنهج وشاهد شرح الفيديو وملاحظات PDF لكل درس</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="w-full sm:w-64">
-                    <LogoSearchInput
-                      value={lessonSearch}
-                      onChange={(e) => setLessonSearch(e.target.value)}
-                      onClear={() => setLessonSearch('')}
-                      placeholder="بحث في الدروس..."
-                      size="sm"
-                    />
-                  </div>
-
-                  {/* Filter Pills */}
-                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <button
-                      onClick={() => setBranchFilter('all')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        branchFilter === 'all' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-700 dark:text-chalk/80'
-                      }`}
-                    >
-                      جميع الفروع
-                    </button>
-                    <button
-                      onClick={() => setBranchFilter('algebra')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        branchFilter === 'algebra' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-700 dark:text-chalk/80'
-                      }`}
-                    >
-                      الجبر والإحصاء
-                    </button>
-                    <button
-                      onClick={() => setBranchFilter('geometry')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        branchFilter === 'geometry' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-700 dark:text-chalk/80'
-                      }`}
-                    >
-                      الهندسة والقياس
-                    </button>
-                  </div>
+                {/* Filter Pills */}
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <button
+                    onClick={() => setBranchFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      branchFilter === 'all' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-700 dark:text-chalk/80'
+                    }`}
+                  >
+                    جميع الفروع
+                  </button>
+                  <button
+                    onClick={() => setBranchFilter('algebra')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      branchFilter === 'algebra' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-700 dark:text-chalk/80'
+                    }`}
+                  >
+                    الجبر والإحصاء
+                  </button>
+                  <button
+                    onClick={() => setBranchFilter('geometry')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      branchFilter === 'geometry' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-700 dark:text-chalk/80'
+                    }`}
+                  >
+                    الهندسة والقياس
+                  </button>
                 </div>
               </div>
 

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/utils';
+import { logoutUser } from '@/lib/actions/auth';
 
 export type RoleMode = 'ADMIN' | 'STUDENT';
 
@@ -152,13 +153,17 @@ export function DashboardSidebar({
         <div className="flex items-center justify-between">
           <ThemeToggle />
           {open && (
-            <Link
-              href="/"
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+            <button
+              onClick={async () => {
+                await logoutUser();
+                window.location.href = '/';
+              }}
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
               title="تسجيل الخروج"
             >
-              <LogOut className="w-5 h-5" />
-            </Link>
+              <LogOut className="w-5 h-5 text-red-500" />
+              <span>خروج</span>
+            </button>
           )}
         </div>
 
