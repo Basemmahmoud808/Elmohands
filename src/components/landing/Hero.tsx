@@ -1,9 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PlayCircle, Award, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowLeft, PlayCircle, CheckCircle2, LayoutDashboard } from 'lucide-react';
+import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 
 export default function Hero() {
+  const [user, setUser] = useState<UserSession | null>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const sessionUser = await getCurrentUser();
+      setUser(sessionUser);
+    }
+    loadUser();
+  }, []);
+
   return (
     <section className="relative min-h-[85vh] flex items-center justify-center py-10 lg:py-16 overflow-hidden">
       
@@ -89,13 +101,23 @@ export default function Hero() {
 
             {/* Main Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <Link
-                href="/sign-up"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
-              >
-                <span>ابدأ الآن مجاناً</span>
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
+              {user ? (
+                <Link
+                  href={user.role === 'ADMIN' ? '/admin' : '/student'}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>الذهاب للوحة التحكم ومتابعة الدروس</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/sign-up"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                >
+                  <span>ابدأ الآن مجاناً</span>
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+              )}
 
               <Link
                 href="#stages"

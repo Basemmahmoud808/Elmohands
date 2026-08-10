@@ -1,14 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, GraduationCap, LogIn, User } from 'lucide-react';
+import { Menu, X, GraduationCap, LogIn, User, LayoutDashboard, UserCheck } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { SlideTabs } from '@/components/ui/slide-tabs';
+import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeNav, setActiveNav] = useState('home');
+  const [user, setUser] = useState<UserSession | null>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const sessionUser = await getCurrentUser();
+      setUser(sessionUser);
+    }
+    loadUser();
+  }, []);
 
   const handleNavChange = (id: string) => {
     setActiveNav(id);
@@ -59,20 +69,39 @@ export default function Navbar() {
           {/* Auth Actions & ThemeToggle */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Link
-              href="/sign-in"
-              className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-900/80 border border-slate-300 dark:border-slate-700/60 transition-all flex items-center gap-2"
-            >
-              <LogIn className="w-4 h-4 text-cyan-electric" />
-              تسجيل الدخول
-            </Link>
-            <Link
-              href="/sign-up"
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
-            >
-              <User className="w-4 h-4" />
-              إنشاء حساب
-            </Link>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-700 dark:text-chalk px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-cyan-electric" />
+                  <span>{user.role === 'ADMIN' ? 'م/ رضا خيرت (أدمن)' : user.fullName}</span>
+                </span>
+                <Link
+                  href={user.role === 'ADMIN' ? '/admin' : '/student'}
+                  className="px-5 py-2.5 rounded-xl text-sm font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>لوحة التحكم</span>
+                </Link>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-900/80 border border-slate-300 dark:border-slate-700/60 transition-all flex items-center gap-2"
+                >
+                  <LogIn className="w-4 h-4 text-cyan-electric" />
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  إنشاء حساب
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Actions */}
@@ -116,20 +145,32 @@ export default function Navbar() {
             </Link>
           </nav>
           <div className="pt-2 border-t border-slate-800 flex flex-col gap-2.5">
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full py-2.5 text-center rounded-xl text-sm font-bold text-chalk border border-slate-700"
-            >
-              تسجيل الدخول
-            </Link>
-            <Link
-              href="/sign-up"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full py-2.5 text-center rounded-xl text-sm font-bold text-black bg-cyan-electric shadow-cyan-glow"
-            >
-              إنشاء حساب جديد
-            </Link>
+            {user ? (
+              <Link
+                href={user.role === 'ADMIN' ? '/admin' : '/student'}
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2.5 text-center rounded-xl text-sm font-black text-black bg-cyan-electric shadow-cyan-glow"
+              >
+                الذهاب للوحة التحكم ({user.role === 'ADMIN' ? 'أدمن' : user.fullName})
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 text-center rounded-xl text-sm font-bold text-chalk border border-slate-700"
+                >
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  href="/sign-up"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 text-center rounded-xl text-sm font-bold text-black bg-cyan-electric shadow-cyan-glow"
+                >
+                  إنشاء حساب جديد
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
