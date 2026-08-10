@@ -40,7 +40,7 @@ export const SlideTabs: React.FC<SlideTabsProps> = ({ tabs, activeId, onChange }
         opacity: 1,
       });
     }
-  }, [selected]);
+  }, [selected, tabs]);
 
   return (
     <ul
@@ -55,7 +55,7 @@ export const SlideTabs: React.FC<SlideTabsProps> = ({ tabs, activeId, onChange }
           });
         }
       }}
-      className="relative mx-auto flex w-fit rounded-full border border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-1.5 backdrop-blur-md shadow-sm"
+      className="relative mx-auto flex w-fit rounded-full border border-slate-300 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 p-1.5 backdrop-blur-md shadow-sm"
     >
       {tabs.map((tab, i) => (
         <Tab
@@ -92,20 +92,21 @@ const Tab = React.forwardRef<
     <li
       ref={ref}
       onClick={onClick}
-      onMouseEnter={() => {
-        if (typeof ref === 'object' && ref?.current) {
-          const { width } = ref.current.getBoundingClientRect();
+      onMouseEnter={(e) => {
+        const target = e.currentTarget;
+        if (target) {
+          const { width } = target.getBoundingClientRect();
           setPosition({
-            left: ref.current.offsetLeft,
+            left: target.offsetLeft,
             width,
             opacity: 1,
           });
         }
       }}
-      className={`relative z-10 block cursor-pointer px-4 py-2 text-xs md:text-sm font-extrabold transition-colors duration-200 ${
+      className={`relative z-10 block cursor-pointer px-4 py-2 text-xs md:text-sm font-extrabold transition-colors duration-200 select-none ${
         isSelected
           ? 'text-black dark:text-black font-black'
-          : 'text-slate-700 dark:text-chalk/80 hover:text-slate-900 dark:hover:text-chalk'
+          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
       }`}
     >
       {children}
@@ -121,7 +122,7 @@ const Cursor = ({ position }: { position: { left: number; width: number; opacity
       animate={{
         ...position,
       }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
       className="absolute z-0 h-8 rounded-full bg-cyan-electric shadow-cyan-glow md:h-9"
     />
   );

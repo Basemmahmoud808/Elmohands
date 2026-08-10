@@ -76,7 +76,7 @@ export default function Stages() {
           </h2>
           
           <p className="text-slate-600 dark:text-chalk-muted text-base sm:text-lg">
-            مناهج منسقة بعناية طبقاً للتحديثات الوزارية الأخيرة، مقسمة لـ (أترم - فروع - وحدات - دروس - اختبارات).
+            مناهج منسقة بعناية طبقاً للتحديثات الوزارية الأخيرة، مقسمة لـ (ترم - فروع - وحدات - دروس - اختبارات).
           </p>
 
           {/* Framer Motion Sliding Tabs */}
