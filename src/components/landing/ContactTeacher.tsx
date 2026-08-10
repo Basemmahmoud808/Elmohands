@@ -40,7 +40,15 @@ export default function ContactTeacher() {
               <div>
                 <span className="text-xs font-bold text-cyan-electric block">رقم الاتصال والواتساب</span>
                 <h3 className="text-2xl font-black text-slate-900 dark:text-chalk tracking-wider pt-1" dir="ltr">
-                  01008901896
+                  <a
+                    href="https://wa.me/201008901896"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-cyan-electric transition-colors underline decoration-cyan-electric/40 decoration-2 underline-offset-4"
+                    title="فتح واتساب م/ رضا خيرت مباشرة"
+                  >
+                    01008901896
+                  </a>
                 </h3>
               </div>
               <p className="text-xs text-slate-500 dark:text-chalk-muted font-medium">
