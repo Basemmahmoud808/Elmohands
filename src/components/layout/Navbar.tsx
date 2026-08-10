@@ -63,7 +63,6 @@ export default function Navbar() {
                 { id: 'home', label: 'الرئيسية' },
                 { id: 'stages', label: 'المراحل الدراسية' },
                 { id: 'features', label: 'المميزات' },
-                { id: 'contact', label: 'تواصل معنا' },
               ]}
               activeId={activeNav}
               onChange={handleNavChange}
@@ -154,13 +153,6 @@ export default function Navbar() {
               className="px-3 py-2 rounded-lg hover:bg-slate-900"
             >
               المميزات
-            </Link>
-            <Link
-              href="#contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg hover:bg-slate-900"
-            >
-              تواصل معنا
             </Link>
           </nav>
           <div className="pt-2 border-t border-slate-800 flex flex-col gap-2.5">
