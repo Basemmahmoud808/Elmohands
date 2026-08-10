@@ -18,6 +18,9 @@ const VOUCHER_STORE: VoucherCode[] = [
   { id: 'v-3', code: 'ALM-YR-9Z7W1M', planName: 'اشتراك سنة', durationDays: 365, status: 'UNUSED', createdAt: new Date().toISOString() },
 ];
 
+// In-Memory Failed Attempts Rate Limiter Tracker
+const FAILED_ATTEMPTS: Record<string, { count: number; lockUntil: number }> = {};
+
 export async function generateVoucherCodes(
   planType: '1month' | 'term' | 'year',
   count: number = 5
@@ -55,13 +58,51 @@ export async function redeemVoucherCode(
     const user = await getCurrentUser();
     if (!user) return { success: false, message: 'يرجى تسجيل الدخول أولاً لتفعيل كود الشحن.' };
 
+    const userKey = user.phone;
+    const now = Date.now();
+
+    // Check Rate Limit Lock
+    if (FAILED_ATTEMPTS[userKey]) {
+      if (now < FAILED_ATTEMPTS[userKey].lockUntil) {
+        const remainingMinutes = Math.ceil((FAILED_ATTEMPTS[userKey].lockUntil - now) / 60000);
+        return {
+          success: false,
+          message: `عفواً، تم إيقاف محاولات الشحن مؤقتاً على حسابك لمدة ${remainingMinutes} دقيقة لحظر التخمين التلقائي.`,
+        };
+      } else {
+        // Lock expired, reset tracker
+        delete FAILED_ATTEMPTS[userKey];
+      }
+    }
+
     const cleanCode = inputCode.trim().toUpperCase();
     const voucher = VOUCHER_STORE.find((v) => v.code === cleanCode);
 
-    if (!voucher) return { success: false, message: 'كود الشحن غير صحيح. يرجى التأكد من كتابته بشكل صحيح.' };
-    if (voucher.status === 'USED') return { success: false, message: 'عفواً، تم استخدام كود الشحن هذا من قبل.' };
-    if (voucher.status === 'DISABLED') return { success: false, message: 'عفواً، هذا الكود ملغى وغير متاح للتفعيل.' };
+    if (!voucher || voucher.status !== 'UNUSED') {
+      // Record Failed Attempt
+      if (!FAILED_ATTEMPTS[userKey]) {
+        FAILED_ATTEMPTS[userKey] = { count: 1, lockUntil: 0 };
+      } else {
+        FAILED_ATTEMPTS[userKey].count += 1;
+      }
 
+      if (FAILED_ATTEMPTS[userKey].count >= 5) {
+        FAILED_ATTEMPTS[userKey].lockUntil = now + 15 * 60 * 1000; // 15 Minutes Lock
+        return {
+          success: false,
+          message: 'تنبيه أمان: تم حظر محاولات الشحن لمدة 15 دقيقة بسبب تكرار إدخال أكواد خاطئة 🛡️',
+        };
+      }
+
+      const attemptsLeft = 5 - FAILED_ATTEMPTS[userKey].count;
+      return {
+        success: false,
+        message: `كود الشحن غير صحيح. المتبقي لديك ${attemptsLeft} محاولات قبل القفل المؤقت.`,
+      };
+    }
+
+    // Success: Reset Failed Attempts Tracker
+    delete FAILED_ATTEMPTS[userKey];
     voucher.status = 'USED';
 
     return {
