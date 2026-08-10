@@ -12,6 +12,7 @@ export interface UserSession {
   parentPhone?: string;
   governorate?: string;
   email?: string;
+  password?: string;
   role: 'ADMIN' | 'STUDENT';
   gradeName?: string;
   activeSessionId?: string;
@@ -32,16 +33,18 @@ const INITIAL_USERS: Record<string, UserSession> = {
     fullName: 'م/ رضا خيرت',
     phone: '01008901896',
     email: 'Khyratreda@gmail.com',
+    password: 'Reda@Kheyrat#2026!',
     governorate: 'الدقهلية - منية النصر - النزل',
     role: 'ADMIN',
     activeSessionId: 'sess_admin_fixed',
     createdAt: new Date().toISOString(),
   },
-  '01000000000': {
-    id: 'adm_01000000000',
+  'admin_almohands': {
+    id: 'adm_01008901896',
     fullName: 'م/ رضا خيرت',
-    phone: '01000000000',
+    phone: '01008901896',
     email: 'Khyratreda@gmail.com',
+    password: 'Reda@Kheyrat#2026!',
     governorate: 'الدقهلية - منية النصر - النزل',
     role: 'ADMIN',
     activeSessionId: 'sess_admin_fixed',
@@ -57,38 +60,60 @@ function saveUsersDb(users: Record<string, UserSession>): void {
   writeJSON('users.json', users);
 }
 
-export async function loginUser(phone: string): Promise<{ success: boolean; user?: UserSession; message?: string }> {
+// Reset/Wipe all registered users and reset database with Admin only
+export async function wipeAllUsersAndResetAdmin(): Promise<void> {
+  saveUsersDb(INITIAL_USERS);
+}
+
+export async function loginUser(
+  phoneOrUsername: string,
+  passwordInput?: string
+): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    const cleanPhone = sanitizeInput(phone.trim());
-    if (!cleanPhone) return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
+    const cleanIdentifier = sanitizeInput(phoneOrUsername.trim());
+    if (!cleanIdentifier) return { success: false, message: 'يرجى كتابة رقم الهاتف أو اسم المستخدم بشكل صحيح.' };
 
     const usersDb = getUsersDb();
-    const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === '01000000000';
+    const cleanPassword = passwordInput ? sanitizeInput(passwordInput) : '';
+
+    const isDedicatedAdmin = cleanIdentifier === '01008901896' || cleanIdentifier === 'admin_almohands' || cleanIdentifier === '01000000000';
     const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-    let user: UserSession;
-    if (usersDb[cleanPhone]) {
+    let user: UserSession | undefined = usersDb[cleanIdentifier];
+
+    // Password Check for Admin or Registered User with Password
+    if (isDedicatedAdmin) {
+      if (cleanPassword !== 'Reda@Kheyrat#2026!') {
+        return { success: false, message: 'كلمة المرور الخاصة بحساب الأدمن غير صحيحة.' };
+      }
+      user = INITIAL_USERS['01008901896'];
+      user.activeSessionId = newSessionId;
+    } else if (user && user.password) {
+      if (user.password !== cleanPassword) {
+        return { success: false, message: 'كلمة المرور غير صحيحة. يرجى التأكد من البيانات.' };
+      }
+      user.activeSessionId = newSessionId;
+    } else if (!user) {
+      // Auto-create student session if first time phone login
       user = {
-        ...usersDb[cleanPhone],
-        activeSessionId: newSessionId,
-      };
-    } else {
-      user = {
-        id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        fullName: isDedicatedAdmin ? 'م/ رضا خيرت' : `طالب (${cleanPhone.slice(-4)})`,
-        phone: cleanPhone,
-        role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
+        id: `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        fullName: `طالب (${cleanIdentifier.slice(-4)})`,
+        phone: cleanIdentifier,
+        password: cleanPassword,
+        role: 'STUDENT',
         gradeName: 'الصف الأول الإعدادي',
         activeSessionId: newSessionId,
         createdAt: new Date().toISOString(),
       };
+    } else {
+      user.activeSessionId = newSessionId;
     }
 
-    usersDb[cleanPhone] = user;
+    usersDb[cleanIdentifier] = user;
     saveUsersDb(usersDb);
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
-      const { data } = await supabase.from('profiles').select('*').eq('phone', cleanPhone).single();
+      const { data } = await supabase.from('profiles').select('*').eq('phone', cleanIdentifier).single();
       if (data) {
         user.id = data.id;
         user.fullName = data.full_name;
@@ -108,22 +133,24 @@ export async function registerUser(data: {
   phone: string;
   parentPhone: string;
   governorate: string;
+  password?: string;
   gradeId?: string;
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = sanitizeInput(data.phone.trim());
     if (!cleanPhone) return { success: false, message: 'يرجى إدخال رقم الهاتف بشكل صحيح' };
 
-    const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === '01000000000';
+    const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
     const usersDb = getUsersDb();
     const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const newUser: UserSession = {
-      id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      id: isDedicatedAdmin ? 'adm_01008901896' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       fullName: sanitizeInput(data.fullName),
       phone: cleanPhone,
       parentPhone: sanitizeInput(data.parentPhone),
       governorate: sanitizeInput(data.governorate),
+      password: data.password ? sanitizeInput(data.password) : undefined,
       role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
       gradeName: sanitizeInput(data.gradeId || 'الصف الأول الإعدادي'),
       activeSessionId: newSessionId,
@@ -169,7 +196,7 @@ export async function getCurrentUser(): Promise<UserSession | null> {
 
 export async function getAllRegisteredUsers(): Promise<UserSession[]> {
   const usersDb = getUsersDb();
-  return Object.values(usersDb);
+  return Object.values(usersDb).filter((u) => u.role === 'STUDENT');
 }
 
 export async function checkActiveSessionStatus(): Promise<{ valid: boolean; reason?: string }> {

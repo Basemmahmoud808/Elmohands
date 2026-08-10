@@ -1,18 +1,24 @@
 {
-  "01000000000": {
-    "id": "adm_01000000000",
+  "01008901896": {
+    "id": "adm_01008901896",
     "fullName": "م/ رضا خيرت",
-    "phone": "01000000000",
-    "email": "reda.kheyrat@almohands.com",
+    "phone": "01008901896",
+    "email": "Khyratreda@gmail.com",
+    "password": "Reda@Kheyrat#2026!",
+    "governorate": "الدقهلية - منية النصر - النزل",
     "role": "ADMIN",
-    "createdAt": "2026-08-10T02:56:58.679Z"
+    "activeSessionId": "sess_admin_fixed",
+    "createdAt": "2026-08-10T18:56:00.000Z"
   },
-  "student@gmail.com": {
-    "id": "std_1786330683698_fteaz",
-    "fullName": "طالب (.com)",
-    "phone": "student@gmail.com",
-    "role": "STUDENT",
-    "gradeName": "الصف الأول الإعدادي",
-    "createdAt": "2026-08-10T02:58:03.698Z"
+  "admin_almohands": {
+    "id": "adm_01008901896",
+    "fullName": "م/ رضا خيرت",
+    "phone": "01008901896",
+    "email": "Khyratreda@gmail.com",
+    "password": "Reda@Kheyrat#2026!",
+    "governorate": "الدقهلية - منية النصر - النزل",
+    "role": "ADMIN",
+    "activeSessionId": "sess_admin_fixed",
+    "createdAt": "2026-08-10T18:56:00.000Z"
   }
 }

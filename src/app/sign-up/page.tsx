@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { registerUser } from '@/lib/actions/auth';
-import { GraduationCap, Phone, User, BookOpen, MapPin, Users, ArrowLeft, AlertCircle } from 'lucide-react';
+import { GraduationCap, Phone, User, BookOpen, MapPin, Users, ArrowLeft, AlertCircle, Lock } from 'lucide-react';
 
 const GRADES = [
   'الصف الأول الإعدادي',
@@ -49,6 +49,7 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [parentPhone, setParentPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [governorate, setGovernorate] = useState(GOVERNORATES[0]);
   const [gradeId, setGradeId] = useState(GRADES[0]);
   const [loading, setLoading] = useState(false);
@@ -56,8 +57,8 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !phone.trim() || !parentPhone.trim()) {
-      setErrorMsg('يرجى إدخال اسم الطالب، رقم هاتف الطالب ورقم هاتف ولي الأمر بشكل صحيح');
+    if (!fullName.trim() || !phone.trim() || !parentPhone.trim() || !password.trim()) {
+      setErrorMsg('يرجى إدخال كافة البيانات وكلمة المرور بشكل صحيح');
       return;
     }
 
@@ -69,6 +70,7 @@ export default function SignUpPage() {
       phone,
       parentPhone,
       governorate,
+      password,
       gradeId,
     });
 
@@ -159,6 +161,21 @@ export default function SignUpPage() {
                   dir="ltr"
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-cyan-electric" />
+                كلمة المرور
+              </label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk outline-none focus:border-cyan-electric transition-colors"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

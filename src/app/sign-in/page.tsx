@@ -24,7 +24,7 @@ export default function SignInPage() {
     setLoading(true);
     setErrorMsg('');
 
-    const res = await loginUser(phone);
+    const res = await loginUser(phone, password);
     setLoading(false);
 
     if (res.success && res.user) {
@@ -56,7 +56,7 @@ export default function SignInPage() {
               تسجيل الدخول لمنصة المهندس
             </h1>
             <p className="text-xs text-slate-500 dark:text-chalk-muted font-medium">
-              ادخل رقم الهاتف المسجل للمتابعة والدراسة مع م/ رضا خيرت
+              ادخل رقم الهاتف أو اسم المستخدم وكلمة المرور للمتابعة والدراسة مع م/ رضا خيرت
             </p>
           </div>
 
@@ -72,12 +72,12 @@ export default function SignInPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-cyan-electric" />
-                رقم الهاتف المحمول
+                رقم الهاتف المحمول أو اسم المستخدم
               </label>
               <input
-                type="tel"
+                type="text"
                 required
-                placeholder="01008901896"
+                placeholder="01008901896 أو admin_almohands"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-left outline-none focus:border-cyan-electric transition-colors"
