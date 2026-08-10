@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PlayCircle, CheckCircle2, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, PlayCircle, CheckCircle2, LayoutDashboard, BookOpen } from 'lucide-react';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 
 export default function Hero() {
@@ -30,8 +30,77 @@ export default function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           
-          {/* Left Column: Teacher Portrait Card (Appears on right in RTL) */}
-          <div className="lg:col-span-5 flex justify-center order-2 lg:order-1">
+          {/* Right Column: Hero Text & Main CTAs (Appears on right in RTL) */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-right order-1 lg:order-1">
+            
+            {/* Main Title */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-chalk leading-[1.25] tracking-tight">
+              و فهم <span className="text-cyan-electric">الرياضيات بأسلوب</span>
+              <br />
+              بسيط وممتع
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xl sm:text-2xl font-black text-slate-800 dark:text-chalk flex items-center justify-center lg:justify-start gap-3">
+              <span className="w-8 h-1 bg-cyan-electric rounded-full inline-block"></span>
+              <span>مع م/ رضا خيرت</span>
+            </p>
+
+            <p className="text-sm sm:text-base text-slate-600 dark:text-chalk-muted font-bold max-w-xl leading-relaxed">
+              شرح مبسط، تطبيق عملي، بنك أسئلة وافي لكل فكرة، واختبارات تفاعلية بعد كل درس لتضمن التفوق والدرجة النهائية بسهولة.
+            </p>
+
+            {/* Main Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+              {user ? (
+                <Link
+                  href={user.role === 'ADMIN' ? '/admin' : '/student'}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>دخول كورسات {user.gradeName || 'صفك الدراسي'} ➔</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/sign-up"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                >
+                  <span>ابدأ الآن مجاناً</span>
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+              )}
+
+              <Link
+                href="#stages"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-bold text-slate-800 dark:text-chalk bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <PlayCircle className="w-5 h-5 text-cyan-electric" />
+                <span>استكشف المنهج والمراحل</span>
+              </Link>
+            </div>
+
+            {/* 3 Stats Highlights */}
+            <div className="pt-6 grid grid-cols-3 gap-4 text-center">
+              <div className="chalk-card p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800">
+                <div className="text-xl sm:text-2xl font-black text-cyan-electric">100%</div>
+                <div className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-chalk-muted mt-1">تغطية شاملة للمنهج</div>
+              </div>
+
+              <div className="chalk-card p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800">
+                <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">MCQ</div>
+                <div className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-chalk-muted mt-1">اختبارات بعد كل درس</div>
+              </div>
+
+              <div className="chalk-card p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800">
+                <div className="text-xl sm:text-2xl font-black text-cyan-electric">مباشر</div>
+                <div className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-chalk-muted mt-1">أكواد شحن فورية</div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Left Column: Teacher Portrait Card (Appears on left in RTL) */}
+          <div className="lg:col-span-5 flex justify-center order-2 lg:order-2">
             <div className="relative w-full max-w-sm text-center space-y-5">
               
               {/* Outer Cyan Glow Effect */}
@@ -77,75 +146,6 @@ export default function Hero() {
               </div>
 
             </div>
-          </div>
-
-          {/* Right Column: Hero Text & Main CTAs */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-right order-1 lg:order-2">
-            
-            {/* Main Title */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-chalk leading-[1.25] tracking-tight">
-              و فهم <span className="text-cyan-electric">الرياضيات بأسلوب</span>
-              <br />
-              بسيط وممتع
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-xl sm:text-2xl font-black text-slate-800 dark:text-chalk flex items-center justify-center lg:justify-start gap-3">
-              <span className="w-8 h-1 bg-cyan-electric rounded-full inline-block"></span>
-              <span>مع م/ رضا خيرت</span>
-            </p>
-
-            <p className="text-sm sm:text-base text-slate-600 dark:text-chalk-muted font-bold max-w-xl leading-relaxed">
-              شرح مبسط، تطبيق عملي، بنك أسئلة وافي لكل فكرة، واختبارات تفاعلية بعد كل درس لتضمن التفوق والدرجة النهائية بسهولة.
-            </p>
-
-            {/* Main Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              {user ? (
-                <Link
-                  href={user.role === 'ADMIN' ? '/admin' : '/student'}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
-                >
-                  <LayoutDashboard className="w-5 h-5" />
-                  <span>الذهاب للوحة التحكم ومتابعة الدروس</span>
-                </Link>
-              ) : (
-                <Link
-                  href="/sign-up"
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
-                >
-                  <span>ابدأ الآن مجاناً</span>
-                  <ArrowLeft className="w-5 h-5" />
-                </Link>
-              )}
-
-              <Link
-                href="#stages"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-bold text-slate-800 dark:text-chalk bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-sm"
-              >
-                <PlayCircle className="w-5 h-5 text-cyan-electric" />
-                <span>استكشف المنهج والمراحل</span>
-              </Link>
-            </div>
-
-            {/* 3 Stats Highlights */}
-            <div className="pt-6 grid grid-cols-3 gap-4 text-center">
-              <div className="chalk-card p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800">
-                <div className="text-xl sm:text-2xl font-black text-cyan-electric">100%</div>
-                <div className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-chalk-muted mt-1">تغطية شاملة للمنهج</div>
-              </div>
-
-              <div className="chalk-card p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800">
-                <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">MCQ</div>
-                <div className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-chalk-muted mt-1">اختبارات بعد كل درس</div>
-              </div>
-
-              <div className="chalk-card p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800">
-                <div className="text-xl sm:text-2xl font-black text-cyan-electric">مباشر</div>
-                <div className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-chalk-muted mt-1">أكواد شحن فورية</div>
-              </div>
-            </div>
-
           </div>
 
         </div>
