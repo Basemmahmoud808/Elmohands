@@ -12,27 +12,33 @@ export interface UserSession {
   email?: string;
   role: 'ADMIN' | 'STUDENT';
   gradeName?: string;
+  createdAt: string;
 }
 
 const DEMO_USERS: Record<string, UserSession> = {
   '01000000000': {
-    id: 'admin-1',
+    id: 'adm_01000000000',
     fullName: 'م/ رضا خيرت',
     phone: '01000000000',
     email: 'reda.kheyrat@almohands.com',
     role: 'ADMIN',
+    createdAt: new Date().toISOString(),
   },
 };
 
 export async function loginUser(phone: string): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = phone.trim();
-    const user: UserSession = DEMO_USERS[cleanPhone] ?? {
-      id: `user-${Date.now()}`,
+    if (!cleanPhone) return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
+
+    const isDedicatedAdmin = cleanPhone === '01000000000';
+    let user: UserSession = DEMO_USERS[cleanPhone] ?? {
+      id: `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       fullName: `طالب (${cleanPhone.slice(-4)})`,
       phone: cleanPhone,
-      role: 'STUDENT',
+      role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
       gradeName: 'الصف الأول الإعدادي',
+      createdAt: new Date().toISOString(),
     };
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
@@ -60,18 +66,20 @@ export async function registerUser(data: {
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = data.phone.trim();
+    const isDedicatedAdmin = cleanPhone === '01000000000';
     const newUser: UserSession = {
-      id: `user-${Date.now()}`,
+      id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       fullName: data.fullName.trim(),
       phone: cleanPhone,
       parentPhone: data.parentPhone.trim(),
       governorate: data.governorate,
-      role: 'STUDENT',
+      role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
       gradeName: data.gradeId || 'الصف الأول الإعدادي',
+      createdAt: new Date().toISOString(),
     };
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
-      await supabase.from('profiles').insert([{ full_name: newUser.fullName, phone: newUser.phone, parent_phone: newUser.parentPhone, governorate: newUser.governorate, role: newUser.role }]);
+      await supabase.from('profiles').insert([{ id: newUser.id, full_name: newUser.fullName, phone: newUser.phone, parent_phone: newUser.parentPhone, governorate: newUser.governorate, role: newUser.role }]);
     }
 
     DEMO_USERS[cleanPhone] = newUser;

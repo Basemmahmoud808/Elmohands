@@ -5,20 +5,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
-import { getLessonById, LessonItem } from '@/lib/actions/lessons';
+import { getLessonById, parseMediaUrl, LessonItem } from '@/lib/actions/lessons';
 import {
   Play,
   Pause,
   RotateCcw,
   RotateCw,
   Maximize,
-  Volume2,
-  VolumeX,
   FileText,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2,
-  Lock,
 } from 'lucide-react';
 
 export default function LessonPlayerPage({ params }: { params: { id: string } }) {
@@ -27,9 +23,8 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
   
   const [user, setUser] = useState<UserSession | null>(null);
   const [lesson, setLesson] = useState<LessonItem | null>(null);
+  const [parsedMedia, setParsedMedia] = useState<{ type: 'video' | 'iframe'; src: string }>({ type: 'video', src: '' });
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [progress, setProgress] = useState(0);
   
@@ -47,6 +42,10 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
 
       const loadedLesson = await getLessonById(params.id);
       setLesson(loadedLesson);
+      if (loadedLesson) {
+        const mediaInfo = await parseMediaUrl(loadedLesson.videoPath || '');
+        setParsedMedia(mediaInfo);
+      }
     }
     loadData();
   }, [params.id, router]);
@@ -161,60 +160,70 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
               <span>{user.fullName}</span> • <span>{user.phone}</span>
             </div>
 
-            {/* Video Element */}
-            <video
-              ref={videoRef}
-              src={lesson.videoPath}
-              poster={lesson.thumbnailPath}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={() => setIsPlaying(false)}
-              className="w-full aspect-video object-contain bg-black cursor-pointer"
-              onClick={togglePlay}
-            />
+            {/* Video Element or Google Drive / YouTube Iframe */}
+            {parsedMedia.type === 'iframe' ? (
+              <iframe
+                src={parsedMedia.src}
+                className="w-full aspect-video border-0 bg-black"
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                title={lesson.title}
+              />
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  src={parsedMedia.src}
+                  poster={lesson.thumbnailPath}
+                  onTimeUpdate={handleTimeUpdate}
+                  onEnded={() => setIsPlaying(false)}
+                  className="w-full aspect-video object-contain bg-black cursor-pointer"
+                  onClick={togglePlay}
+                />
 
-            {/* Video Controls Bar */}
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 z-20 space-y-3 opacity-90 group-hover:opacity-100 transition-opacity">
-              
-              {/* Progress Line */}
-              <div className="w-full bg-white/20 rounded-full h-1.5 cursor-pointer overflow-hidden">
-                <div className="bg-cyan-electric h-1.5 rounded-full shadow-cyan-glow transition-all" style={{ width: `${progress}%` }} />
-              </div>
+                {/* Video Controls Bar */}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 z-20 space-y-3 opacity-90 group-hover:opacity-100 transition-opacity">
+                  <div className="w-full bg-white/20 rounded-full h-1.5 cursor-pointer overflow-hidden">
+                    <div className="bg-cyan-electric h-1.5 rounded-full shadow-cyan-glow transition-all" style={{ width: `${progress}%` }} />
+                  </div>
 
-              <div className="flex items-center justify-between text-white text-xs font-bold">
-                <div className="flex items-center gap-3">
-                  <button onClick={togglePlay} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-cyan-electric">
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                  </button>
-
-                  <button onClick={() => handleSeek(-10)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="إرجاع 10 ثوانٍ">
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleSeek(10)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="تقديم 10 ثوانٍ">
-                    <RotateCw className="w-4 h-4" />
-                  </button>
-
-                  <div className="flex items-center gap-1.5">
-                    {[0.75, 1, 1.25, 1.5, 2].map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => handleSpeedChange(s)}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          playbackSpeed === s ? 'bg-cyan-electric text-black' : 'bg-white/10 text-white/80 hover:bg-white/20'
-                        }`}
-                      >
-                        {s}x
+                  <div className="flex items-center justify-between text-white text-xs font-bold">
+                    <div className="flex items-center gap-3">
+                      <button onClick={togglePlay} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-cyan-electric">
+                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                       </button>
-                    ))}
+
+                      <button onClick={() => handleSeek(-10)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="إرجاع 10 ثوانٍ">
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleSeek(10)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="تقديم 10 ثوانٍ">
+                        <RotateCw className="w-4 h-4" />
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        {[0.75, 1, 1.25, 1.5, 2].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => handleSpeedChange(s)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              playbackSpeed === s ? 'bg-cyan-electric text-black' : 'bg-white/10 text-white/80 hover:bg-white/20'
+                            }`}
+                          >
+                            {s}x
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                        <Maximize className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
-                    <Maximize className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
           </div>
 

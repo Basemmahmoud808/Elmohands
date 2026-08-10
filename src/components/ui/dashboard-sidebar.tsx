@@ -77,13 +77,13 @@ export function DashboardSidebar({
       {/* Top Header */}
       <div>
         <div className="pb-4 mb-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black font-extrabold shadow-cyan-glow">
+          <Link href="/" className="flex items-center gap-3 overflow-hidden group" title="العودة للرئيسية">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black font-extrabold shadow-cyan-glow group-hover:scale-105 transition-transform duration-200">
               <GraduationCap className="w-6 h-6" />
             </div>
             {open && (
               <div className="flex flex-col truncate">
-                <span className="font-extrabold text-base text-slate-900 dark:text-chalk truncate">
+                <span className="font-extrabold text-base text-slate-900 dark:text-chalk truncate group-hover:text-cyan-electric transition-colors">
                   {role === 'ADMIN' ? 'منصة المهندس (Admin)' : 'منصة المهندس'}
                 </span>
                 <span className="text-xs text-cyan-electric font-semibold truncate">
@@ -91,7 +91,7 @@ export function DashboardSidebar({
                 </span>
               </div>
             )}
-          </div>
+          </Link>
         </div>
 
         {/* User Card Badge */}

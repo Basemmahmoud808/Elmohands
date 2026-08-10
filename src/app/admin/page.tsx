@@ -5,6 +5,8 @@ import { DashboardSidebar } from '@/components/ui/dashboard-sidebar';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { generateVoucherCodes, getAllVouchers, VoucherCode } from '@/lib/actions/vouchers';
 import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/lessons';
+import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/actions/auth';
 import {
   Users,
   Video,
@@ -22,14 +24,12 @@ import {
   HelpCircle,
   Copy,
   Layers,
-  GraduationCap,
-  Award,
-  TrendingUp,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [selectedTab, setSelectedTab] = useState('dashboard');
-  
+
   // Voucher Generator State
   const [planType, setPlanType] = useState<'1month' | 'term' | 'year'>('1month');
   const [codeCount, setCodeCount] = useState(5);
@@ -69,13 +69,22 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function loadData() {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        router.push('/sign-in');
+        return;
+      }
+      if (currentUser.role !== 'ADMIN') {
+        router.push('/student');
+        return;
+      }
       const vList = await getAllVouchers();
       setVouchers(vList);
       const lList = await getLessonsList();
       setLessons(lList);
     }
     loadData();
-  }, []);
+  }, [router]);
 
   const handleGenerateCodes = async (e: React.FormEvent) => {
     e.preventDefault();
