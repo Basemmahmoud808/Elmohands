@@ -58,7 +58,7 @@ export default function RootLayout({
           .dark body { background-color: #000000 !important; color: #f8fafc !important; }
         ` }} />
       </head>
-      <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black" suppressHydrationWarning>
+      <body className={`${cairo.className} ${cairo.variable} font-arabic bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>
