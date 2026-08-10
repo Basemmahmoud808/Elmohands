@@ -24,6 +24,8 @@ import {
   HelpCircle,
   Copy,
   Layers,
+  FileUp,
+  Link2,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -41,8 +43,14 @@ export default function AdminDashboard() {
   const [lessonGrade, setLessonGrade] = useState('الصف الأول الإعدادي');
   const [lessonBranch, setLessonBranch] = useState('فرع الجبر والإحصاء');
   const [lessonUnit, setLessonUnit] = useState('الوحدة الأولى: الأعداد النسبية والعمليات عليها');
+  
+  // Media Input Mode: 'file' (direct device upload) or 'url' (Google Drive/YouTube/HTTP)
+  const [videoSourceMode, setVideoSourceMode] = useState<'file' | 'url'>('file');
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
+
   const [lessons, setLessons] = useState<LessonItem[]>([]);
   const [uploadMsg, setUploadMsg] = useState('');
 
@@ -58,6 +66,18 @@ export default function AdminDashboard() {
     { id: 'q-2', text: 'س: في المثلث قائم الزاوية، مجموع مربعي طولي ضلعي القائمة يساوي:', options: ['A) مربع الوتر', 'B) نصف الوتر', 'C) ضعف الوتر', 'D) محيط المثلث'], correct: 'A', branch: 'فرع الهندسة والقياس' },
   ]);
   const [qMsg, setQMsg] = useState('');
+
+  // Exam / Quiz Builder State
+  const [quizTitle, setQuizTitle] = useState('');
+  const [quizGrade, setQuizGrade] = useState('الصف الأول الإعدادي');
+  const [quizBranch, setQuizBranch] = useState('فرع الجبر والإحصاء');
+  const [quizDuration, setQuizDuration] = useState(25);
+  const [quizQCount, setQuizQCount] = useState(10);
+  const [quizMsg, setQuizMsg] = useState('');
+  const [quizzesList, setQuizzesList] = useState([
+    { id: 'qz-1', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', count: '15 سؤالاً', duration: '20 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الجبر والإحصاء' },
+    { id: 'qz-2', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', count: '20 سؤالاً', duration: '25 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الهندسة والقياس' },
+  ]);
 
   // Student Search & Filter
   const [searchStudent, setSearchStudent] = useState('');
@@ -99,20 +119,34 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!lessonTitle.trim()) return;
 
+    let finalVideoPath = videoUrl;
+    if (videoSourceMode === 'file' && selectedVideoFile) {
+      finalVideoPath = URL.createObjectURL(selectedVideoFile);
+    }
+
+    let finalPdfPath = pdfUrl;
+    if (selectedPdfFile) {
+      finalPdfPath = URL.createObjectURL(selectedPdfFile);
+    }
+
     const fd = new FormData();
     fd.append('title', lessonTitle);
     fd.append('description', lessonDesc);
     fd.append('gradeName', lessonGrade);
     fd.append('branchName', lessonBranch);
     fd.append('unitTitle', lessonUnit);
-    if (videoUrl) fd.append('videoUrl', videoUrl);
-    if (pdfUrl) fd.append('pdfUrl', pdfUrl);
+    if (finalVideoPath) fd.append('videoUrl', finalVideoPath);
+    if (finalPdfPath) fd.append('pdfUrl', finalPdfPath);
 
     const res = await createLessonAction(fd);
     if (res.success && res.lesson) {
       setUploadMsg('تم حفظ ونشر الدرس بنجاح في الفرع المحدد للطلاب!');
       setLessonTitle('');
       setLessonDesc('');
+      setSelectedVideoFile(null);
+      setSelectedPdfFile(null);
+      setVideoUrl('');
+      setPdfUrl('');
       const updatedLessons = await getLessonsList();
       setLessons(updatedLessons);
     }
@@ -137,6 +171,24 @@ export default function AdminDashboard() {
     setOptB('');
     setOptC('');
     setOptD('');
+  };
+
+  const handleCreateQuiz = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quizTitle.trim()) return;
+
+    const newQuiz = {
+      id: `qz-${Date.now()}`,
+      title: quizTitle.trim(),
+      count: `${quizQCount} سؤالاً`,
+      duration: `${quizDuration} دقيقة`,
+      grade: quizGrade,
+      branch: quizBranch,
+    };
+
+    setQuizzesList([newQuiz, ...quizzesList]);
+    setQuizMsg('تم نشر الامتحان بنجاح للطلاب على المنصة!');
+    setQuizTitle('');
   };
 
   const filteredStudents = studentsList.filter(
@@ -244,14 +296,14 @@ export default function AdminDashboard() {
                     className="p-4 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 text-cyan-electric hover:bg-cyan-electric/20 font-extrabold text-xs flex items-center justify-center gap-2"
                   >
                     <UploadCloud className="w-4 h-4" />
-                    <span>رفع درس جديد للطلاب</span>
+                    <span>رفع درس جديد من الجهاز</span>
                   </button>
                   <button
-                    onClick={() => setSelectedTab('vouchers')}
+                    onClick={() => setSelectedTab('quizzes')}
                     className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/20 font-extrabold text-xs flex items-center justify-center gap-2"
                   >
-                    <KeyRound className="w-4 h-4" />
-                    <span>توليد أكواد شحن جديدة</span>
+                    <HelpCircle className="w-4 h-4" />
+                    <span>إنشاء امتحان جديد للطلاب</span>
                   </button>
                   <button
                     onClick={() => setSelectedTab('questions')}
@@ -366,14 +418,14 @@ export default function AdminDashboard() {
           )}
 
           {/* ==================================================== */}
-          {/* TAB 4: LESSONS MANAGEMENT */}
+          {/* TAB 4: LESSONS MANAGEMENT (DEVICE VIDEO UPLOAD) */}
           {/* ==================================================== */}
           {selectedTab === 'lessons' && (
             <div className="space-y-8">
               <div className="chalk-card rounded-3xl p-6 bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
                 <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">رفع وتجهيز درس جديد (Video & PDF Upload)</h3>
-                  <p className="text-xs text-slate-500 dark:text-chalk-muted">إضافة عنوان الدرس، الفرع، رابط الفيديو والمذكرة وتحديد الصف الدراسي</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">رفع وتجهيز درس جديد (من الجهاز أو Google Drive)</h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted">اختر ملف الفيديو مباشرة من جهازك أو ضع رابط Google Drive / YouTube</p>
                 </div>
 
                 {uploadMsg && (
@@ -434,15 +486,66 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">رابط الفيديو المستضاف (Video Stream URL)</label>
+                  {/* Video Source Switcher */}
+                  <div className="md:col-span-2 space-y-3 p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk">مصدر ملف الفيديو:</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setVideoSourceMode('file')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                            videoSourceMode === 'file' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'bg-slate-200 dark:bg-slate-900 text-slate-600 dark:text-chalk'
+                          }`}
+                        >
+                          <FileUp className="w-3.5 h-3.5" />
+                          <span>رفع من الجهاز</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVideoSourceMode('url')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                            videoSourceMode === 'url' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'bg-slate-200 dark:bg-slate-900 text-slate-600 dark:text-chalk'
+                          }`}
+                        >
+                          <Link2 className="w-3.5 h-3.5" />
+                          <span>رابط Drive / YouTube</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {videoSourceMode === 'file' ? (
+                      <div className="space-y-2">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={(e) => setSelectedVideoFile(e.target.files?.[0] || null)}
+                          className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-cyan-electric file:text-black hover:file:bg-cyan-electric-hover cursor-pointer"
+                        />
+                        {selectedVideoFile && (
+                          <p className="text-[11px] font-mono text-emerald-500 font-bold">تم اختيار: {selectedVideoFile.name} ({(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB)</p>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="ضع رابط Google Drive أو YouTube أو MP4..."
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs font-mono outline-none focus:border-cyan-electric"
+                        dir="ltr"
+                      />
+                    )}
+                  </div>
+
+                  {/* PDF File Input */}
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">رفع المذكرة PDF من الجهاز (اختياري)</label>
                     <input
-                      type="text"
-                      placeholder="https://..."
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs font-mono outline-none focus:border-cyan-electric"
-                      dir="ltr"
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => setSelectedPdfFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-slate-200 dark:file:bg-slate-800 file:text-slate-800 dark:file:text-chalk cursor-pointer"
                     />
                   </div>
 
@@ -590,30 +693,117 @@ export default function AdminDashboard() {
           )}
 
           {/* ==================================================== */}
-          {/* TAB 6: QUIZZES MANAGEMENT */}
+          {/* TAB 6: QUIZZES MANAGEMENT & LOCAL EXAM CREATOR */}
           {/* ==================================================== */}
           {selectedTab === 'quizzes' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">إدارة الامتحانات والاختبارات الإلكترونية</h2>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted">إنشاء وتعيين الامتحانات للطلاب ومتابعة النسب</p>
+            <div className="space-y-8">
+              {/* Quiz Creator Form */}
+              <div className="chalk-card rounded-3xl p-6 bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">إنشاء امتحان / اختبار جديد ونشره للطلاب</h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted">حدد عنوان الامتحان، الصف الدراسي، مدة الاختيار بالدقائق وعدد الأسئلة</p>
+                </div>
+
+                {quizMsg && (
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{quizMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleCreateQuiz} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عنوان الامتحان / الاختبار</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: امتحان شهر أكتوبر في الجبر وحساب المثلثات"
+                      value={quizTitle}
+                      onChange={(e) => setQuizTitle(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">الصف الدراسي</label>
+                    <select
+                      value={quizGrade}
+                      onChange={(e) => setQuizGrade(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    >
+                      <option value="الصف الأول الإعدادي">الصف الأول الإعدادي</option>
+                      <option value="الصف الثاني الإعدادي">الصف الثاني الإعدادي</option>
+                      <option value="الصف الثالث الإعدادي">الصف الثالث الإعدادي</option>
+                      <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">فرع المادة</label>
+                    <select
+                      value={quizBranch}
+                      onChange={(e) => setQuizBranch(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    >
+                      <option value="فرع الجبر والإحصاء">فرع الجبر والإحصاء</option>
+                      <option value="فرع الهندسة والقياس">فرع الهندسة والقياس</option>
+                      <option value="فرع حساب المثلثات">فرع حساب المثلثات</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">مدة الامتحان (بالدقائق)</label>
+                    <input
+                      type="number"
+                      min="5"
+                      max="180"
+                      value={quizDuration}
+                      onChange={(e) => setQuizDuration(Number(e.target.value))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عدد أسئلة الامتحان</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={quizQCount}
+                      onChange={(e) => setQuizQCount(Number(e.target.value))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 pt-2">
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>حفظ وحفظ الامتحان الآن للطلاب</span>
+                    </button>
+                  </div>
+                </form>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  { title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', count: '15 سؤالاً', duration: '20 دقيقة', grade: 'الصف الأول الإعدادي' },
-                  { title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', count: '20 سؤالاً', duration: '25 دقيقة', grade: 'الصف الأول الإعدادي' },
-                ].map((qz, idx) => (
-                  <div key={idx} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">{qz.grade}</span>
-                      <span className="text-xs font-bold text-emerald-500">نشط</span>
-                    </div>
+              {/* Active Quizzes List */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-black text-slate-900 dark:text-chalk">الامتحانات الفعالة المتاحة ({quizzesList.length})</h3>
 
-                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-chalk">{qz.title}</h3>
-                    <p className="text-xs text-slate-500 dark:text-chalk-muted">{qz.count} • مدة الاختيار: {qz.duration}</p>
-                  </div>
-                ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {quizzesList.map((qz) => (
+                    <div key={qz.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">{qz.grade}</span>
+                        <span className="text-xs font-bold text-emerald-500">نشط ومتاح</span>
+                      </div>
+
+                      <h3 className="text-lg font-extrabold text-slate-900 dark:text-chalk">{qz.title}</h3>
+                      <p className="text-xs text-slate-500 dark:text-chalk-muted">{qz.count} • مدة الاختيار: {qz.duration} • {qz.branch}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
