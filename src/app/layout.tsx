@@ -30,6 +30,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root { --background: 255 255 255; --foreground: 15 23 42; }
+          .dark { --background: 0 0 0; --foreground: 248 250 252; }
+          body { font-family: var(--font-cairo), 'Cairo', system-ui, -apple-system, sans-serif; min-height: 100vh; overflow-x: hidden; }
+          .chalk-card { background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(226, 232, 240, 0.9); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+          .dark .chalk-card { background-color: rgba(15, 23, 42, 0.8); border-color: rgba(0, 207, 255, 0.15); box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.4); }
+          .bg-cyan-electric { background-color: #00CFFF !important; }
+          .text-cyan-electric { color: #00CFFF !important; }
+          .dark body { background-color: #000000 !important; color: #f8fafc !important; }
+        ` }} />
+      </head>
       <body className="bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk antialiased selection:bg-cyan-electric selection:text-black" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
