@@ -77,29 +77,6 @@ export default function Stages() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
         
-        {/* Logged in Student Personalized Greeting Banner */}
-        {user && user.role === 'STUDENT' && (
-          <div className="p-6 rounded-3xl bg-gradient-to-r from-cyan-electric/20 via-blue-900/30 to-slate-900 border-2 border-cyan-electric/40 shadow-cyan-glow space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-cyan-electric" />
-                  <span className="text-sm font-extrabold text-cyan-electric">أهلاً بك مجدداً، {user.fullName}!</span>
-                </div>
-                <h3 className="text-xl font-black text-chalk">
-                  الكورسات والمناهج المتاحة لصفك الدراسي ({studentGrade})
-                </h3>
-              </div>
-
-              <Link
-                href="/student"
-                className="px-6 py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2 shrink-0"
-              >
-                <span>الدخول لداشبورد الدروس والمعاينات ➔</span>
-              </Link>
-            </div>
-          </div>
-        )}
 
         {/* Section Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
