@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Cairo } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
-import 'katex/dist/katex.min.css';
 import './globals.css';
+import 'katex/dist/katex.min.css';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
