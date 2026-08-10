@@ -75,8 +75,19 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 text-center text-xs text-slate-500 dark:text-chalk-muted font-medium">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-chalk-muted font-medium">
           <p>© {new Date().getFullYear()} منصة المهندس — جميع الحقوق محفوظة م/ رضا خيرت.</p>
+          <p className="flex items-center gap-1">
+            <span>صنع بواسطة</span>
+            <a
+              href="https://www.facebook.com/share/17rn8UEngV/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-electric font-black hover:underline transition-all inline-flex items-center gap-1"
+            >
+              باسم
+            </a>
+          </p>
         </div>
 
       </div>
