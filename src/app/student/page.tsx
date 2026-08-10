@@ -140,18 +140,22 @@ export default function StudentDashboard() {
 
   const activeLessons = lessons.length > 0 ? lessons : DEFAULT_LESSONS;
 
-  const filteredLessons = activeLessons.filter((les) => {
-    if (branchFilter === 'algebra') return les.branchName.includes('جبر');
-    if (branchFilter === 'geometry') return les.branchName.includes('هندسة');
-    return true;
-  });
+  const filteredLessons = React.useMemo(() => {
+    return activeLessons.filter((les) => {
+      if (branchFilter === 'algebra') return les.branchName.includes('جبر');
+      if (branchFilter === 'geometry') return les.branchName.includes('هندسة');
+      return true;
+    });
+  }, [activeLessons, branchFilter]);
 
-  const groupedLessons = filteredLessons.reduce((acc, les) => {
-    const bName = les.branchName || 'دروس المنهج العامة';
-    if (!acc[bName]) acc[bName] = [];
-    acc[bName].push(les);
-    return acc;
-  }, {} as Record<string, LessonItem[]>);
+  const groupedLessons = React.useMemo(() => {
+    return filteredLessons.reduce((acc, les) => {
+      const bName = les.branchName || 'دروس المنهج العامة';
+      if (!acc[bName]) acc[bName] = [];
+      acc[bName].push(les);
+      return acc;
+    }, {} as Record<string, LessonItem[]>);
+  }, [filteredLessons]);
 
   return (
     <DarkGradientBg>

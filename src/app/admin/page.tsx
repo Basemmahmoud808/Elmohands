@@ -210,9 +210,11 @@ export default function AdminDashboard() {
     setQuizTitle('');
   };
 
-  const filteredStudents = studentsList.filter(
-    (st) => st.name.includes(searchStudent) || st.phone.includes(searchStudent) || st.gov.includes(searchStudent)
-  );
+  const filteredStudents = React.useMemo(() => {
+    return studentsList.filter(
+      (st) => st.name.includes(searchStudent) || st.phone.includes(searchStudent) || st.gov.includes(searchStudent)
+    );
+  }, [studentsList, searchStudent]);
 
   return (
     <DarkGradientBg>
