@@ -7,6 +7,7 @@ import { generateVoucherCodes, getAllVouchers, VoucherCode } from '@/lib/actions
 import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/lessons';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getAllRegisteredUsers } from '@/lib/actions/auth';
+import { LogoSearchInput } from '@/components/ui/LogoSearchInput';
 import {
   Users,
   Video,
@@ -362,14 +363,13 @@ export default function AdminDashboard() {
                   <h3 className="text-xl font-black text-slate-900 dark:text-chalk">إدارة حسابات الطلاب المسجلين</h3>
                   <p className="text-xs text-slate-500 dark:text-chalk-muted">البحث باسم الطالب أو المحافظة أو رقم ولي الأمر</p>
                 </div>
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="بحث بالاسم أو رقم الهاتف..."
+                <div className="w-full sm:w-72">
+                  <LogoSearchInput
                     value={searchStudent}
                     onChange={(e) => setSearchStudent(e.target.value)}
-                    className="pr-9 pl-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs text-slate-900 dark:text-chalk outline-none focus:border-cyan-electric"
+                    onClear={() => setSearchStudent('')}
+                    placeholder="بحث باسم الطالب أو رقم الهاتف..."
+                    size="sm"
                   />
                 </div>
               </div>
