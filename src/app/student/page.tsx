@@ -501,14 +501,13 @@ export default function StudentDashboard() {
           {selectedTab === 'activate-code' && (
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="text-center space-y-2">
-                <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">تفعيل كارت الشحن (Voucher Code)</h2>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted">أدخل الكود المطبوع على الكارت المكون من 12 حرفاً للبدء أو تمديد الاشتراك</p>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">تفعيل كود الاشتراك</h2>
               </div>
 
               <div className="chalk-card rounded-3xl p-8 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/20 space-y-6 shadow-cyan-glow">
                 <form onSubmit={handleActivateVoucher} className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">أدخل رمز الشحن:</label>
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">أدخل كود الاشتراك:</label>
                     <input
                       type="text"
                       placeholder="مثال: ALM-M1-8K9X2P"
@@ -533,7 +532,7 @@ export default function StudentDashboard() {
                     type="submit"
                     className="w-full py-4 rounded-2xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
                   >
-                    تأكيد وتفعيل كارت الشحن
+                    تأكيد وتفعيل كود الاشتراك
                   </button>
                 </form>
               </div>
