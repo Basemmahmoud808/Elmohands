@@ -75,6 +75,7 @@ export default function SignUpPage() {
     setLoading(false);
 
     if (res.success) {
+      router.refresh();
       router.push('/student');
     } else {
       setErrorMsg(res.message || 'فشل إنشاء الحساب.');

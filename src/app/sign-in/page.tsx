@@ -28,6 +28,7 @@ export default function SignInPage() {
     setLoading(false);
 
     if (res.success && res.user) {
+      router.refresh();
       if (res.user.role === 'ADMIN') {
         router.push('/admin');
       } else {
