@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   LayoutDashboard,
@@ -41,6 +41,12 @@ export function DashboardSidebar({
   setSelectedTab,
 }: DashboardSidebarProps) {
   const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setOpen(false);
+    }
+  }, []);
 
   // Admin options
   const adminOptions = [
