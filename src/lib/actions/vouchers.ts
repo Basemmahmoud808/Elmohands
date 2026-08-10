@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase/client';
 import { getCurrentUser } from '@/lib/actions/auth';
+import { sanitizeInput } from '@/lib/security';
 
 export interface VoucherCode {
   id: string;
@@ -75,7 +76,7 @@ export async function redeemVoucherCode(
       }
     }
 
-    const cleanCode = inputCode.trim().toUpperCase();
+    const cleanCode = sanitizeInput(inputCode).trim().toUpperCase();
     const voucher = VOUCHER_STORE.find((v) => v.code === cleanCode);
 
     if (!voucher || voucher.status !== 'UNUSED') {

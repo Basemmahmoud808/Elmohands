@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { supabase } from '@/lib/supabase/client';
 import { readJSON, writeJSON } from '@/lib/store/db';
+import { sanitizeInput } from '@/lib/security';
 
 export interface UserSession {
   id: string;
@@ -58,7 +59,7 @@ function saveUsersDb(users: Record<string, UserSession>): void {
 
 export async function loginUser(phone: string): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    const cleanPhone = phone.trim();
+    const cleanPhone = sanitizeInput(phone.trim());
     if (!cleanPhone) return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
 
     const usersDb = getUsersDb();
@@ -110,7 +111,7 @@ export async function registerUser(data: {
   gradeId?: string;
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    const cleanPhone = data.phone.trim();
+    const cleanPhone = sanitizeInput(data.phone.trim());
     if (!cleanPhone) return { success: false, message: 'يرجى إدخال رقم الهاتف بشكل صحيح' };
 
     const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === '01000000000';
@@ -119,12 +120,12 @@ export async function registerUser(data: {
 
     const newUser: UserSession = {
       id: isDedicatedAdmin ? 'adm_01000000000' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      fullName: data.fullName.trim(),
+      fullName: sanitizeInput(data.fullName),
       phone: cleanPhone,
-      parentPhone: data.parentPhone.trim(),
-      governorate: data.governorate,
+      parentPhone: sanitizeInput(data.parentPhone),
+      governorate: sanitizeInput(data.governorate),
       role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
-      gradeName: data.gradeId || 'الصف الأول الإعدادي',
+      gradeName: sanitizeInput(data.gradeId || 'الصف الأول الإعدادي'),
       activeSessionId: newSessionId,
       createdAt: new Date().toISOString(),
     };
