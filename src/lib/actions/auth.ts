@@ -15,6 +15,14 @@ export interface UserSession {
   createdAt: string;
 }
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  path: '/',
+  maxAge: 60 * 60 * 24 * 365, // 365 Days persistent session
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+};
+
 const DEMO_USERS: Record<string, UserSession> = {
   '01000000000': {
     id: 'adm_01000000000',
@@ -50,7 +58,7 @@ export async function loginUser(phone: string): Promise<{ success: boolean; user
       }
     }
 
-    cookies().set('almohands_session', JSON.stringify(user), { httpOnly: true, path: '/' });
+    cookies().set('almohands_session', JSON.stringify(user), COOKIE_OPTIONS);
     return { success: true, user };
   } catch (error: any) {
     return { success: false, message: error.message || 'فشل تسجيل الدخول' };
@@ -83,7 +91,7 @@ export async function registerUser(data: {
     }
 
     DEMO_USERS[cleanPhone] = newUser;
-    cookies().set('almohands_session', JSON.stringify(newUser), { httpOnly: true, path: '/' });
+    cookies().set('almohands_session', JSON.stringify(newUser), COOKIE_OPTIONS);
     return { success: true, user: newUser };
   } catch (error: any) {
     return { success: false, message: error.message || 'فشل إنشاء الحساب' };
