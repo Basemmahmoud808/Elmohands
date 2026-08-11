@@ -179,10 +179,10 @@ export default function Stages() {
                   </div>
 
                   <Link
-                    href={targetDashboardRoute}
+                    href={`/courses/${encodeURIComponent(stage.name)}`}
                     className="w-full py-2.5 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 group-hover:shadow-cyan-glow-lg"
                   >
-                    <span>{user ? 'الانتقال لدروسك وكورساتك' : 'استعرض المحتوى'}</span>
+                    <span>عرض صفحة كورسات وبنك أسئلة هذا الصف 🚀</span>
                   </Link>
                 </div>
 
