@@ -81,9 +81,9 @@ const DEFAULT_LESSONS: LessonItem[] = [
 ];
 
 const MOCK_QUIZZES = [
-  { id: 'q-1', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', duration: '20 دقيقة', questionsCount: 15, maxScore: 30, isCompleted: true, studentScore: 28, branch: 'فرع الجبر والإحصاء' },
-  { id: 'q-2', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', duration: '25 دقيقة', questionsCount: 20, maxScore: 40, isCompleted: true, studentScore: 38, branch: 'فرع الهندسة والقياس' },
-  { id: 'q-3', title: 'الاختبار الشامل على نصف الترم الأول (جبر وهندسة)', duration: '45 دقيقة', questionsCount: 30, maxScore: 60, isCompleted: false, studentScore: 0, branch: 'امتحان شامل' },
+  { id: 'q-1', type: 'mcq', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', duration: '20 دقيقة', questionsCount: '15 سؤالاً', maxScore: 30, isCompleted: true, studentScore: 28, branch: 'فرع الجبر والإحصاء' },
+  { id: 'q-2', type: 'mcq', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', duration: '25 دقيقة', questionsCount: '20 سؤالاً', maxScore: 40, isCompleted: true, studentScore: 38, branch: 'فرع الهندسة والقياس' },
+  { id: 'q-3', type: 'file', title: 'امتحان الجبر والهندسة المرفوع ورقيّاً (صورة / PDF)', duration: '45 دقيقة', fileType: 'pdf', fileUrl: '/sample-lesson-notes.pdf', fileName: 'امتحان_شهر_أكتوبر_المهندس.pdf', questionsCount: 'ورقة امتحان كاملة', maxScore: 60, isCompleted: false, studentScore: 0, branch: 'ورقة امتحان من المدرس' },
 ];
 
 export default function StudentDashboard() {
@@ -431,6 +431,11 @@ export default function StudentDashboard() {
                         <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
                           {quiz.branch}
                         </span>
+                        {quiz.type === 'file' && (
+                          <span className="text-[10px] font-black text-black bg-cyan-electric px-2 py-0.5 rounded-full">
+                            ورقة مرفوعة
+                          </span>
+                        )}
                         {quiz.isCompleted && (
                           <span className="text-xs font-bold text-emerald-500 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30">
                             مكتمـل: {quiz.studentScore} / {quiz.maxScore}
@@ -439,14 +444,23 @@ export default function StudentDashboard() {
                       </div>
 
                       <h3 className="text-lg font-extrabold text-slate-900 dark:text-chalk">{quiz.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-chalk-muted">{quiz.questionsCount} سؤال اختياري (MCQ) • المدة: {quiz.duration}</p>
+                      <p className="text-xs text-slate-500 dark:text-chalk-muted">
+                        {quiz.type === 'file' ? 'ورقة امتحان من الجهاز (صورة / PDF)' : `${quiz.questionsCount} (MCQ)`} • المدة: {quiz.duration}
+                      </p>
                     </div>
 
                     <button
-                      onClick={() => handleStartQuiz(quiz)}
-                      className="w-full py-3 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
+                      onClick={() => {
+                        if (quiz.type === 'file') {
+                          setActiveExamFileModal(quiz);
+                          setExamSubmitted(false);
+                        } else {
+                          handleStartQuiz(quiz);
+                        }
+                      }}
+                      className="w-full py-3 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-1.5"
                     >
-                      {quiz.isCompleted ? 'إعادة الاختبار الآن' : 'بدء الاختبار الحاضر'}
+                      {quiz.type === 'file' ? 'فتح ورقة الامتحان (صورة / PDF)' : quiz.isCompleted ? 'إعادة الاختبار الآن' : 'بدء الاختبار الحاضر'}
                     </button>
                   </div>
                 ))}
@@ -605,6 +619,97 @@ export default function StudentDashboard() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* EXAM FILE VIEWER MODAL (For Image / PDF Exams uploaded by teacher) */}
+      {activeExamFileModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden text-chalk shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-electric/15 text-cyan-electric flex items-center justify-center font-bold">
+                  📄
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-chalk">{activeExamFileModal.title}</h3>
+                  <p className="text-xs text-slate-400 font-bold">
+                    م/ رضا خيرت • مدة الامتحان: {activeExamFileModal.duration} • {activeExamFileModal.branch}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveExamFileModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content / Exam File Viewer */}
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-4 bg-slate-950/40">
+              {!examSubmitted ? (
+                <>
+                  <div className="p-3 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 text-cyan-electric text-xs font-bold flex items-center justify-between">
+                    <span>💡 ورقة الامتحان المرفوعة من المدرس كاملة جاهزة للمعاينة والحل.</span>
+                    <a
+                      href={activeExamFileModal.fileUrl || '/sample-lesson-notes.pdf'}
+                      download={activeExamFileModal.fileName || 'امتحان_م_رضا_خيرت.pdf'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-cyan-electric text-black font-extrabold hover:bg-cyan-electric-hover shadow-cyan-glow text-xs flex items-center gap-1.5"
+                    >
+                      <span>تحميل ورقة الامتحان</span>
+                    </a>
+                  </div>
+
+                  <div className="w-full min-h-[450px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                    {activeExamFileModal.fileType === 'image' || activeExamFileModal.fileUrl?.match(/\.(jpeg|jpg|png|webp|gif)$/i) ? (
+                      <img
+                        src={activeExamFileModal.fileUrl || '/teacher_reda_kheyrat.jpg'}
+                        alt="ورقة الامتحان"
+                        className="w-full h-auto max-h-[70vh] object-contain rounded-xl"
+                      />
+                    ) : (
+                      <iframe
+                        src={activeExamFileModal.fileUrl || '/sample-lesson-notes.pdf'}
+                        className="w-full h-[550px] rounded-xl border-none"
+                        title="معاينة ورقة الامتحان PDF"
+                      />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center space-y-4 py-8">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-2xl font-black">
+                    ✓
+                  </div>
+                  <h4 className="text-xl font-black text-chalk">تم إرسال إجابات ورقة الامتحان بنجاح!</h4>
+                  <p className="text-sm text-cyan-electric font-black">
+                    سيتم مراجعة ورقة إجابتك ورصد الدرجة النهائية بواسطة م/ رضا خيرت 🏆
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+              <button
+                onClick={() => setActiveExamFileModal(null)}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800"
+              >
+                إغلاق
+              </button>
+              {!examSubmitted && (
+                <button
+                  onClick={() => setExamSubmitted(true)}
+                  className="px-6 py-2.5 rounded-xl text-xs font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
+                >
+                  إرسال وتأكيد حل الامتحان الورقي
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

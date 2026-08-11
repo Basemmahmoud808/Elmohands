@@ -76,15 +76,17 @@ export default function AdminDashboard() {
   const [qMsg, setQMsg] = useState('');
 
   // Exam / Quiz Builder State
+  const [quizMode, setQuizMode] = useState<'mcq' | 'file'>('file');
   const [quizTitle, setQuizTitle] = useState('');
   const [quizGrade, setQuizGrade] = useState('الصف الأول الإعدادي');
   const [quizBranch, setQuizBranch] = useState('فرع الجبر والإحصاء');
   const [quizDuration, setQuizDuration] = useState(25);
   const [quizQCount, setQuizQCount] = useState(10);
+  const [selectedExamFile, setSelectedExamFile] = useState<File | null>(null);
   const [quizMsg, setQuizMsg] = useState('');
-  const [quizzesList, setQuizzesList] = useState([
-    { id: 'qz-1', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', count: '15 سؤالاً', duration: '20 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الجبر والإحصاء' },
-    { id: 'qz-2', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', count: '20 سؤالاً', duration: '25 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الهندسة والقياس' },
+  const [quizzesList, setQuizzesList] = useState<any[]>([
+    { id: 'qz-1', type: 'mcq', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', count: '15 سؤالاً', duration: '20 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الجبر والإحصاء' },
+    { id: 'qz-2', type: 'mcq', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', count: '20 سؤالاً', duration: '25 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الهندسة والقياس' },
   ]);
 
   // Student Search & Filter
@@ -210,10 +212,19 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!quizTitle.trim()) return;
 
+    let examFileUrl = '';
+    let examFileType: 'image' | 'pdf' | undefined = undefined;
+
+    if (quizMode === 'file' && selectedExamFile) {
+      examFileUrl = URL.createObjectURL(selectedExamFile);
+      examFileType = selectedExamFile.type.includes('pdf') ? 'pdf' : 'image';
+    }
+
     const newQuiz = {
       id: `qz-${Date.now()}`,
+      type: quizMode,
       title: quizTitle.trim(),
-      count: `${quizQCount} سؤالاً`,
+      count: quizMode === 'file' ? 'ورقة امتحان (صورة/PDF)' : `${quizQCount} سؤالاً`,
       duration: `${quizDuration} دقيقة`,
       grade: quizGrade,
       branch: quizBranch,
@@ -821,9 +832,37 @@ export default function AdminDashboard() {
             <div className="space-y-8">
               {/* Quiz Creator Form */}
               <div className="chalk-card rounded-3xl p-6 bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
-                <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">إنشاء امتحان / اختبار جديد ونشره للطلاب</h3>
-                  <p className="text-xs text-slate-500 dark:text-chalk-muted">حدد عنوان الامتحان، الصف الدراسي، مدة الاختيار بالدقائق وعدد الأسئلة</p>
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-chalk">إنشاء ونشر امتحان جديد للطلاب</h3>
+                      <p className="text-xs text-slate-500 dark:text-chalk-muted">رفع ورقة امتحان مباشرة من الجهاز (صورة / PDF) أو إنشاء اختبار تفاعلي أسئلة</p>
+                    </div>
+
+                    {/* Mode Selector */}
+                    <div className="flex gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setQuizMode('file')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all ${
+                          quizMode === 'file' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-600 dark:text-chalk/80'
+                        }`}
+                      >
+                        <FileUp className="w-3.5 h-3.5" />
+                        <span>ورقة امتحان من الجهاز (صورة / PDF)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQuizMode('mcq')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all ${
+                          quizMode === 'mcq' ? 'bg-cyan-electric text-black shadow-cyan-glow' : 'text-slate-600 dark:text-chalk/80'
+                        }`}
+                      >
+                        <FileQuestion className="w-3.5 h-3.5" />
+                        <span>اختبار MCQ تفاعلي</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {quizMsg && (
@@ -839,7 +878,7 @@ export default function AdminDashboard() {
                     <input
                       type="text"
                       required
-                      placeholder="مثال: امتحان شهر أكتوبر في الجبر وحساب المثلثات"
+                      placeholder="مثال: امتحان شهر أكتوبر الشامل في الرياضيات"
                       value={quizTitle}
                       onChange={(e) => setQuizTitle(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
@@ -885,17 +924,56 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عدد أسئلة الامتحان</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={quizQCount}
-                      onChange={(e) => setQuizQCount(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
-                    />
-                  </div>
+                  {quizMode === 'mcq' ? (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">عدد أسئلة الامتحان</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={quizQCount}
+                        onChange={(e) => setQuizQCount(Number(e.target.value))}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
+                        <UploadCloud className="w-3.5 h-3.5 text-cyan-electric" />
+                        اختيار ملف الامتحان (صورة JPG/PNG أو ملف PDF):
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setSelectedExamFile(e.target.files?.[0] || null)}
+                        className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-cyan-electric file:text-black hover:file:bg-cyan-electric-hover cursor-pointer"
+                      />
+                    </div>
+                  )}
+
+                  {/* Exam File Preview Badge */}
+                  {quizMode === 'file' && selectedExamFile && (
+                    <div className="md:col-span-2 p-4 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {selectedExamFile.type.includes('image') ? (
+                          <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 shrink-0 border border-slate-700">
+                            <img src={URL.createObjectURL(selectedExamFile)} alt="معاينة ورقة الامتحان" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center font-bold text-xs">
+                            PDF
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-xs font-bold text-slate-900 dark:text-chalk block">{selectedExamFile.name}</span>
+                          <span className="text-[10px] text-cyan-electric font-semibold">
+                            {(selectedExamFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedExamFile.type.includes('pdf') ? 'مستند PDF' : 'صورة ورقية'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">جاهز للرفع</span>
+                    </div>
+                  )}
 
                   <div className="md:col-span-2 pt-2">
                     <button
