@@ -94,17 +94,7 @@ export async function loginUser(
       }
       user.activeSessionId = newSessionId;
     } else if (!user) {
-      // Auto-create student session if first time phone login
-      user = {
-        id: `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        fullName: `طالب (${cleanIdentifier.slice(-4)})`,
-        phone: cleanIdentifier,
-        password: cleanPassword,
-        role: 'STUDENT',
-        gradeName: 'الصف الأول الإعدادي',
-        activeSessionId: newSessionId,
-        createdAt: new Date().toISOString(),
-      };
+      return { success: false, message: 'هذا الحساب غير مسجل في منصة المهندس. يرجى إنشاء حساب طالب جديد أولاً.' };
     } else {
       user.activeSessionId = newSessionId;
     }
@@ -142,6 +132,11 @@ export async function registerUser(data: {
 
     const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
     const usersDb = getUsersDb();
+
+    if (usersDb[cleanPhone] && !isDedicatedAdmin) {
+      return { success: false, message: 'رقم الهاتف هذا مسجل بالفعل مسبقاً في منصة المهندس. يرجى الذهاب لصفحة تسجيل الدخول.' };
+    }
+
     const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const newUser: UserSession = {
@@ -209,4 +204,36 @@ export async function checkActiveSessionStatus(): Promise<{ valid: boolean; reas
 
 export async function logoutUser() {
   cookies().delete('almohands_session');
+}
+
+export async function updateUserPassword(
+  oldPasswordInput: string,
+  newPasswordInput: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, message: 'يرجى تسجيل الدخول أولاً' };
+
+    const usersDb = getUsersDb();
+    const serverUser = usersDb[user.phone];
+
+    if (!serverUser) return { success: false, message: 'المستخدم غير موجود' };
+
+    if (serverUser.password && serverUser.password !== oldPasswordInput) {
+      return { success: false, message: 'كلمة المرور الحالية غير صحيحة' };
+    }
+
+    const cleanNewPass = sanitizeInput(newPasswordInput);
+    serverUser.password = cleanNewPass;
+
+    usersDb[user.phone] = serverUser;
+    saveUsersDb(usersDb);
+
+    const updatedSession = { ...user, password: cleanNewPass };
+    cookies().set('almohands_session', JSON.stringify(updatedSession), COOKIE_OPTIONS);
+
+    return { success: true, message: 'تم تحديث كلمة المرور وحفظ الأمان المشدد بنجاح 🎯' };
+  } catch (err: any) {
+    return { success: false, message: err.message || 'فشل تحديث كلمة المرور' };
+  }
 }

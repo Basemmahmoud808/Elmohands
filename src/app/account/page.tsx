@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
-import { getCurrentUser, logoutUser, UserSession } from '@/lib/actions/auth';
+import { getCurrentUser, logoutUser, updateUserPassword, UserSession } from '@/lib/actions/auth';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import {
@@ -54,23 +54,27 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPass.trim()) return;
 
     if (newPass !== confirmPass) {
-      setPassMsg({ success: false, text: 'كلمة المرور الجديدة وغير متطابقة مع التأكيد!' });
+      setPassMsg({ success: false, text: 'كلمة المرور الجديدة غير متطابقة مع تأكيد كلمة المرور!' });
       return;
     }
 
     setIsChangingPass(true);
-    setTimeout(() => {
-      setIsChangingPass(false);
-      setPassMsg({ success: true, text: 'تم تحديث كلمة المرور وحفظ الأمان المشدد بنجاح 🎯' });
+    const res = await updateUserPassword(oldPass, newPass);
+    setIsChangingPass(false);
+
+    if (res.success) {
+      setPassMsg({ success: true, text: res.message || 'تم تحديث كلمة المرور وحفظ الأمان المشدد بنجاح 🎯' });
       setOldPass('');
       setNewPass('');
       setConfirmPass('');
-    }, 600);
+    } else {
+      setPassMsg({ success: false, text: res.message || 'فشل تحديث كلمة المرور. يرجى التأكد من كلمة المرور الحالية.' });
+    }
   };
 
   if (loading) {
