@@ -7,6 +7,7 @@ import { generateVoucherCodes, getAllVouchers, VoucherCode } from '@/lib/actions
 import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/lessons';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getAllRegisteredUsers } from '@/lib/actions/auth';
+import * as Sentry from '@sentry/nextjs';
 import {
   Users,
   Video,
@@ -1362,6 +1363,28 @@ export default function AdminDashboard() {
               <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
                 <h3 className="text-xl font-black text-slate-900 dark:text-chalk">سجل الأحداث والعمليات الفعالة (Audit Logs)</h3>
                 <p className="text-xs text-slate-500 dark:text-chalk-muted">سجل العمليات وتفعيلات أكواد الشحن المباشرة</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-black text-cyan-electric">اختبار فحص أخطاء Sentry المباشر (Org: basem-04) 🧪</h4>
+                  <p className="text-xs text-slate-400 font-semibold">توليد وإرسال استثناء تجريبي لتجربة استجابة حساب Sentry المباشرة</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      // @ts-ignore
+                      myUndefinedFunction();
+                    } catch (err) {
+                      Sentry.captureException(err);
+                      alert('تم إرسال الخطأ التجريبي بنجاح إلى لوحة تحكم Sentry (basem-04) 🚀!');
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow whitespace-nowrap"
+                >
+                  توليد خطأ Sentry تجريبي 🚀
+                </button>
               </div>
 
               <div className="space-y-3 text-xs">
