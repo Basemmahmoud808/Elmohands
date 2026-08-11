@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   X,
+  User,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -56,6 +57,7 @@ export function DashboardSidebar({
     { id: 'quizzes', title: 'الاختبارات والامتحانات', icon: HelpCircle },
     { id: 'vouchers', title: 'أكواد الشحن', icon: KeyRound, badge: 'جديد' },
     { id: 'subscriptions', title: 'الاشتراكات الفعالة', icon: CreditCard },
+    { id: 'account', title: 'حسابي والشخصية', icon: User },
     { id: 'audit', title: 'سجل الأحداث', icon: History },
   ];
 
@@ -66,6 +68,7 @@ export function DashboardSidebar({
     { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle, badge: '2' },
     { id: 'my-results', title: 'نتائجي وتقييماتي', icon: AwardIcon },
     { id: 'activate-code', title: 'تفعيل كود شحن', icon: KeyRound },
+    { id: 'account', title: 'حسابي الشخصي', icon: User },
   ];
 
   function AwardIcon(props: any) {
@@ -81,6 +84,10 @@ export function DashboardSidebar({
   const currentTabObj = options.find((o) => o.id === selectedTab);
 
   const handleSelectTab = (tabId: string) => {
+    if (tabId === 'account') {
+      window.location.href = '/account';
+      return;
+    }
     setSelectedTab(tabId);
     setMobileDrawerOpen(false);
   };
@@ -253,7 +260,7 @@ export function DashboardSidebar({
               return (
                 <button
                   key={opt.id}
-                  onClick={() => setSelectedTab(opt.id)}
+                  onClick={() => handleSelectTab(opt.id)}
                   className={cn(
                     'relative flex h-11 w-full items-center rounded-xl transition-all duration-200 font-bold text-sm',
                     isSelected

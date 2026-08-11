@@ -100,15 +100,15 @@ export default function Navbar() {
                     <span>لوحة التحكم</span>
                   </Link>
 
-                  {/* My Account ("حسابي") Button */}
-                  <button
-                    onClick={() => setAccountModalOpen(true)}
+                  {/* My Account ("حسابي") Standalone Link */}
+                  <Link
+                    href="/account"
                     className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-800 transition-all flex items-center gap-2"
-                    title="مشاهدة جميع بيانات حسابي وتغيير كلمة المرور"
+                    title="صفحة حسابي الشخصي وتغيير كلمة المرور"
                   >
                     <User className="w-4 h-4 text-cyan-electric" />
                     <span>حسابي</span>
-                  </button>
+                  </Link>
                 </div>
               ) : (
                 <>
@@ -180,16 +180,14 @@ export default function Navbar() {
                   >
                     الذهاب للوحة التحكم ({user.role === 'ADMIN' ? 'أدمن' : user.fullName})
                   </Link>
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setAccountModalOpen(true);
-                    }}
+                  <Link
+                    href="/account"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="w-full py-2.5 text-center rounded-xl text-sm font-bold text-chalk bg-slate-900 border border-slate-800 flex items-center justify-center gap-2"
                   >
                     <User className="w-4 h-4 text-cyan-electric" />
-                    <span>حسابي (عرض البيانات وتغيير الباسورد)</span>
-                  </button>
+                    <span>صفحة حسابي الشخصي</span>
+                  </Link>
                 </>
               ) : (
                 <>
