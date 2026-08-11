@@ -63,56 +63,7 @@ export async function parseMediaUrl(url: string): Promise<{ type: 'video' | 'ifr
 }
 
 // Structured lesson store grouped by grade, course, branch, and unit
-const LESSON_STORE: LessonItem[] = [
-  {
-    id: 'les-1',
-    unitId: 'u-algebra-1',
-    unitTitle: 'الوحدة الأولى: الأعداد النسبية والعمليات عليها',
-    courseName: 'كورس الجبر الشامل (الترم الأول)',
-    sequenceOrder: 1,
-    title: 'الدرس الأول: مجموعات الأعداد والعمليات الأساسية (محاضرة كاملة 60 دقيقة)',
-    description: 'شرح مبسط ومفصل لمفهوم الأعداد النسبية وتطبيقاتها في الحياة العملية مع التمارين المحلولة.',
-    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    pdfPath: '/sample-lesson-notes.pdf',
-    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-    durationMinutes: 60,
-    gradeName: 'الصف الأول الإعدادي',
-    branchName: 'فرع الجبر والإحصاء',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'les-2',
-    unitId: 'u-algebra-1',
-    unitTitle: 'الوحدة الأولى: الأعداد النسبية والعمليات عليها',
-    courseName: 'كورس الجبر الشامل (الترم الأول)',
-    sequenceOrder: 2,
-    title: 'الدرس الثاني: التحليل بتقسيم الأعداد وإكمال المربع',
-    description: 'تمارين ومسائل مبرهنة على التحليل وإكمال المربع وطرق الحل المتعددة.',
-    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    pdfPath: '/sample-lesson-notes.pdf',
-    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-    durationMinutes: 45,
-    gradeName: 'الصف الأول الإعدادي',
-    branchName: 'فرع الجبر والإحصاء',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'les-3',
-    unitId: 'u-geometry-1',
-    unitTitle: 'الوحدة الأولى: العلاقات والمفاهيم الهندسية والإنشاءات',
-    courseName: 'كورس الهندسة والإنشاءات الأساسية',
-    sequenceOrder: 1,
-    title: 'الدرس الأول: مفاهيم هندسية أساسية والإنشاءات والزوايا (محاضرة مكثفة 75 دقيقة)',
-    description: 'تطبيق عملي ونظري لمفاهيم العلاقات بين الزوايا والمستقيمات المتوازية والإنشاءات الهندسية.',
-    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    pdfPath: '/sample-lesson-notes.pdf',
-    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-    durationMinutes: 75,
-    gradeName: 'الصف الأول الإعدادي',
-    branchName: 'فرع الهندسة والقياس',
-    createdAt: new Date().toISOString(),
-  },
-];
+const LESSON_STORE: LessonItem[] = [];
 
 export async function createLessonAction(formData: FormData): Promise<{ success: boolean; lesson?: LessonItem; message?: string }> {
   try {

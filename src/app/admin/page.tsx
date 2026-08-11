@@ -29,6 +29,8 @@ import {
   Image as ImageIcon,
   Clock,
   FolderGit2,
+  Play,
+  FileText,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -110,10 +112,11 @@ export default function AdminDashboard() {
   const [quizQCount, setQuizQCount] = useState(10);
   const [selectedExamFile, setSelectedExamFile] = useState<File | null>(null);
   const [quizMsg, setQuizMsg] = useState('');
-  const [quizzesList, setQuizzesList] = useState<any[]>([
-    { id: 'qz-1', type: 'mcq', title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية', count: '15 سؤالاً', duration: '20 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الجبر والإحصاء' },
-    { id: 'qz-2', type: 'mcq', title: 'اختبار هندسة: الإنشاءات الهندسية والتناظر', count: '20 سؤالاً', duration: '25 دقيقة', grade: 'الصف الأول الإعدادي', branch: 'فرع الهندسة والقياس' },
-  ]);
+  const [quizzesList, setQuizzesList] = useState<any[]>([]);
+
+  // Grade Content Modal & Media Preview Modal State
+  const [selectedGradeModal, setSelectedGradeModal] = useState<string | null>(null);
+  const [activeMediaModal, setActiveMediaModal] = useState<{ type: 'video' | 'pdf' | 'exam'; title: string; url: string; fileType?: string } | null>(null);
 
   // Student Search & Filter
   const [searchStudent, setSearchStudent] = useState('');
@@ -132,8 +135,29 @@ export default function AdminDashboard() {
       }
       const vList = await getAllVouchers();
       setVouchers(vList);
-      const lList = await getLessonsList();
-      setLessons(lList);
+
+      // Load shared real lessons and quizzes from localStorage
+      const savedLessons = localStorage.getItem('almohands_real_lessons');
+      if (savedLessons) {
+        try {
+          setLessons(JSON.parse(savedLessons));
+        } catch (e) {
+          setLessons([]);
+        }
+      } else {
+        setLessons([]);
+      }
+
+      const savedQuizzes = localStorage.getItem('almohands_real_quizzes');
+      if (savedQuizzes) {
+        try {
+          setQuizzesList(JSON.parse(savedQuizzes));
+        } catch (e) {
+          setQuizzesList([]);
+        }
+      } else {
+        setQuizzesList([]);
+      }
 
       const allUsers = await getAllRegisteredUsers();
       const mappedStudents = allUsers.map((u) => ({
@@ -203,8 +227,13 @@ export default function AdminDashboard() {
         setVideoUrl('');
         setPdfUrl('');
         setThumbnailUrl('');
-        const updatedLessons = await getLessonsList();
+        
+        const newL = res.lesson;
+        const updatedLessons = [newL, ...lessons];
         setLessons(updatedLessons);
+        try {
+          localStorage.setItem('almohands_real_lessons', JSON.stringify(updatedLessons));
+        } catch (e) {}
       }
     });
   };
@@ -266,7 +295,12 @@ export default function AdminDashboard() {
         fileName: selectedExamFile ? selectedExamFile.name : undefined,
       };
 
-      setQuizzesList([newQuiz, ...quizzesList]);
+      const updatedQuizzes = [newQuiz, ...quizzesList];
+      setQuizzesList(updatedQuizzes);
+      try {
+        localStorage.setItem('almohands_real_quizzes', JSON.stringify(updatedQuizzes));
+      } catch (e) {}
+
       setQuizMsg('تم رفع ونشر الامتحان بنجاح للطلاب على المنصة!');
       setQuizTitle('');
       setSelectedExamFile(null);
@@ -486,7 +520,11 @@ export default function AdminDashboard() {
                   const gradeQuizzesCount = quizzesList.filter((q) => q.grade === c.grade).length;
 
                   return (
-                    <div key={idx} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 space-y-4">
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedGradeModal(c.grade)}
+                      className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 space-y-4 hover:border-cyan-electric/60 hover:shadow-cyan-glow cursor-pointer transition-all group"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
                           {c.stage}
@@ -496,21 +534,35 @@ export default function AdminDashboard() {
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{c.grade}</h3>
+                      <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk group-hover:text-cyan-electric transition-colors">
+                        {c.grade}
+                      </h3>
 
-                    <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                      <span className="text-xs font-bold text-slate-700 dark:text-chalk/80 block">فروع المنهج:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {c.branches.map((b, i) => (
-                          <span key={i} className="text-xs font-bold px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-cyan-electric">
-                            • {b}
-                          </span>
-                        ))}
+                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <span className="text-xs font-bold text-slate-700 dark:text-chalk/80 block">فروع المنهج:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {c.branches.map((b, i) => (
+                            <span key={i} className="text-xs font-bold px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-cyan-electric">
+                              • {b}
+                            </span>
+                          ))}
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedGradeModal(c.grade);
+                        }}
+                        className="w-full py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 mt-2"
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        <span>دخول وعرض جميع دروس وامتحانات الصف 👁️</span>
+                      </button>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1333,6 +1385,218 @@ export default function AdminDashboard() {
 
         </main>
       </div>
+
+      {/* ==================================================== */}
+      {/* GRADE CONTENT MODAL (Selected Grade Videos, Sheets, Exams) */}
+      {/* ==================================================== */}
+      {selectedGradeModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden text-chalk shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-electric/15 text-cyan-electric flex items-center justify-center font-bold">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-chalk">محتويات ومناهج {selectedGradeModal}</h3>
+                  <p className="text-xs text-slate-400 font-semibold">
+                    {lessons.filter((l) => l.gradeName === selectedGradeModal).length} درساً وفيديو • {quizzesList.filter((q) => q.grade === selectedGradeModal).length} اختبار وامتحان
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedGradeModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 flex-1 overflow-y-auto space-y-6 bg-slate-950/40">
+              {lessons.filter((l) => l.gradeName === selectedGradeModal).length === 0 &&
+               quizzesList.filter((q) => q.grade === selectedGradeModal).length === 0 ? (
+                <div className="p-8 rounded-3xl bg-slate-900/90 border border-slate-800 text-center space-y-4 my-4">
+                  <div className="w-14 h-14 rounded-2xl bg-cyan-electric/10 text-cyan-electric flex items-center justify-center mx-auto">
+                    <Sparkles className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-base font-black text-chalk">لا يضم هذا الصف أي محتوى حالياً (0 درساً • 0 اختبار)</h4>
+                  <p className="text-xs text-slate-400 max-w-md mx-auto font-bold">
+                    لم يقم المدرس بنشر أي محاضرات أو امتحانات مرفوعة لهذا الصف بعد. يمكنك البدء الآن بالرفع المباشر وسوف يظهر فوراً للطلاب!
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setLessonGrade(selectedGradeModal);
+                        setSelectedTab('lessons');
+                        setSelectedGradeModal(null);
+                      }}
+                      className="px-5 py-2.5 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>رفع كورس وفيديو لهذا الصف</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setQuizGrade(selectedGradeModal);
+                        setSelectedTab('quizzes');
+                        setSelectedGradeModal(null);
+                      }}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-chalk bg-slate-800 border border-slate-700 flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>رفع امتحان ورقي / MCQ</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Uploaded Lessons / Videos Section */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-black text-cyan-electric flex items-center gap-2 border-b border-slate-800 pb-2">
+                      <Play className="w-4 h-4" />
+                      <span>المحاضرات ودروس الفيديو المرفوعة ({lessons.filter((l) => l.gradeName === selectedGradeModal).length})</span>
+                    </h4>
+
+                    {lessons.filter((l) => l.gradeName === selectedGradeModal).length === 0 ? (
+                      <p className="text-xs text-slate-500 font-bold p-3 bg-slate-900/50 rounded-xl">لا توجد دروس فيديو مرفوعة لهذا الصف بعد (0 درس).</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {lessons.filter((l) => l.gradeName === selectedGradeModal).map((les) => (
+                          <div key={les.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
+                                {les.branchName}
+                              </span>
+                              <h5 className="text-sm font-black text-chalk">{les.title}</h5>
+                              <p className="text-xs text-slate-400 font-semibold line-clamp-1">{les.description}</p>
+                              <span className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-cyan-electric" /> {les.durationMinutes} دقيقة
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {les.videoPath && (
+                                <button
+                                  onClick={() => setActiveMediaModal({ type: 'video', title: les.title, url: les.videoPath! })}
+                                  className="px-3 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-1.5"
+                                >
+                                  <Play className="w-3.5 h-3.5" />
+                                  <span>تشغيل الفيديو 🎬</span>
+                                </button>
+                              )}
+                              {les.pdfPath && (
+                                <button
+                                  onClick={() => setActiveMediaModal({ type: 'pdf', title: `مذكرة: ${les.title}`, url: les.pdfPath! })}
+                                  className="px-3 py-2 rounded-xl text-xs font-bold text-chalk bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center gap-1.5"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-cyan-electric" />
+                                  <span>الشيت PDF 📄</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Uploaded Quizzes / Exams Section */}
+                  <div className="space-y-3 pt-4 border-t border-slate-800">
+                    <h4 className="text-sm font-black text-cyan-electric flex items-center gap-2 border-b border-slate-800 pb-2">
+                      <HelpCircle className="w-4 h-4" />
+                      <span>الامتحانات والأوراق المرفوعة ({quizzesList.filter((q) => q.grade === selectedGradeModal).length})</span>
+                    </h4>
+
+                    {quizzesList.filter((q) => q.grade === selectedGradeModal).length === 0 ? (
+                      <p className="text-xs text-slate-500 font-bold p-3 bg-slate-900/50 rounded-xl">لا توجد امتحانات مرفوعة لهذا الصف بعد (0 اختبار).</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {quizzesList.filter((q) => q.grade === selectedGradeModal).map((qz) => (
+                          <div key={qz.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
+                                {qz.branch}
+                              </span>
+                              <h5 className="text-sm font-black text-chalk">{qz.title}</h5>
+                              <span className="text-[11px] text-slate-400 font-mono">المدة: {qz.duration} • {qz.count}</span>
+                            </div>
+
+                            <button
+                              onClick={() => setActiveMediaModal({ type: 'exam', title: qz.title, url: qz.fileUrl || '/sample-lesson-notes.pdf', fileType: qz.fileType })}
+                              className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-1.5 shrink-0"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>معاينة ورقة الامتحان 📝</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================== */}
+      {/* MEDIA & DOCUMENT PREVIEW MODAL */}
+      {/* ==================================================== */}
+      {activeMediaModal && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden text-chalk shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/30">
+                  {activeMediaModal.type === 'video' ? 'معاينة الفيديو المحاضرة 🎬' : 'معاينة المستند والورقة 📄'}
+                </span>
+                <h4 className="text-sm font-black text-chalk truncate max-w-md">{activeMediaModal.title}</h4>
+              </div>
+              <button
+                onClick={() => setActiveMediaModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Viewer Content */}
+            <div className="p-4 flex-1 bg-black flex items-center justify-center overflow-hidden">
+              {activeMediaModal.type === 'video' ? (
+                activeMediaModal.url.includes('iframe') || activeMediaModal.url.includes('youtube') || activeMediaModal.url.includes('drive') ? (
+                  <iframe src={activeMediaModal.url} className="w-full h-[60vh] rounded-2xl border border-slate-800" allowFullScreen />
+                ) : (
+                  <video controls autoPlay src={activeMediaModal.url} className="w-full max-h-[65vh] rounded-2xl border border-slate-800" />
+                )
+              ) : activeMediaModal.fileType === 'image' || activeMediaModal.url.match(/\.(jpg|jpeg|png|webp)/i) ? (
+                <div className="max-h-[70vh] overflow-auto p-2">
+                  <img src={activeMediaModal.url} alt="معاينة المستند الورقي" className="max-w-full h-auto rounded-xl object-contain border border-slate-800" />
+                </div>
+              ) : (
+                <iframe src={activeMediaModal.url} className="w-full h-[70vh] rounded-2xl border border-slate-800 bg-white" />
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-900 flex justify-between items-center text-xs">
+              <span className="text-slate-400 font-bold">معاينة تفاعلية عالية الدقة من منصة المهندس م/ رضا خيرت</span>
+              <a
+                href={activeMediaModal.url}
+                target="_blank"
+                rel="noreferrer"
+                download
+                className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow"
+              >
+                تحميل المستند / الفيديو 📥
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </DarkGradientBg>
   );
 }

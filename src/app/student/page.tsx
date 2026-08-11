@@ -89,16 +89,18 @@ const MOCK_QUIZZES = [
 export default function StudentDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [user, setUser] = useState<UserSession | null>(null);
-  const [lessons, setLessons] = useState<LessonItem[]>(DEFAULT_LESSONS);
+  const [lessons, setLessons] = useState<LessonItem[]>([]);
+  const [quizzesList, setQuizzesList] = useState<any[]>([]);
   const [branchFilter, setBranchFilter] = useState('all');
 
   const [voucherInput, setVoucherInput] = useState('');
   const [voucherStatus, setVoucherStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [subDays, setSubDays] = useState(28);
 
-  // Interactive Quiz Modal State
+  // Interactive Quiz Modal & Video Modal State
   const [activeQuizModal, setActiveQuizModal] = useState<any | null>(null);
   const [activeExamFileModal, setActiveExamFileModal] = useState<any | null>(null);
+  const [activeVideoModal, setActiveVideoModal] = useState<{ title: string; url: string } | null>(null);
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizResult, setQuizResult] = useState<number | null>(null);
@@ -107,8 +109,28 @@ export default function StudentDashboard() {
     async function loadData() {
       const currentUser = await getCurrentUser();
       if (currentUser) setUser(currentUser);
-      const lList = await getLessonsList();
-      if (lList && lList.length > 0) setLessons(lList);
+
+      const savedLessons = localStorage.getItem('almohands_real_lessons');
+      if (savedLessons) {
+        try {
+          setLessons(JSON.parse(savedLessons));
+        } catch (e) {
+          setLessons([]);
+        }
+      } else {
+        setLessons([]);
+      }
+
+      const savedQuizzes = localStorage.getItem('almohands_real_quizzes');
+      if (savedQuizzes) {
+        try {
+          setQuizzesList(JSON.parse(savedQuizzes));
+        } catch (e) {
+          setQuizzesList([]);
+        }
+      } else {
+        setQuizzesList([]);
+      }
     }
     loadData();
   }, []);
@@ -140,7 +162,7 @@ export default function StudentDashboard() {
     setQuizResult(calculatedScore);
   };
 
-  const activeLessons = lessons.length > 0 ? lessons : DEFAULT_LESSONS;
+  const activeLessons = lessons;
 
   const filteredLessons = React.useMemo(() => {
     return activeLessons.filter((les) => {
@@ -369,49 +391,68 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {Object.entries(groupedLessons).map(([branchName, branchLessons]) => (
-                <div key={branchName} className="space-y-4">
-                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-cyan-electric/20 text-slate-900 dark:text-chalk text-base font-black w-fit">
-                    <Layers className="w-5 h-5 text-cyan-electric" />
-                    <span>{branchName}</span>
+              {Object.keys(groupedLessons).length === 0 ? (
+                <div className="chalk-card rounded-3xl p-8 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 text-center space-y-4 my-6">
+                  <div className="w-14 h-14 rounded-2xl bg-cyan-electric/10 text-cyan-electric flex items-center justify-center mx-auto">
+                    <BookOpen className="w-7 h-7" />
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {branchLessons.map((les, index) => (
-                      <div key={les.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-4 flex flex-col justify-between">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div className="w-10 h-10 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-center text-cyan-electric font-black text-sm">
-                              0{index + 1}
-                            </div>
-                            <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk/80">
-                              {les.durationMinutes} دقيقة فيديو
-                            </span>
-                          </div>
-
-                          <span className="text-xs font-bold text-cyan-electric block">{les.unitTitle}</span>
-                          <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{les.title}</h3>
-                          <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed">{les.description}</p>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-chalk-muted">
-                            <FileText className="w-4 h-4 text-cyan-electric" />
-                            <span>ملف PDF للتمارين</span>
-                          </div>
-                          <Link
-                            href={`/lessons/${les.id}`}
-                            className="px-5 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-1.5"
-                          >
-                            <PlayCircle className="w-4 h-4" />
-                            <span>مشاهدة الدرس</span>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">لا توجد دروس أو فيديوهات مرفوعة لصفك بعد (0 درس)</h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted max-w-md mx-auto font-bold">
+                    بمجرد أن يبدأ م/ رضا خيرت بنشر الدروس والمحاضرات لـ ({user?.gradeName || 'صفك الدراسي'})، ستظهر هنا فوراً تلقائياً!
+                  </p>
                 </div>
-              ))}
+              ) : (
+                Object.entries(groupedLessons).map(([branchName, branchLessons]) => (
+                  <div key={branchName} className="space-y-4">
+                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-cyan-electric/20 text-slate-900 dark:text-chalk text-base font-black w-fit">
+                      <Layers className="w-5 h-5 text-cyan-electric" />
+                      <span>{branchName}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {branchLessons.map((les, index) => (
+                        <div key={les.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-4 flex flex-col justify-between">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div className="w-10 h-10 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-center text-cyan-electric font-black text-sm">
+                                0{index + 1}
+                              </div>
+                              <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk/80">
+                                {les.durationMinutes} دقيقة فيديو
+                              </span>
+                            </div>
+
+                            <span className="text-xs font-bold text-cyan-electric block">{les.unitTitle}</span>
+                            <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{les.title}</h3>
+                            <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed">{les.description}</p>
+                          </div>
+
+                          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            {les.pdfPath ? (
+                              <button
+                                onClick={() => setActiveExamFileModal({ fileUrl: les.pdfPath, fileName: `${les.title}.pdf`, fileType: 'pdf' })}
+                                className="flex items-center gap-2 text-xs font-bold text-cyan-electric hover:underline"
+                              >
+                                <FileText className="w-4 h-4 text-cyan-electric" />
+                                <span>عرض الشيت الـ PDF 📄</span>
+                              </button>
+                            ) : (
+                              <span className="text-xs font-semibold text-slate-400">شرح فيديو حصري</span>
+                            )}
+                            <button
+                              onClick={() => setActiveVideoModal({ title: les.title, url: les.videoPath || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' })}
+                              className="px-5 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center gap-1.5"
+                            >
+                              <PlayCircle className="w-4 h-4" />
+                              <span>مشاهدة الفيديو 🎬</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
@@ -421,52 +462,59 @@ export default function StudentDashboard() {
           {selectedTab === 'my-quizzes' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">الاختبارات والتأهيلات المتاحة</h2>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted">اختبر فهمك للمواد بعد كل وحدة واحصل على درجات فورية</p>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-chalk">الاختبارات والامتحانات المرفوعة</h2>
+                <p className="text-xs text-slate-500 dark:text-chalk-muted">اختبر فهمك للمواد بعد كل وحدة واطلع على الأوراق الامتحانية المرفوعة</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {MOCK_QUIZZES.map((quiz) => (
-                  <div key={quiz.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 flex flex-col justify-between space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
-                          {quiz.branch}
-                        </span>
-                        {quiz.type === 'file' && (
-                          <span className="text-[10px] font-black text-black bg-cyan-electric px-2 py-0.5 rounded-full">
-                            ورقة مرفوعة
+              {quizzesList.filter((q) => !user?.gradeName || q.grade === user?.gradeName || true).length === 0 ? (
+                <div className="chalk-card rounded-3xl p-8 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 text-center space-y-4 my-6">
+                  <div className="w-14 h-14 rounded-2xl bg-cyan-electric/10 text-cyan-electric flex items-center justify-center mx-auto">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">لا توجد امتحانات مرفوعة لصفك بعد (0 اختبار)</h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted max-w-md mx-auto font-bold">
+                    بمجرد أن يبدأ م/ رضا خيرت بنشر اختبار أو رفع ورقة امتحان من جهازه لـ ({user?.gradeName || 'صفك الدراسي'})، ستظهر هنا فوراً!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {quizzesList.filter((q) => !user?.gradeName || q.grade === user?.gradeName || true).map((quiz) => (
+                    <div key={quiz.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 flex flex-col justify-between space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
+                            {quiz.branch}
                           </span>
-                        )}
-                        {quiz.isCompleted && (
-                          <span className="text-xs font-bold text-emerald-500 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30">
-                            مكتمـل: {quiz.studentScore} / {quiz.maxScore}
-                          </span>
-                        )}
+                          {quiz.type === 'file' && (
+                            <span className="text-[10px] font-black text-black bg-cyan-electric px-2 py-0.5 rounded-full">
+                              ورقة مرفوعة
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-lg font-extrabold text-slate-900 dark:text-chalk">{quiz.title}</h3>
+                        <p className="text-xs text-slate-500 dark:text-chalk-muted">
+                          {quiz.type === 'file' ? 'ورقة امتحان من الجهاز (صورة / PDF)' : `${quiz.count} (MCQ)`} • المدة: {quiz.duration}
+                        </p>
                       </div>
 
-                      <h3 className="text-lg font-extrabold text-slate-900 dark:text-chalk">{quiz.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-chalk-muted">
-                        {quiz.type === 'file' ? 'ورقة امتحان من الجهاز (صورة / PDF)' : `${quiz.questionsCount} (MCQ)`} • المدة: {quiz.duration}
-                      </p>
+                      <button
+                        onClick={() => {
+                          if (quiz.type === 'file') {
+                            setActiveExamFileModal(quiz);
+                            setExamSubmitted(false);
+                          } else {
+                            handleStartQuiz(quiz);
+                          }
+                        }}
+                        className="w-full py-3 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-1.5"
+                      >
+                        {quiz.type === 'file' ? 'فتح ورقة الامتحان (صورة / PDF)' : 'بدء الاختبار التفاعلي'}
+                      </button>
                     </div>
-
-                    <button
-                      onClick={() => {
-                        if (quiz.type === 'file') {
-                          setActiveExamFileModal(quiz);
-                          setExamSubmitted(false);
-                        } else {
-                          handleStartQuiz(quiz);
-                        }
-                      }}
-                      className="w-full py-3 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-1.5"
-                    >
-                      {quiz.type === 'file' ? 'فتح ورقة الامتحان (صورة / PDF)' : quiz.isCompleted ? 'إعادة الاختبار الآن' : 'بدء الاختبار الحاضر'}
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -711,6 +759,39 @@ export default function StudentDashboard() {
                   إرسال وتأكيد حل الامتحان الورقي
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIDEO PLAYER MODAL FOR STUDENTS */}
+      {activeVideoModal && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden text-chalk shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/30">
+                  شرح فيديو حصري 🎬
+                </span>
+                <h4 className="text-sm font-black text-chalk truncate max-w-md">{activeVideoModal.title}</h4>
+              </div>
+              <button
+                onClick={() => setActiveVideoModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 flex-1 bg-black flex items-center justify-center overflow-hidden">
+              {activeVideoModal.url.includes('iframe') || activeVideoModal.url.includes('youtube') || activeVideoModal.url.includes('drive') ? (
+                <iframe src={activeVideoModal.url} className="w-full h-[60vh] rounded-2xl border border-slate-800" allowFullScreen />
+              ) : (
+                <video controls autoPlay src={activeVideoModal.url} className="w-full max-h-[65vh] rounded-2xl border border-slate-800" />
+              )}
+            </div>
+            <div className="p-4 border-t border-slate-800 bg-slate-900 flex justify-between items-center text-xs text-slate-400 font-bold">
+              <span>منصة المهندس — الشرح الحصري م/ رضا خيرت</span>
+              <span>مشاهدة عالية الدقة FHD</span>
             </div>
           </div>
         </div>
