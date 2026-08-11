@@ -653,10 +653,21 @@ export default function AdminDashboard() {
 
                   {/* Thumbnail Image Picker & Preview */}
                   <div className="md:col-span-2 space-y-2 p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-cyan-electric" />
-                      الصورة المصغرة للمحاضرة (Thumbnail Image):
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-cyan-electric" />
+                        الصورة المصغرة للمحاضرة (Thumbnail Image):
+                      </label>
+                      {selectedThumbnailFile && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedThumbnailFile(null)}
+                          className="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold border border-red-500/30 flex items-center gap-1"
+                        >
+                          ✕ إلغاء الصورة
+                        </button>
+                      )}
+                    </div>
                     
                     <div className="flex flex-col sm:flex-row gap-4 items-center">
                       <input
@@ -715,7 +726,16 @@ export default function AdminDashboard() {
                           className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-cyan-electric file:text-black hover:file:bg-cyan-electric-hover cursor-pointer"
                         />
                         {selectedVideoFile && (
-                          <p className="text-[11px] font-mono text-emerald-500 font-bold">تم اختيار فيديو من الجهاز: {selectedVideoFile.name} ({(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB)</p>
+                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <p className="text-[11px] font-mono text-emerald-500 font-bold">تم اختيار فيديو من الجهاز: {selectedVideoFile.name} ({(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB)</p>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedVideoFile(null)}
+                              className="px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold border border-red-500/30"
+                            >
+                              ✕ إلغاء الملف
+                            </button>
+                          </div>
                         )}
                       </div>
                     ) : (
@@ -731,8 +751,19 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* PDF File Input */}
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">رفع المذكرة PDF من الجهاز (اختياري)</label>
+                  <div className="md:col-span-2 space-y-2 p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk/90">رفع المذكرة PDF من الجهاز (اختياري)</label>
+                      {selectedPdfFile && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPdfFile(null)}
+                          className="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold border border-red-500/30 flex items-center gap-1"
+                        >
+                          ✕ إلغاء ملف الـ PDF
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="file"
                       accept=".pdf"
@@ -857,10 +888,21 @@ export default function AdminDashboard() {
 
                   {/* Question Attachment Image / File Picker */}
                   <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 pt-3">
-                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-cyan-electric" />
-                      إرفاق رسم هندسي أو صورة توضيحية للسؤال من الجهاز (اختياري):
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-cyan-electric" />
+                        إرفاق رسم هندسي أو صورة توضيحية للسؤال من الجهاز (اختياري):
+                      </label>
+                      {selectedQImageFile && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQImageFile(null)}
+                          className="px-2 py-1 rounded bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold border border-red-500/30"
+                        >
+                          ✕ إلغاء الصورة
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="file"
                       accept="image/*,.pdf"
@@ -877,13 +919,30 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>إضافة السؤال والصورة لبنك الأسئلة</span>
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      className="flex-1 py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>إضافة السؤال والصورة لبنك الأسئلة</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQText('');
+                        setOptA('');
+                        setOptB('');
+                        setOptC('');
+                        setOptD('');
+                        setSelectedQImageFile(null);
+                      }}
+                      className="px-4 py-3.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800 border border-slate-700"
+                      title="مسح الحقول وكتابة سؤال جديد"
+                    >
+                      ↺ تفريغ الحقول
+                    </button>
+                  </div>
                 </form>
               </div>
 
@@ -1065,17 +1124,35 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                       </div>
-                      <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">جاهز للرفع</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedExamFile(null)}
+                        className="px-3 py-1.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold border border-red-500/30 flex items-center gap-1"
+                      >
+                        ✕ إلغاء هذا الملف
+                      </button>
                     </div>
                   )}
 
-                  <div className="md:col-span-2 pt-2">
+                  <div className="md:col-span-2 pt-2 flex gap-3">
                     <button
                       type="submit"
-                      className="w-full py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>حفظ وحفظ الامتحان الآن للطلاب</span>
+                      <span>حفظ ونشر الامتحان الآن للطلاب</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuizTitle('');
+                        setQuizDuration(25);
+                        setSelectedExamFile(null);
+                      }}
+                      className="px-5 py-3.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800 border border-slate-700"
+                      title="مسح الحقول وكتابة امتحان جديد"
+                    >
+                      ↺ تفريغ الحقول
                     </button>
                   </div>
                 </form>

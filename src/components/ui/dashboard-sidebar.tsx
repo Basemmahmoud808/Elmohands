@@ -179,13 +179,23 @@ export function DashboardSidebar({
           </div>
 
           <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
-            <button
-              onClick={handleLogout}
-              className="w-full py-3 rounded-2xl text-xs font-black text-red-400 bg-red-500/10 border border-red-500/30 flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>تسجيل الخروج من المنصة</span>
-            </button>
+            {role === 'ADMIN' ? (
+              <button
+                onClick={() => { window.location.href = '/'; }}
+                className="w-full py-3 rounded-2xl text-xs font-black text-cyan-electric bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-center gap-2"
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>العودة للرئيسية (دون خروج)</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="w-full py-3 rounded-2xl text-xs font-black text-red-400 bg-red-500/10 border border-red-500/30 flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>تسجيل الخروج من المنصة</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -272,14 +282,25 @@ export function DashboardSidebar({
           <div className="flex items-center justify-between">
             <ThemeToggle />
             {desktopOpen && (
-              <button
-                onClick={handleLogout}
-                className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
-                title="تسجيل الخروج"
-              >
-                <LogOut className="w-5 h-5 text-red-500" />
-                <span>خروج</span>
-              </button>
+              role === 'ADMIN' ? (
+                <button
+                  onClick={() => { window.location.href = '/'; }}
+                  className="p-2.5 rounded-xl border border-cyan-electric/30 text-cyan-electric hover:bg-cyan-electric/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
+                  title="العودة للصفحة الرئيسية بدون تسجيل الخروج"
+                >
+                  <GraduationCap className="w-5 h-5 text-cyan-electric" />
+                  <span>الرئيسية</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
+                  title="تسجيل الخروج"
+                >
+                  <LogOut className="w-5 h-5 text-red-500" />
+                  <span>خروج</span>
+                </button>
+              )
             )}
           </div>
 
