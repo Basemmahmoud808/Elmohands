@@ -54,11 +54,23 @@ const STAGES = [
 export default function Stages() {
   const [activeFilter, setActiveFilter] = useState('prep');
   const [user, setUser] = useState<UserSession | null>(null);
+  const [realLessons, setRealLessons] = useState<any[]>([]);
+  const [realQuizzes, setRealQuizzes] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadUser() {
       const sessionUser = await getCurrentUser();
       setUser(sessionUser);
+
+      const savedLessons = localStorage.getItem('almohands_real_lessons');
+      if (savedLessons) {
+        try { setRealLessons(JSON.parse(savedLessons)); } catch (e) {}
+      }
+
+      const savedQuizzes = localStorage.getItem('almohands_real_quizzes');
+      if (savedQuizzes) {
+        try { setRealQuizzes(JSON.parse(savedQuizzes)); } catch (e) {}
+      }
     }
     loadUser();
   }, []);
@@ -69,7 +81,6 @@ export default function Stages() {
     return true;
   });
 
-  const studentGrade = user?.gradeName || 'الصف الأول الإعدادي';
   const targetDashboardRoute = user ? (user.role === 'ADMIN' ? '/admin' : '/student') : '/sign-up';
 
   return (
@@ -106,6 +117,8 @@ export default function Stages() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredStages.map((stage) => {
             const isRegisteredGrade = user && user.gradeName === stage.name;
+            const lCount = realLessons.filter((l) => l.gradeName === stage.name).length;
+            const qCount = realQuizzes.filter((q) => q.grade === stage.name).length;
 
             return (
               <div
@@ -157,11 +170,11 @@ export default function Stages() {
                   <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-chalk-muted">
                     <span className="flex items-center gap-1">
                       <BookOpen className="w-3.5 h-3.5 text-cyan-electric" />
-                      {stage.lessonsCount} درس متاح
+                      {lCount} درس متاح
                     </span>
                     <span className="flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-cyan-electric" />
-                      {stage.quizzesCount} اختبار MCQ
+                      {qCount} اختبار MCQ
                     </span>
                   </div>
 
@@ -169,8 +182,7 @@ export default function Stages() {
                     href={targetDashboardRoute}
                     className="w-full py-2.5 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 group-hover:shadow-cyan-glow-lg"
                   >
-                    <span>{user ? `الانتقال لدروسك وكورساتك ➔` : `استعرض المحتوى`}</span>
-                    <ChevronLeft className="w-4 h-4" />
+                    <span>{user ? 'الانتقال لدروسك وكورساتك' : 'استعرض المحتوى'}</span>
                   </Link>
                 </div>
 
