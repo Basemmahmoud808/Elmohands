@@ -98,6 +98,8 @@ export default function StudentDashboard() {
 
   // Interactive Quiz Modal State
   const [activeQuizModal, setActiveQuizModal] = useState<any | null>(null);
+  const [activeExamFileModal, setActiveExamFileModal] = useState<any | null>(null);
+  const [examSubmitted, setExamSubmitted] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizResult, setQuizResult] = useState<number | null>(null);
 
