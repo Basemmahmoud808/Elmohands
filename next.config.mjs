@@ -63,10 +63,4 @@ export default withSentryConfig(nextConfig, {
 
   // Hides source maps from visitors
   hideSourceMaps: true,
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-
-  // Enables automatic Instrumentation of Vercel Cron Monitors.
-  automaticVercelMonitors: true,
 });
