@@ -8,6 +8,7 @@ import { createLessonAction, getLessonsList, LessonItem } from '@/lib/actions/le
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser, getAllRegisteredUsers } from '@/lib/actions/auth';
+import { uploadRealFile } from '@/lib/supabase/storage';
 import * as Sentry from '@sentry/nextjs';
 import {
   Users,
@@ -192,17 +193,17 @@ export default function AdminDashboard() {
     startUploadProgress('جاري رفع وتخصيص فيديو الشرح والمذكرة الـ PDF...', async () => {
       let finalVideoPath = videoUrl;
       if (videoSourceMode === 'file' && selectedVideoFile) {
-        finalVideoPath = URL.createObjectURL(selectedVideoFile);
+        finalVideoPath = await uploadRealFile(selectedVideoFile, 'course-materials');
       }
 
       let finalPdfPath = pdfUrl;
       if (selectedPdfFile) {
-        finalPdfPath = URL.createObjectURL(selectedPdfFile);
+        finalPdfPath = await uploadRealFile(selectedPdfFile, 'course-materials');
       }
 
       let finalThumbnailPath = thumbnailUrl || '/teacher_reda_kheyrat.jpg';
       if (selectedThumbnailFile) {
-        finalThumbnailPath = URL.createObjectURL(selectedThumbnailFile);
+        finalThumbnailPath = await uploadRealFile(selectedThumbnailFile, 'course-materials');
       }
 
       const fd = new FormData();
@@ -220,7 +221,7 @@ export default function AdminDashboard() {
 
       const res = await createLessonAction(fd);
       if (res.success && res.lesson) {
-        setUploadMsg(`تم رفع الكورس ونشر المحاضرة (${durationMinutes} دقيقة) بنجاح!`);
+        setUploadMsg(`تم رفع الكورس ونشر المحاضرة (${durationMinutes} دقيقة) بنجاح! تظهر الآن لطلاب (${lessonGrade})`);
         setLessonTitle('');
         setLessonDesc('');
         setSelectedVideoFile(null);
@@ -244,10 +245,10 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!qText.trim()) return;
 
-    startUploadProgress('جاري معالجة وإرفاق صورة السؤال لبنك الأسئلة...', () => {
+    startUploadProgress('جاري معالجة وإرفاق صورة السؤال لبنك الأسئلة...', async () => {
       let imageUrl = '';
       if (selectedQImageFile) {
-        imageUrl = URL.createObjectURL(selectedQImageFile);
+        imageUrl = await uploadRealFile(selectedQImageFile, 'course-materials');
       }
 
       const newQ = {
@@ -275,12 +276,12 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!quizTitle.trim()) return;
 
-    startUploadProgress('جاري رفع ملف ورقة الامتحان والمعالجة السحابية...', () => {
+    startUploadProgress('جاري رفع ملف ورقة الامتحان والمعالجة السحابية...', async () => {
       let examFileUrl = '';
       let examFileType: 'image' | 'pdf' | undefined = undefined;
 
       if (quizMode === 'file' && selectedExamFile) {
-        examFileUrl = URL.createObjectURL(selectedExamFile);
+        examFileUrl = await uploadRealFile(selectedExamFile, 'course-materials');
         examFileType = selectedExamFile.type.includes('pdf') ? 'pdf' : 'image';
       }
 
@@ -303,7 +304,7 @@ export default function AdminDashboard() {
         localStorage.setItem('almohands_real_quizzes', JSON.stringify(updatedQuizzes));
       } catch (e) {}
 
-      setQuizMsg('تم رفع ونشر الامتحان بنجاح للطلاب على المنصة!');
+      setQuizMsg(`تم رفع ونشر الامتحان بنجاح للطلاب المسجلين في (${quizGrade})!`);
       setQuizTitle('');
       setSelectedExamFile(null);
     });

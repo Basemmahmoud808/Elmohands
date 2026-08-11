@@ -162,7 +162,10 @@ export default function StudentDashboard() {
     setQuizResult(calculatedScore);
   };
 
-  const activeLessons = lessons;
+  const activeLessons = React.useMemo(() => {
+    if (!user?.gradeName) return lessons;
+    return lessons.filter((l) => l.gradeName === user.gradeName);
+  }, [lessons, user]);
 
   const filteredLessons = React.useMemo(() => {
     return activeLessons.filter((les) => {
@@ -466,7 +469,7 @@ export default function StudentDashboard() {
                 <p className="text-xs text-slate-500 dark:text-chalk-muted">اختبر فهمك للمواد بعد كل وحدة واطلع على الأوراق الامتحانية المرفوعة</p>
               </div>
 
-              {quizzesList.filter((q) => !user?.gradeName || q.grade === user?.gradeName || true).length === 0 ? (
+              {quizzesList.filter((q) => !user?.gradeName || q.grade === user?.gradeName).length === 0 ? (
                 <div className="chalk-card rounded-3xl p-8 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 text-center space-y-4 my-6">
                   <div className="w-14 h-14 rounded-2xl bg-cyan-electric/10 text-cyan-electric flex items-center justify-center mx-auto">
                     <FileText className="w-7 h-7" />
@@ -478,7 +481,7 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {quizzesList.filter((q) => !user?.gradeName || q.grade === user?.gradeName || true).map((quiz) => (
+                  {quizzesList.filter((q) => !user?.gradeName || q.grade === user?.gradeName).map((quiz) => (
                     <div key={quiz.id} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 flex flex-col justify-between space-y-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
