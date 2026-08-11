@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { registerUser } from '@/lib/actions/auth';
-import { GraduationCap, Phone, User, BookOpen, MapPin, Users, ArrowLeft, AlertCircle, Lock } from 'lucide-react';
+import { GraduationCap, Phone, User, BookOpen, MapPin, Users, ArrowLeft, AlertCircle, Lock, Eye, EyeOff } from 'lucide-react';
 
 const GRADES = [
   'الصف الأول الإعدادي',
@@ -50,6 +50,7 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [governorate, setGovernorate] = useState(GOVERNORATES[0]);
   const [gradeId, setGradeId] = useState(GRADES[0]);
   const [loading, setLoading] = useState(false);
@@ -168,14 +169,24 @@ export default function SignUpPage() {
                 <Lock className="w-3.5 h-3.5 text-cyan-electric" />
                 كلمة المرور
               </label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk outline-none focus:border-cyan-electric transition-colors"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 pl-12 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk outline-none focus:border-cyan-electric transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-cyan-electric transition-colors"
+                  title={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

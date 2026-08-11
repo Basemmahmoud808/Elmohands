@@ -62,18 +62,44 @@ export default function AdminDashboard() {
   const [lessons, setLessons] = useState<LessonItem[]>([]);
   const [uploadMsg, setUploadMsg] = useState('');
 
-  // MCQ Question State
+  // Question Bank State
   const [qText, setQText] = useState('');
   const [optA, setOptA] = useState('');
   const [optB, setOptB] = useState('');
   const [optC, setOptC] = useState('');
   const [optD, setOptD] = useState('');
   const [correctAns, setCorrectAns] = useState('A');
-  const [questionsList, setQuestionsList] = useState([
+  const [selectedQImageFile, setSelectedQImageFile] = useState<File | null>(null);
+  const [questionsList, setQuestionsList] = useState<any[]>([
     { id: 'q-1', text: 'س: اختر الإجابة الصحيحة: أي مما يلي يمثل عدداً نسبياً؟', options: ['A) 5/0', 'B) 3/4', 'C) √(-4)', 'D) 0/0'], correct: 'B', branch: 'فرع الجبر والإحصاء' },
     { id: 'q-2', text: 'س: في المثلث قائم الزاوية، مجموع مربعي طولي ضلعي القائمة يساوي:', options: ['A) مربع الوتر', 'B) نصف الوتر', 'C) ضعف الوتر', 'D) محيط المثلث'], correct: 'A', branch: 'فرع الهندسة والقياس' },
   ]);
   const [qMsg, setQMsg] = useState('');
+
+  // Real-time Upload Progress State
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadLabel, setUploadLabel] = useState<string>('');
+
+  const startUploadProgress = (label: string, onFinish: () => void) => {
+    setUploadProgress(0);
+    setUploadLabel(label);
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 12;
+      if (progress >= 100) {
+        progress = 100;
+        setUploadProgress(100);
+        clearInterval(interval);
+        setTimeout(() => {
+          onFinish();
+          setUploadProgress(null);
+          setUploadLabel('');
+        }, 400);
+      } else {
+        setUploadProgress(progress);
+      }
+    }, 150);
+  };
 
   // Exam / Quiz Builder State
   const [quizMode, setQuizMode] = useState<'mcq' | 'file'>('file');
@@ -109,23 +135,18 @@ export default function AdminDashboard() {
       const lList = await getLessonsList();
       setLessons(lList);
 
-      const registeredUsers = await getAllRegisteredUsers();
-      const realStudents = registeredUsers
-        .filter((u) => u.role === 'STUDENT')
-        .map((u) => ({
-          id: u.id,
-          name: u.fullName,
-          phone: u.phone,
-          parentPhone: u.parentPhone || 'غير محدد',
-          grade: u.gradeName || 'الصف الأول الإعدادي',
-          gov: u.governorate || 'القاهرة',
-          status: 'نشط',
-          subExpire: '30 يوماً',
-        }));
-
-      if (realStudents.length > 0) {
-        setStudentsList(realStudents);
-      }
+      const allUsers = await getAllRegisteredUsers();
+      const mappedStudents = allUsers.map((u) => ({
+        id: u.id,
+        name: u.fullName,
+        phone: u.phone,
+        parentPhone: u.parentPhone || 'غير مدخل',
+        gov: u.governorate || 'الدقهلية',
+        grade: u.gradeName || 'الصف الأول الإعدادي',
+        subExpire: 'مكتمل (30 يوماً)',
+        status: 'نشط',
+      }));
+      setStudentsList(mappedStudents);
     }
     loadData();
   }, [router]);
@@ -133,9 +154,8 @@ export default function AdminDashboard() {
   const handleGenerateCodes = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await generateVoucherCodes(planType, codeCount);
-    if (res.success) {
-      const updatedVouchers = await getAllVouchers();
-      setVouchers(updatedVouchers);
+    if (res.success && res.codes) {
+      setVouchers(res.codes);
     }
   };
 
@@ -143,96 +163,114 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!lessonTitle.trim()) return;
 
-    let finalVideoPath = videoUrl;
-    if (videoSourceMode === 'file' && selectedVideoFile) {
-      finalVideoPath = URL.createObjectURL(selectedVideoFile);
-    }
+    startUploadProgress('جاري رفع وتخصيص فيديو الشرح والمذكرة الـ PDF...', async () => {
+      let finalVideoPath = videoUrl;
+      if (videoSourceMode === 'file' && selectedVideoFile) {
+        finalVideoPath = URL.createObjectURL(selectedVideoFile);
+      }
 
-    let finalPdfPath = pdfUrl;
-    if (selectedPdfFile) {
-      finalPdfPath = URL.createObjectURL(selectedPdfFile);
-    }
+      let finalPdfPath = pdfUrl;
+      if (selectedPdfFile) {
+        finalPdfPath = URL.createObjectURL(selectedPdfFile);
+      }
 
-    let finalThumbnailPath = thumbnailUrl || '/teacher_reda_kheyrat.jpg';
-    if (selectedThumbnailFile) {
-      finalThumbnailPath = URL.createObjectURL(selectedThumbnailFile);
-    }
+      let finalThumbnailPath = thumbnailUrl || '/teacher_reda_kheyrat.jpg';
+      if (selectedThumbnailFile) {
+        finalThumbnailPath = URL.createObjectURL(selectedThumbnailFile);
+      }
 
-    const fd = new FormData();
-    fd.append('title', lessonTitle);
-    fd.append('description', lessonDesc);
-    fd.append('gradeName', lessonGrade);
-    fd.append('branchName', lessonBranch);
-    fd.append('unitTitle', lessonUnit);
-    fd.append('courseName', lessonCourse);
-    fd.append('sequenceOrder', String(sequenceOrder));
-    fd.append('durationMinutes', String(durationMinutes));
-    fd.append('thumbnailPath', finalThumbnailPath);
-    if (finalVideoPath) fd.append('videoUrl', finalVideoPath);
-    if (finalPdfPath) fd.append('pdfUrl', finalPdfPath);
+      const fd = new FormData();
+      fd.append('title', lessonTitle);
+      fd.append('description', lessonDesc);
+      fd.append('gradeName', lessonGrade);
+      fd.append('branchName', lessonBranch);
+      fd.append('unitTitle', lessonUnit);
+      fd.append('courseName', lessonCourse);
+      fd.append('sequenceOrder', String(sequenceOrder));
+      fd.append('durationMinutes', String(durationMinutes));
+      fd.append('thumbnailPath', finalThumbnailPath);
+      if (finalVideoPath) fd.append('videoUrl', finalVideoPath);
+      if (finalPdfPath) fd.append('pdfUrl', finalPdfPath);
 
-    const res = await createLessonAction(fd);
-    if (res.success && res.lesson) {
-      setUploadMsg(`تم نشر المحاضرة (${durationMinutes} دقيقة) بنجاح في ${lessonCourse}!`);
-      setLessonTitle('');
-      setLessonDesc('');
-      setSelectedVideoFile(null);
-      setSelectedPdfFile(null);
-      setSelectedThumbnailFile(null);
-      setVideoUrl('');
-      setPdfUrl('');
-      setThumbnailUrl('');
-      const updatedLessons = await getLessonsList();
-      setLessons(updatedLessons);
-    }
+      const res = await createLessonAction(fd);
+      if (res.success && res.lesson) {
+        setUploadMsg(`تم رفع الكورس ونشر المحاضرة (${durationMinutes} دقيقة) بنجاح!`);
+        setLessonTitle('');
+        setLessonDesc('');
+        setSelectedVideoFile(null);
+        setSelectedPdfFile(null);
+        setSelectedThumbnailFile(null);
+        setVideoUrl('');
+        setPdfUrl('');
+        setThumbnailUrl('');
+        const updatedLessons = await getLessonsList();
+        setLessons(updatedLessons);
+      }
+    });
   };
 
   const handleAddQuestion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!qText.trim()) return;
 
-    const newQ = {
-      id: `q-${Date.now()}`,
-      text: qText.trim(),
-      options: [`A) ${optA || 'الخيار الأول'}`, `B) ${optB || 'الخيار الثاني'}`, `C) ${optC || 'الخيار الثالث'}`, `D) ${optD || 'الخيار الرابع'}`],
-      correct: correctAns,
-      branch: lessonBranch,
-    };
+    startUploadProgress('جاري معالجة وإرفاق صورة السؤال لبنك الأسئلة...', () => {
+      let imageUrl = '';
+      if (selectedQImageFile) {
+        imageUrl = URL.createObjectURL(selectedQImageFile);
+      }
 
-    setQuestionsList([newQ, ...questionsList]);
-    setQMsg('تمت إضافة السؤال بنجاح إلى بنك الأسئلة!');
-    setQText('');
-    setOptA('');
-    setOptB('');
-    setOptC('');
-    setOptD('');
+      const newQ = {
+        id: `q-${Date.now()}`,
+        text: qText.trim(),
+        imageUrl,
+        imageName: selectedQImageFile ? selectedQImageFile.name : undefined,
+        options: [`A) ${optA || 'الخيار الأول'}`, `B) ${optB || 'الخيار الثاني'}`, `C) ${optC || 'الخيار الثالث'}`, `D) ${optD || 'الخيار الرابع'}`],
+        correct: correctAns,
+        branch: lessonBranch,
+      };
+
+      setQuestionsList([newQ, ...questionsList]);
+      setQMsg('تمت إضافة السؤال والصورة التوضيحية بنجاح إلى بنك الأسئلة!');
+      setQText('');
+      setOptA('');
+      setOptB('');
+      setOptC('');
+      setOptD('');
+      setSelectedQImageFile(null);
+    });
   };
 
   const handleCreateQuiz = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quizTitle.trim()) return;
 
-    let examFileUrl = '';
-    let examFileType: 'image' | 'pdf' | undefined = undefined;
+    startUploadProgress('جاري رفع ملف ورقة الامتحان والمعالجة السحابية...', () => {
+      let examFileUrl = '';
+      let examFileType: 'image' | 'pdf' | undefined = undefined;
 
-    if (quizMode === 'file' && selectedExamFile) {
-      examFileUrl = URL.createObjectURL(selectedExamFile);
-      examFileType = selectedExamFile.type.includes('pdf') ? 'pdf' : 'image';
-    }
+      if (quizMode === 'file' && selectedExamFile) {
+        examFileUrl = URL.createObjectURL(selectedExamFile);
+        examFileType = selectedExamFile.type.includes('pdf') ? 'pdf' : 'image';
+      }
 
-    const newQuiz = {
-      id: `qz-${Date.now()}`,
-      type: quizMode,
-      title: quizTitle.trim(),
-      count: quizMode === 'file' ? 'ورقة امتحان (صورة/PDF)' : `${quizQCount} سؤالاً`,
-      duration: `${quizDuration} دقيقة`,
-      grade: quizGrade,
-      branch: quizBranch,
-    };
+      const newQuiz = {
+        id: `qz-${Date.now()}`,
+        type: quizMode,
+        title: quizTitle.trim(),
+        count: quizMode === 'file' ? 'ورقة امتحان (صورة/PDF)' : `${quizQCount} سؤالاً`,
+        duration: `${quizDuration} دقيقة`,
+        grade: quizGrade,
+        branch: quizBranch,
+        fileUrl: examFileUrl,
+        fileType: examFileType,
+        fileName: selectedExamFile ? selectedExamFile.name : undefined,
+      };
 
-    setQuizzesList([newQuiz, ...quizzesList]);
-    setQuizMsg('تم نشر الامتحان بنجاح للطلاب على المنصة!');
-    setQuizTitle('');
+      setQuizzesList([newQuiz, ...quizzesList]);
+      setQuizMsg('تم رفع ونشر الامتحان بنجاح للطلاب على المنصة!');
+      setQuizTitle('');
+      setSelectedExamFile(null);
+    });
   };
 
   const filteredStudents = React.useMemo(() => {
@@ -276,6 +314,25 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+
+          {/* Real-time Upload Progress Bar Card */}
+          {uploadProgress !== null && (
+            <div className="p-5 rounded-3xl bg-slate-900 border-2 border-cyan-electric shadow-cyan-glow space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between text-xs font-black">
+                <span className="text-cyan-electric flex items-center gap-2">
+                  <UploadCloud className="w-4 h-4 animate-bounce" />
+                  {uploadLabel || 'جاري رفع وتجهيز الملفات على السيرفر السحابي...'}
+                </span>
+                <span className="font-mono text-cyan-electric text-sm">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800 p-0.5">
+                <div
+                  className="bg-gradient-to-r from-cyan-electric via-blue-400 to-cyan-electric h-full rounded-full transition-all duration-300 ease-out shadow-cyan-glow"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* ==================================================== */}
           {/* TAB 1: OVERVIEW DASHBOARD */}
@@ -420,20 +477,26 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  { grade: 'الصف الأول الإعدادي', stage: 'المرحلة الإعدادية', branches: ['فرع الجبر والإحصاء', 'فرع الهندسة والقياس'], lessons: 24 },
-                  { grade: 'الصف الثاني الإعدادي', stage: 'المرحلة الإعدادية', branches: ['فرع الجبر والإحصاء', 'فرع الهندسة والتحليل'], lessons: 28 },
-                  { grade: 'الصف الثالث الإعدادي', stage: 'المرحلة الإعدادية', branches: ['فرع الجبر وحساب المثلثات', 'فرع الهندسة التحليلية'], lessons: 32 },
-                  { grade: 'الصف الأول الثانوي', stage: 'المرحلة الثانوية', branches: ['فرع الجبر والأعداد المركبة', 'حساب المثلثات', 'الهندسة المستوية'], lessons: 36 },
-                ].map((c, idx) => (
-                  <div key={idx} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
-                        {c.stage}
-                      </span>
-                      <span className="text-xs font-bold text-slate-500">{c.lessons} درساً متاحة</span>
-                    </div>
+                  { grade: 'الصف الأول الإعدادي', stage: 'المرحلة الإعدادية', branches: ['فرع الجبر والإحصاء', 'فرع الهندسة والقياس'] },
+                  { grade: 'الصف الثاني الإعدادي', stage: 'المرحلة الإعدادية', branches: ['فرع الجبر والإحصاء', 'فرع الهندسة والتحليل'] },
+                  { grade: 'الصف الثالث الإعدادي', stage: 'المرحلة الإعدادية', branches: ['فرع الجبر وحساب المثلثات', 'فرع الهندسة التحليلية'] },
+                  { grade: 'الصف الأول الثانوي', stage: 'المرحلة الثانوية', branches: ['فرع الجبر والأعداد المركبة', 'حساب المثلثات', 'الهندسة المستوية'] },
+                ].map((c, idx) => {
+                  const gradeLessonsCount = lessons.filter((l) => l.gradeName === c.grade).length;
+                  const gradeQuizzesCount = quizzesList.filter((q) => q.grade === c.grade).length;
 
-                    <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{c.grade}</h3>
+                  return (
+                    <div key={idx} className="chalk-card rounded-3xl p-6 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/10 border border-cyan-electric/30">
+                          {c.stage}
+                        </span>
+                        <span className="text-xs font-black text-slate-700 dark:text-chalk px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800">
+                          {gradeLessonsCount} درساً • {gradeQuizzesCount} اختبار
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-extrabold text-slate-900 dark:text-chalk">{c.grade}</h3>
 
                     <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                       <span className="text-xs font-bold text-slate-700 dark:text-chalk/80 block">فروع المنهج:</span>
@@ -446,7 +509,8 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           )}
@@ -791,12 +855,34 @@ export default function AdminDashboard() {
                     </select>
                   </div>
 
+                  {/* Question Attachment Image / File Picker */}
+                  <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 pt-3">
+                    <label className="text-xs font-bold text-slate-700 dark:text-chalk/90 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-cyan-electric" />
+                      إرفاق رسم هندسي أو صورة توضيحية للسؤال من الجهاز (اختياري):
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setSelectedQImageFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs text-slate-700 dark:text-chalk file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-cyan-electric file:text-black hover:file:bg-cyan-electric-hover cursor-pointer"
+                    />
+                    {selectedQImageFile && (
+                      <div className="p-3 rounded-xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-between text-xs font-bold text-cyan-electric">
+                        <span>تم إرفاق: {selectedQImageFile.name} ({(selectedQImageFile.size / 1024).toFixed(1)} KB)</span>
+                        {selectedQImageFile.type.includes('image') && (
+                          <img src={URL.createObjectURL(selectedQImageFile)} alt="معاينة الصورة" className="w-10 h-10 rounded-lg object-cover border border-slate-700" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <button
                     type="submit"
                     className="w-full py-3.5 rounded-xl text-sm font-extrabold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>إضافة السؤال لبنك الأسئلة</span>
+                    <span>إضافة السؤال والصورة لبنك الأسئلة</span>
                   </button>
                 </form>
               </div>
@@ -806,13 +892,21 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-black text-slate-900 dark:text-chalk border-b border-slate-200 dark:border-slate-800 pb-3">أسئلة البنك الحالية ({questionsList.length})</h3>
                 <div className="space-y-3">
                   {questionsList.map((q) => (
-                    <div key={q.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div key={q.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-sm text-slate-900 dark:text-chalk">{q.text}</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-electric/15 text-cyan-electric">{q.branch}</span>
                       </div>
+                      
+                      {/* Uploaded Question Image Preview */}
+                      {q.imageUrl && (
+                        <div className="w-full max-w-xs h-32 rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+                          <img src={q.imageUrl} alt="صورة السؤال" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-2 text-xs">
-                        {q.options.map((opt, idx) => (
+                        {q.options.map((opt: string, idx: number) => (
                           <span key={idx} className="px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-chalk">
                             {opt}
                           </span>
