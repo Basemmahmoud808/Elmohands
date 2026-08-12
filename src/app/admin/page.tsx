@@ -553,7 +553,7 @@ export default function AdminDashboard() {
 
                       <div className="w-full py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 mt-2">
                         <BookOpen className="w-4 h-4" />
-                        <span>الانتقال فوراً لصفحة دروس وبنك أسئلة الصف 🚀</span>
+                        <span>عرض صفحة كورس وبنك أسئلة الصف</span>
                       </div>
                     </Link>
                   );

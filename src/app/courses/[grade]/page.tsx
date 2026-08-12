@@ -130,11 +130,86 @@ export default function StandaloneGradeCoursePage() {
     );
   }
 
+  // Security Access Control Check
+  const isAuthorized = user && (user.role === 'ADMIN' || user.gradeName === gradeName);
+
   return (
     <DarkGradientBg>
       <Navbar />
 
       <main className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 font-arabic">
+        
+        {/* ACCESS LOCK OVERLAY FOR UNAUTHORIZED / GUEST USERS */}
+        {!user ? (
+          <div className="chalk-card rounded-3xl p-8 sm:p-12 bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-cyan-electric/30 text-center space-y-6 my-10 max-w-2xl mx-auto shadow-cyan-glow-lg">
+            <div className="w-20 h-20 rounded-3xl bg-cyan-electric/15 border border-cyan-electric/30 text-cyan-electric flex items-center justify-center mx-auto shadow-cyan-glow text-3xl">
+              🔒
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-xs font-black px-3 py-1 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
+                محتوى كورس مدفوع وحصري
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
+                المحتوى محمي 🔒 — يرجى تسجيل الدخول والاشتراك أولاً
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed font-bold max-w-lg mx-auto">
+                محاضرات، مذكرات الشيت الـ PDF، والامتحانات الورقية لـ ({gradeName}) مخصصة فقط لطلاب منصة المهندس المشتركين والمفعلين مع م/ رضا خيرت.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <Link
+                href="/sign-in"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
+              >
+                تسجيل الدخول لحسابك
+              </Link>
+              <Link
+                href="/sign-up"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-bold text-slate-800 dark:text-chalk bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+              >
+                إنشاء حساب طالب جديد
+              </Link>
+            </div>
+          </div>
+        ) : !isAuthorized ? (
+          <div className="chalk-card rounded-3xl p-8 sm:p-12 bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-red-500/30 text-center space-y-6 my-10 max-w-2xl mx-auto shadow-lg">
+            <div className="w-20 h-20 rounded-3xl bg-red-500/15 border border-red-500/30 text-red-500 flex items-center justify-center mx-auto text-3xl">
+              🔒
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-xs font-black px-3 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
+                هذا الكورس خاص بـ ({gradeName})
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
+                الكورس غير مفعل لصفك الدراسي الحالي 🔒
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed font-bold max-w-lg mx-auto">
+                حسابك الحالي مفعل لـ ({user.gradeName || 'صف آخر'})، بينما هذه الصفحة تحتوي على دروس ومناهج ({gradeName}). يرجى الذهاب لكورسات صفك الدراسي أو التواصل مع م/ رضا خيرت لتعديل الصف أو تفعيل الكود.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <Link
+                href="/student"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
+              >
+                الذهاب لكورسات صفك ({user.gradeName})
+              </Link>
+              <a
+                href="https://wa.me/201008901896"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all"
+              >
+                تواصل مع م/ رضا خيرت (01008901896)
+              </a>
+            </div>
+          </div>
+        ) : (
+          <React.Fragment>
         
         {/* Header Breadcrumb Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-800 pb-8">
@@ -441,6 +516,8 @@ export default function StandaloneGradeCoursePage() {
           </div>
         )}
 
+      </React.Fragment>
+      )}
       </main>
 
       {/* MEDIA PREVIEW MODAL */}
