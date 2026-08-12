@@ -158,8 +158,25 @@ export default function StudentDashboard() {
   };
 
   const handleSubmitQuiz = () => {
-    const calculatedScore = Math.floor(Math.random() * 5) + (activeQuizModal.maxScore - 4);
-    setQuizResult(calculatedScore);
+    if (!activeQuizModal) return;
+
+    const quizQuestions = activeQuizModal.questions || [
+      { question: 'إذا كان س/5 = 3/15، فإن قيمة (س + 2) تساوي:', options: ['1', '3', '5', '7'], correctIdx: 1 },
+      { question: 'مجموع قياسات الزوايا المتجمعة حول نقطة واحدة يساوي:', options: ['180°', '360°', '90°', '270°'], correctIdx: 1 },
+    ];
+
+    let correctAnswersCount = 0;
+    quizQuestions.forEach((q: any, index: number) => {
+      const selectedIndex = quizAnswers[index];
+      const correctIdx = q.correctIdx ?? (q.correct === 'A' ? 0 : q.correct === 'B' ? 1 : q.correct === 'C' ? 2 : 3);
+      if (selectedIndex !== undefined && selectedIndex === correctIdx) {
+        correctAnswersCount++;
+      }
+    });
+
+    const maxScore = activeQuizModal.maxScore || 30;
+    const finalCalculatedScore = Math.round((correctAnswersCount / quizQuestions.length) * maxScore);
+    setQuizResult(finalCalculatedScore);
   };
 
   const activeLessons = React.useMemo(() => {
@@ -625,46 +642,66 @@ export default function StudentDashboard() {
             </div>
 
             {quizResult === null ? (
-              <div className="space-y-6">
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                  <span className="text-xs font-bold text-cyan-electric">السؤال 1 من 1:</span>
-                  <p className="text-sm font-bold text-chalk">
-                    إذا كان س/5 = 3/15، فإن قيمة (س + 2) تساوي:
-                  </p>
-                  <div className="space-y-2 pt-2">
-                    {['1', '3', '5', '7'].map((opt, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setQuizAnswers((prev) => ({ ...prev, [0]: idx }))}
-                        className={`w-full p-3 rounded-xl text-right text-xs font-bold border transition-colors ${
-                          quizAnswers[0] === idx
-                            ? 'bg-cyan-electric text-black border-cyan-electric'
-                            : 'bg-slate-900 text-chalk border-slate-800 hover:border-slate-700'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto p-1">
+                {(activeQuizModal.questions || [
+                  { question: 'إذا كان س/5 = 3/15، فإن قيمة (س + 2) تساوي:', options: ['1', '3', '5', '7'], correctIdx: 1 },
+                  { question: 'مجموع قياسات الزوايا المتجمعة حول نقطة واحدة يساوي:', options: ['180°', '360°', '90°', '270°'], correctIdx: 1 }
+                ]).map((qItem: any, qIdx: number) => (
+                  <div key={qIdx} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-cyan-electric">السؤال {qIdx + 1}:</span>
+                      {qItem.branch && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
+                          {qItem.branch}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-bold text-chalk">
+                      {qItem.question || qItem.text}
+                    </p>
+                    <div className="space-y-2 pt-2">
+                      {(qItem.options || ['أ', 'ب', 'ج', 'د']).map((opt: string, optIdx: number) => (
+                        <button
+                          key={optIdx}
+                          type="button"
+                          onClick={() => setQuizAnswers((prev) => ({ ...prev, [qIdx]: optIdx }))}
+                          className={`w-full p-3 rounded-xl text-right text-xs font-bold border transition-colors ${
+                            quizAnswers[qIdx] === optIdx
+                              ? 'bg-cyan-electric text-black border-cyan-electric shadow-cyan-glow'
+                              : 'bg-slate-900 text-chalk border-slate-800 hover:border-slate-700'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ))}
 
                 <button
+                  type="button"
                   onClick={handleSubmitQuiz}
-                  className="w-full py-3.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow"
+                  className="w-full py-3.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
                 >
-                  تسليم الاختبار ورصد الدرجة
+                  تسليم الاختبار ورصد الدرجة النهائية الفعليه
                 </button>
               </div>
             ) : (
-              <div className="text-center space-y-4 py-4">
+              <div className="text-center space-y-4 py-6">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-2xl font-black">
                   ✓
                 </div>
-                <h4 className="text-xl font-black text-chalk">أحسنت! اكتمل الاختبار بنجاح</h4>
-                <p className="text-sm text-cyan-electric font-black">
-                  درجتك: {quizResult} من {activeQuizModal.maxScore}
-                </p>
+                <h4 className="text-xl font-black text-chalk">تم تصحيح وحساب نتيجة الإجابات بنجاح!</h4>
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 max-w-sm mx-auto">
+                  <p className="text-lg text-cyan-electric font-black">
+                    النتيجة النهائية: {quizResult} من {activeQuizModal.maxScore || 30}
+                  </p>
+                  <p className="text-xs text-slate-400 font-bold">
+                    النسبة المئوية: {Math.round((quizResult / (activeQuizModal.maxScore || 30)) * 100)}%
+                  </p>
+                </div>
                 <button
+                  type="button"
                   onClick={() => setActiveQuizModal(null)}
                   className="px-6 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric shadow-cyan-glow"
                 >

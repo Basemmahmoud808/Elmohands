@@ -128,9 +128,34 @@ export async function registerUser(data: {
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = sanitizeInput(data.phone.trim());
-    if (!cleanPhone) return { success: false, message: 'يرجى إدخال رقم الهاتف بشكل صحيح' };
+    const cleanParentPhone = sanitizeInput(data.parentPhone.trim());
+    const cleanFullName = sanitizeInput(data.fullName.trim());
+    const cleanPassword = data.password ? sanitizeInput(data.password) : '';
 
     const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
+
+    // 1. Full Name Validation (at least 2 words)
+    const nameWords = cleanFullName.split(/\s+/).filter(Boolean);
+    if (!cleanFullName || nameWords.length < 2 || cleanFullName.length < 5) {
+      return { success: false, message: 'يرجى كتابة اسم الطالب بالكامل (الاسم الثنائي أو الثلاثي على الأقل بشكل صحيح).' };
+    }
+
+    // 2. Egyptian 11-digit Mobile Phone Validation (^01[0125]\d{8}$)
+    const phoneRegex = /^01[0125]\d{8}$/;
+
+    if (!isDedicatedAdmin && !phoneRegex.test(cleanPhone)) {
+      return { success: false, message: 'رقم هاتف الطالب غير صحيح! يجب إدخال رقم محمول مصري صحيح مكون من 11 رقماً ويبدأ بـ 01 (مثال: 01012345678).' };
+    }
+
+    if (!isDedicatedAdmin && !phoneRegex.test(cleanParentPhone)) {
+      return { success: false, message: 'رقم هاتف ولي الأمر غير صحيح! يجب إدخال رقم محمول مصري صحيح مكون من 11 رقماً ويبدأ بـ 01 (مثال: 01223456789).' };
+    }
+
+    // 3. Password Minimum Length Validation (min 6 characters)
+    if (!isDedicatedAdmin && cleanPassword.length < 6) {
+      return { success: false, message: 'كلمة المرور ضعيفة! يرجى اختيار كلمة مرور تتكون من 6 أرقام أو خانات على الأقل لضمان أمان حسابك.' };
+    }
+
     const usersDb = getUsersDb();
 
     if (usersDb[cleanPhone] && !isDedicatedAdmin) {
