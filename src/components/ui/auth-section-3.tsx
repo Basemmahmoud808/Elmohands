@@ -1,0 +1,362 @@
+'use client';
+
+import React, { useState, ReactNode } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, GraduationCap, Phone, User, BookOpen, MapPin, Users, Lock, ArrowLeft, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
+
+interface AuthSectionProps {
+  mode?: 'signup' | 'signin';
+  onSubmit: (data: any) => Promise<void>;
+  loading: boolean;
+  errorMsg: string;
+}
+
+const GRADES = [
+  'الصف الأول الإعدادي',
+  'الصف الثاني الإعدادي',
+  'الصف الثالث الإعدادي',
+  'الصف الأول الثانوي',
+];
+
+const GOVERNORATES = [
+  'الدقهلية',
+  'القاهرة',
+  'الجيزة',
+  'الإسكندرية',
+  'الشرقية',
+  'القليوبية',
+  'البحيرة',
+  'المنوفية',
+  'الغربية',
+  'كفر الشيخ',
+  'الفيوم',
+  'بني سويف',
+  'المنيا',
+  'أسيوط',
+  'سوهاج',
+  'قنا',
+  'الأقصر',
+  'أسوان',
+  'دمياط',
+  'بورسعيد',
+  'السويس',
+  'الإسماعيلية',
+];
+
+export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, errorMsg }: AuthSectionProps) {
+  // Form State
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [parentPhone, setParentPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [governorate, setGovernorate] = useState(GOVERNORATES[0]);
+  const [gradeId, setGradeId] = useState(GRADES[0]);
+
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      fullName,
+      phone,
+      parentPhone,
+      password,
+      governorate,
+      gradeId,
+    });
+  };
+
+  return (
+    <section className="min-h-screen bg-slate-950 p-3 sm:p-6 text-chalk font-arabic antialiased flex items-center justify-center">
+      <div className="w-full max-w-7xl grid min-h-[calc(100vh-3rem)] gap-6 lg:grid-cols-[1fr_1fr] items-stretch">
+        
+        {/* RIGHT SIDE (RTL: FIRST) - AUTH FORM CONTAINER */}
+        <div className="flex min-h-[600px] flex-col justify-center rounded-3xl border border-slate-800 bg-slate-900/90 p-6 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-electric/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-ink/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="mx-auto w-full max-w-md space-y-6 relative z-10">
+            
+            {/* Header */}
+            <div className="space-y-3">
+              <Link href="/" className="inline-flex items-center gap-3 group">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-electric to-blue-ink text-black flex items-center justify-center shadow-cyan-glow group-hover:scale-105 transition-transform">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-cyan-electric tracking-wide">منصة المهندس لتعليم الرياضيات</h2>
+                  <p className="text-[11px] text-slate-400 font-bold">مع م/ رضا خيرت — التأسيس والتميز</p>
+                </div>
+              </Link>
+
+              <h1 className="text-2xl sm:text-3xl font-black text-chalk tracking-tight pt-2">
+                {mode === 'signup' ? 'إنشاء حساب طالب جديد 🎓' : 'تسجيل الدخول لمنصة المهندس 🔐'}
+              </h1>
+              <p className="text-xs text-slate-400 font-semibold leading-relaxed">
+                {mode === 'signup'
+                  ? 'قم بإدخال بياناتك كاملة للوصول الفوري للمحاضرات والأوراق الامتحانية وبنك الأسئلة'
+                  : 'ادخل رقم الهاتف المحمول وكلمة المرور الخاصة بك للمتابعة واستكمال دروسك'}
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {errorMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-2.5"
+              >
+                <AlertCircle className="w-4.5 h-4.5 shrink-0" />
+                <span>{errorMsg}</span>
+              </motion.div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmitForm} className="space-y-4">
+              
+              {mode === 'signup' && (
+                <div className="space-y-1.5 text-right w-full">
+                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-cyan-electric" />
+                    اسم الطالب الثلاثي
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: أحمد محمود السيد"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk text-xs outline-none focus:border-cyan-electric transition-colors"
+                  />
+                </div>
+              )}
+
+              <div className={mode === 'signup' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}>
+                <div className="space-y-1.5 text-right w-full">
+                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-cyan-electric" />
+                    {mode === 'signup' ? 'رقم هاتف الطالب' : 'رقم الهاتف أو اسم المستخدم'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={mode === 'signup' ? '01012345678' : '01008901896 أو اسم المستخدم'}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk font-mono text-left text-xs outline-none focus:border-cyan-electric transition-colors"
+                    dir="ltr"
+                  />
+                </div>
+
+                {mode === 'signup' && (
+                  <div className="space-y-1.5 text-right w-full">
+                    <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-cyan-electric" />
+                      رقم هاتف ولي الأمر
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="01223456789"
+                      value={parentPhone}
+                      onChange={(e) => setParentPhone(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk font-mono text-left text-xs outline-none focus:border-cyan-electric transition-colors"
+                      dir="ltr"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-1.5 text-right w-full">
+                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-cyan-electric" />
+                  كلمة المرور
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 pl-10 rounded-xl bg-slate-950 border border-slate-800 text-chalk text-xs outline-none focus:border-cyan-electric transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 text-slate-400 hover:text-cyan-electric transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {mode === 'signup' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5 text-right w-full">
+                    <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-electric" />
+                      المحافظة
+                    </label>
+                    <select
+                      value={governorate}
+                      onChange={(e) => setGovernorate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk text-xs outline-none focus:border-cyan-electric transition-colors"
+                    >
+                      {GOVERNORATES.map((g, i) => (
+                        <option key={i} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5 text-right w-full">
+                    <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-cyan-electric" />
+                      الصف الدراسي
+                    </label>
+                    <select
+                      value={gradeId}
+                      onChange={(e) => setGradeId(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk text-xs outline-none focus:border-cyan-electric transition-colors"
+                    >
+                      {GRADES.map((g, i) => (
+                        <option key={i} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-6 w-full py-4 rounded-2xl text-sm font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {loading ? (
+                  <span>جاري التنفيذ والتسجيل...</span>
+                ) : (
+                  <>
+                    <span>{mode === 'signup' ? 'إنشاء حساب والبدء الفوري' : 'تسجيل الدخول للحساب'}</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Footer Navigation Link */}
+            <div className="text-center text-xs text-slate-400 font-semibold pt-3 border-t border-slate-800">
+              {mode === 'signup' ? (
+                <>
+                  لديك حساب بالفعل؟{' '}
+                  <Link href="/sign-in" className="text-cyan-electric hover:underline font-bold">
+                    تسجيل الدخول من هنا
+                  </Link>
+                </>
+              ) : (
+                <>
+                  ليس لديك حساب بعد؟{' '}
+                  <Link href="/sign-up" className="text-cyan-electric hover:underline font-bold">
+                    أنشئ حساب طالب جديد
+                  </Link>
+                </>
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        {/* LEFT SIDE (RTL: SECOND) - VISUAL HERO & TESTIMONIAL DISPLAY */}
+        <div className="relative flex min-h-[550px] flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-b from-slate-900 via-slate-950 to-black p-8 sm:p-12 lg:p-14 text-white border border-slate-800 shadow-2xl">
+          
+          {/* Background Ambient Glow & Math Formulas Backdrop */}
+          <div className="absolute inset-0 z-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-cyan-electric via-blue-900 to-transparent" />
+          <div className="absolute top-10 right-10 text-slate-700/20 text-6xl font-mono select-none pointer-events-none">
+            f(x) = ax² + bx + c
+          </div>
+          <div className="absolute bottom-20 left-10 text-slate-700/20 text-5xl font-mono select-none pointer-events-none">
+            sin θ = a/c
+          </div>
+
+          <div className="relative z-10 space-y-6">
+            
+            {/* Teacher Badge Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex items-center gap-4 bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md max-w-fit"
+            >
+              <img
+                src="/teacher_reda_kheyrat.jpg"
+                alt="م/ رضا خيرت"
+                className="w-12 h-12 shrink-0 rounded-xl border border-cyan-electric/40 object-cover shadow-cyan-glow"
+              />
+              <div>
+                <h3 className="font-extrabold text-sm text-chalk flex items-center gap-1.5">
+                  <span>م/ رضا خيرت</span>
+                  <ShieldCheck className="w-4 h-4 text-cyan-electric" />
+                </h3>
+                <p className="text-[11px] text-cyan-electric font-bold">خبير تعليم الرياضيات — المنصورة والنزل</p>
+              </div>
+            </motion.div>
+
+            {/* Inspiring Arabic Quote */}
+            <motion.blockquote
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              className="text-xl sm:text-2xl lg:text-3xl font-black leading-relaxed text-chalk/90 tracking-tight max-w-lg"
+            >
+              « الرياضيات ليست مجرد أرقام وقوانين، بل هي فن التفكير المنطقي والهندسي الذكي لتفوق كل طالب »
+            </motion.blockquote>
+
+          </div>
+
+          {/* Floating UI Mockup Display */}
+          <div className="relative z-10 mt-8 w-full">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 0.25 }}
+              className="overflow-hidden rounded-2xl border border-cyan-electric/30 bg-slate-950/80 p-4 shadow-cyan-glow-lg backdrop-blur-xl"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-cyan-electric" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+                  <span className="mr-2 text-[10px] font-mono text-slate-400">almohands.edu.eg/courses</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  منصة تعليمية متكاملة ⚡
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-400 font-bold block">المحاضرات</span>
+                  <span className="text-sm font-black text-cyan-electric">FHD 1080p</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-400 font-bold block">بنك الأسئلة</span>
+                  <span className="text-sm font-black text-cyan-electric">+500 سؤال</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-400 font-bold block">الامتحانات</span>
+                  <span className="text-sm font-black text-cyan-electric">ورقية و MCQ</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  );
+}
