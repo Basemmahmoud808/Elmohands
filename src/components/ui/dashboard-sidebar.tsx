@@ -47,31 +47,38 @@ export function DashboardSidebar({
     }
   }, []);
 
+  interface SidebarOption {
+    id: string;
+    title: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badge?: string;
+  }
+
   // Admin options
-  const adminOptions = [
+  const adminOptions: SidebarOption[] = [
     { id: 'dashboard', title: 'لوحة التحكم', icon: LayoutDashboard },
-    { id: 'students', title: 'إدارة الطلاب', icon: Users, badge: '128' },
+    { id: 'students', title: 'إدارة الطلاب', icon: Users },
     { id: 'courses', title: 'المناهج والصفوف', icon: BookOpen },
-    { id: 'lessons', title: 'إدارة الدروس', icon: Video, badge: '36' },
+    { id: 'lessons', title: 'إدارة الدروس', icon: Video },
     { id: 'questions', title: 'بنك الأسئلة', icon: FileQuestion },
     { id: 'quizzes', title: 'الاختبارات والامتحانات', icon: HelpCircle },
-    { id: 'vouchers', title: 'أكواد الشحن', icon: KeyRound, badge: 'جديد' },
+    { id: 'vouchers', title: 'أكواد الشحن', icon: KeyRound },
     { id: 'subscriptions', title: 'الاشتراكات الفعالة', icon: CreditCard },
     { id: 'account', title: 'حسابي والشخصية', icon: User },
     { id: 'audit', title: 'سجل الأحداث', icon: History },
   ];
 
   // Student options
-  const studentOptions = [
+  const studentOptions: SidebarOption[] = [
     { id: 'overview', title: 'الرئيسية', icon: LayoutDashboard },
     { id: 'my-courses', title: 'مناهجي والدروس', icon: BookOpen },
-    { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle, badge: '2' },
+    { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle },
     { id: 'my-results', title: 'نتائجي وتقييماتي', icon: AwardIcon },
     { id: 'activate-code', title: 'تفعيل كود شحن', icon: KeyRound },
     { id: 'account', title: 'حسابي الشخصي', icon: User },
   ];
 
-  function AwardIcon(props: any) {
+  function AwardIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
       <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="8" r="6"/>

@@ -3,22 +3,15 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { registerUser } from '@/lib/actions/auth';
-import AuthSectionThree from '@/components/ui/auth-section-3';
+import AuthSectionThree, { AuthFormData } from '@/components/ui/auth-section-3';
 
 export default function SignUpPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSignUp = async (formData: {
-    fullName: string;
-    phone: string;
-    parentPhone: string;
-    password?: string;
-    governorate: string;
-    gradeId: string;
-  }) => {
-    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.parentPhone.trim() || !formData.password?.trim()) {
+  const handleSignUp = async (formData: AuthFormData) => {
+    if (!formData.fullName?.trim() || !formData.phone?.trim() || !formData.parentPhone?.trim() || !formData.password?.trim()) {
       setErrorMsg('يرجى إدخال كافة البيانات وكلمة المرور بشكل صحيح');
       return;
     }

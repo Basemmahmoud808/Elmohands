@@ -1,578 +1,550 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { getCurrentUser, getAllRegisteredUsers, UserSession } from '@/lib/actions/auth';
-import { LessonItem } from '@/lib/actions/lessons';
+import { getCurrentUser, UserSession } from '@/lib/actions/auth';
+import { getCurriculumByGradeAction } from '@/lib/actions/lessons';
+import { CurriculumGradeDTO, CurriculumLessonDTO, CurriculumUnitDTO } from '@/lib/types/dashboard';
+import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
 import {
   BookOpen,
   Video,
-  FileQuestion,
-  HelpCircle,
-  Users,
-  Eye,
-  Clock,
-  Play,
   FileText,
-  Plus,
-  ArrowRight,
+  Play,
+  Clock,
+  CheckCircle2,
+  Lock,
   Sparkles,
   Layers,
   Award,
-  CheckCircle2,
-  BarChart3,
-  ShieldCheck,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ArrowRight,
+  ShieldAlert,
+  GraduationCap,
+  MessageCircle,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 
-export default function StandaloneGradeCoursePage() {
+export default function GradeCoursesPage() {
   const params = useParams();
   const router = useRouter();
 
   // Decode grade param
-  const rawGradeParam = typeof params.grade === 'string' ? decodeURIComponent(params.grade) : 'الصف الأول الإعدادي';
-  
-  // Normalize grade name if short code used
-  const gradeNameMap: Record<string, string> = {
+  const rawParam = typeof params.grade === 'string' ? decodeURIComponent(params.grade) : 'الصف الأول الإعدادي';
+  const gradeAliasMap: Record<string, string> = {
     'prep1': 'الصف الأول الإعدادي',
     'prep2': 'الصف الثاني الإعدادي',
     'prep3': 'الصف الثالث الإعدادي',
     'sec1': 'الصف الأول الثانوي',
   };
-  const gradeName = gradeNameMap[rawGradeParam] || rawGradeParam;
+  const gradeName = gradeAliasMap[rawParam] || rawParam;
 
   const [user, setUser] = useState<UserSession | null>(null);
+  const [curriculum, setCurriculum] = useState<CurriculumGradeDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Content Data State
-  const [lessons, setLessons] = useState<LessonItem[]>([]);
-  const [quizzesList, setQuizzesList] = useState<any[]>([]);
-  const [studentsCount, setStudentsCount] = useState(0);
+  // Filters & State
+  const [selectedTermIndex, setSelectedTermIndex] = useState(0);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'FREE'>('ALL');
+  const [collapsedUnits, setCollapsedUnits] = useState<Record<string, boolean>>({});
 
-  // Active Tab State inside Grade Page
-  const [activeSection, setActiveSection] = useState<'videos' | 'exams' | 'qbank'>('videos');
-
-  // Media Preview Modal State
-  const [activeMediaModal, setActiveMediaModal] = useState<{ type: 'video' | 'pdf' | 'exam'; title: string; url: string; fileType?: string } | null>(null);
+  // Media preview modal for PDF
+  const [activePdfModal, setActivePdfModal] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
-    async function loadGradeData() {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
+    async function loadData() {
+      setLoading(true);
+      setErrorMsg(null);
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
 
-      // Load shared real lessons
-      const savedLessons = localStorage.getItem('almohands_real_lessons');
-      if (savedLessons) {
-        try {
-          const parsed: LessonItem[] = JSON.parse(savedLessons);
-          setLessons(parsed.filter((l) => l.gradeName === gradeName));
-        } catch (e) {
-          setLessons([]);
+        const res = await getCurriculumByGradeAction(gradeName);
+        if (res.success && res.data) {
+          setCurriculum(res.data);
+        } else {
+          setErrorMsg(res.error || 'لم يتم العثور على منهج هذا الصف');
         }
-      } else {
-        setLessons([]);
+      } catch {
+        setErrorMsg('حدث خطأ أثناء تحميل بيانات المنهج');
+      } finally {
+        setLoading(false);
       }
-
-      // Load shared real quizzes
-      const savedQuizzes = localStorage.getItem('almohands_real_quizzes');
-      if (savedQuizzes) {
-        try {
-          const parsed = JSON.parse(savedQuizzes);
-          setQuizzesList(parsed.filter((q: any) => q.grade === gradeName));
-        } catch (e) {
-          setQuizzesList([]);
-        }
-      } else {
-        setQuizzesList([]);
-      }
-
-      // Load students count for this grade
-      const allUsers = await getAllRegisteredUsers();
-      const gradeStudents = allUsers.filter((u) => (u.gradeName || 'الصف الأول الإعدادي') === gradeName);
-      setStudentsCount(gradeStudents.length);
-
-      setLoading(false);
     }
-    loadGradeData();
+    loadData();
   }, [gradeName]);
 
-  // Compute stats
-  const totalViews = lessons.reduce((acc, l) => acc + (l.durationMinutes ? l.durationMinutes * 4 + 18 : 35), 0);
+  // Check access authorization
+  const isGuest = !user;
+  const isAdmin = user?.role === 'ADMIN';
+  const isMatchingStudent = user?.role === 'STUDENT' && (user.gradeName === gradeName || user.gradeId === curriculum?.id);
+  const isGradeMismatch = user?.role === 'STUDENT' && !isMatchingStudent;
 
-  // Mock Question Bank for this grade
-  const mockGradeQuestions = [
-    {
-      id: 'gb-1',
-      text: `س: في مادة الرياضيات لـ (${gradeName}) — أي مما يلي يعتبر حلاً صحيحاً للمعادلة الأساسية؟`,
-      options: ['أ) الخيار الأول المتوافق', 'ب) الخيار الثاني الصحيح', 'ج) الخيار الثالث', 'د) الخيار الرابع'],
-      correct: 'B',
-      branch: gradeName.includes('الثانوي') ? 'فرع الجبر والأعداد المركبة' : 'فرع الجبر والإحصاء',
-    },
-    {
-      id: 'gb-2',
-      text: `س: اختر الإجابة الصحيحة: مجموع قياسات الزوايا المتجمعة حول نقطة واحدة يساوي:`,
-      options: ['أ) 180°', 'ب) 360°', 'ج) 90°', 'د) 270°'],
-      correct: 'B',
-      branch: gradeName.includes('الثانوي') ? 'فرع الهندسة المستوية' : 'فرع الهندسة والقياس',
-    },
-  ];
+  // Active Term
+  const activeTerm = curriculum?.terms[selectedTermIndex] || curriculum?.terms[0];
+
+  // Available Branches in active term
+  const branches = activeTerm?.branches || [];
+
+  // Filtered Units and Lessons
+  const filteredUnits = useMemo(() => {
+    if (!activeTerm) return [];
+
+    let currentUnits: Array<CurriculumUnitDTO & { branchName: string }> = [];
+    activeTerm.branches.forEach((b) => {
+      if (selectedBranchId === 'ALL' || b.id === selectedBranchId) {
+        b.units.forEach((u) => {
+          currentUnits.push({ ...u, branchName: b.name });
+        });
+      }
+    });
+
+    if (!searchQuery.trim() && statusFilter === 'ALL') {
+      return currentUnits;
+    }
+
+    return currentUnits
+      .map((u) => {
+        const matchingLessons = u.lessons.filter((l) => {
+          const matchesQuery =
+            !searchQuery.trim() ||
+            l.title.includes(searchQuery.trim()) ||
+            l.description.includes(searchQuery.trim());
+
+          let matchesStatus = true;
+          if (statusFilter === 'COMPLETED') matchesStatus = l.isCompleted;
+          else if (statusFilter === 'IN_PROGRESS') matchesStatus = l.watchPercentage > 0 && !l.isCompleted;
+          else if (statusFilter === 'FREE') matchesStatus = !l.isLocked;
+
+          return matchesQuery && matchesStatus;
+        });
+
+        return {
+          ...u,
+          lessons: matchingLessons,
+        };
+      })
+      .filter((u) => u.lessons.length > 0);
+  }, [activeTerm, selectedBranchId, searchQuery, statusFilter]);
+
+  // Overall Stats
+  const allLessons = useMemo(() => {
+    const list: CurriculumLessonDTO[] = [];
+    curriculum?.terms.forEach((t) => {
+      t.branches.forEach((b) => {
+        b.units.forEach((u) => {
+          u.lessons.forEach((l) => list.push(l));
+        });
+      });
+    });
+    return list;
+  }, [curriculum]);
+
+  const totalLessonsCount = allLessons.length;
+  const completedLessonsCount = allLessons.filter((l) => l.isCompleted).length;
+  const overallProgressPct =
+    totalLessonsCount > 0 ? Math.round((completedLessonsCount / totalLessonsCount) * 100) : 0;
+
+  const toggleUnitCollapse = (unitId: string) => {
+    setCollapsedUnits((prev) => ({ ...prev, [unitId]: !prev[unitId] }));
+  };
 
   if (loading) {
     return (
       <DarkGradientBg>
-        <div className="min-h-screen flex items-center justify-center text-cyan-electric font-black text-sm">
-          جاري فتح صفحة مناهج وكورسات {gradeName}...
+        <div className="min-h-screen flex items-center justify-center font-arabic">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-cyan-electric border-t-transparent rounded-full animate-spin mx-auto shadow-lg shadow-cyan-electric/20" />
+            <p className="text-sm font-bold text-slate-700 dark:text-chalk">
+              جاري جلب منهج ودروس {gradeName}...
+            </p>
+          </div>
         </div>
       </DarkGradientBg>
     );
   }
 
-  // Security Access Control Check
-  const isAuthorized = user && (user.role === 'ADMIN' || user.gradeName === gradeName);
-
   return (
     <DarkGradientBg>
       <Navbar />
 
-      <main className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 font-arabic">
-        
-        {/* ACCESS LOCK OVERLAY FOR UNAUTHORIZED / GUEST USERS */}
-        {!user ? (
-          <div className="chalk-card rounded-3xl p-8 sm:p-12 bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-cyan-electric/30 text-center space-y-6 my-10 max-w-2xl mx-auto shadow-cyan-glow-lg">
-            <div className="w-20 h-20 rounded-3xl bg-cyan-electric/15 border border-cyan-electric/30 text-cyan-electric flex items-center justify-center mx-auto shadow-cyan-glow text-3xl">
-              🔒
-            </div>
-
-            <div className="space-y-3">
-              <span className="text-xs font-black px-3 py-1 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                محتوى كورس مدفوع وحصري
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
-                المحتوى محمي 🔒 — يرجى تسجيل الدخول والاشتراك أولاً
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed font-bold max-w-lg mx-auto">
-                محاضرات، مذكرات الشيت الـ PDF، والامتحانات الورقية لـ ({gradeName}) مخصصة فقط لطلاب منصة المهندس المشتركين والمفعلين مع م/ رضا خيرت.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link
-                href="/sign-in"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
-              >
-                تسجيل الدخول لحسابك
-              </Link>
-              <Link
-                href="/sign-up"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-bold text-slate-800 dark:text-chalk bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-              >
-                إنشاء حساب طالب جديد
-              </Link>
-            </div>
-          </div>
-        ) : !isAuthorized ? (
-          <div className="chalk-card rounded-3xl p-8 sm:p-12 bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-red-500/30 text-center space-y-6 my-10 max-w-2xl mx-auto shadow-lg">
-            <div className="w-20 h-20 rounded-3xl bg-red-500/15 border border-red-500/30 text-red-500 flex items-center justify-center mx-auto text-3xl">
-              🔒
-            </div>
-
-            <div className="space-y-3">
-              <span className="text-xs font-black px-3 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
-                هذا الكورس خاص بـ ({gradeName})
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
-                الكورس غير مفعل لصفك الدراسي الحالي 🔒
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed font-bold max-w-lg mx-auto">
-                حسابك الحالي مفعل لـ ({user.gradeName || 'صف آخر'})، بينما هذه الصفحة تحتوي على دروس ومناهج ({gradeName}). يرجى الذهاب لكورسات صفك الدراسي أو التواصل مع م/ رضا خيرت لتعديل الصف أو تفعيل الكود.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link
-                href="/student"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all"
-              >
-                الذهاب لكورسات صفك ({user.gradeName})
-              </Link>
-              <a
-                href="https://wa.me/201008901896"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all"
-              >
-                تواصل مع م/ رضا خيرت (01008901896)
-              </a>
-            </div>
-          </div>
-        ) : (
-          <React.Fragment>
-        
-        {/* Header Breadcrumb Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-800 pb-8">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Link href={user?.role === 'ADMIN' ? '/admin' : '/student'} className="text-xs font-bold text-slate-400 hover:text-cyan-electric flex items-center gap-1">
-                <ArrowRight className="w-3.5 h-3.5" />
-                العودة للوحة التحكم
-              </Link>
-              <span className="text-slate-600 text-xs">/</span>
-              <span className="text-xs font-bold text-cyan-electric px-3 py-1 rounded-full bg-cyan-electric/10 border border-cyan-electric/30">
-                {gradeName.includes('الثانوي') ? 'المرحلة الثانوية' : 'المرحلة الإعدادية'}
-              </span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-chalk tracking-tight">
-              مناهج وكورسات {gradeName}
-            </h1>
-            <p className="text-sm text-slate-600 dark:text-chalk-muted font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-electric" />
-              <span>الشرح والمراجعة الحصرية مع م/ رضا خيرت — منصة المهندس لتعليم الرياضيات</span>
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {user?.role === 'ADMIN' ? (
-              <>
-                <Link
-                  href="/admin"
-                  className="px-5 py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>رفع محتوى جديد لهذا الصف</span>
-                </Link>
-              </>
-            ) : (
-              <Link
-                href="/student"
-                className="px-5 py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>الذهاب لدروسي في المنصة</span>
-              </Link>
-            )}
-          </div>
+      <main className="min-h-screen font-arabic py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+        {/* Breadcrumb Header */}
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <Link href="/" className="hover:text-cyan-electric transition-colors">
+            الرئيسية
+          </Link>
+          <span>/</span>
+          <Link href="/courses" className="hover:text-cyan-electric transition-colors">
+            الكورسات
+          </Link>
+          <span>/</span>
+          <span className="text-cyan-electric font-bold">{gradeName}</span>
         </div>
 
-        {/* Analytics Stats Grid (4 Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-cyan-electric">
-              <Video className="w-6 h-6" />
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-electric/15 border border-cyan-electric/30">المحاضرات</span>
-            </div>
-            <div className="text-3xl font-black text-slate-900 dark:text-chalk">{lessons.length}</div>
-            <div className="text-xs font-bold text-slate-500 dark:text-chalk-muted">درساً وفيديو مرفوع للصف</div>
-          </div>
-
-          <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-emerald-500">
-              <Eye className="w-6 h-6" />
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">المشاهدات</span>
-            </div>
-            <div className="text-3xl font-black text-slate-900 dark:text-chalk">{totalViews}</div>
-            <div className="text-xs font-bold text-slate-500 dark:text-chalk-muted">إجمالي مشاهدات الطلاب للدروس</div>
-          </div>
-
-          <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-amber-500">
-              <HelpCircle className="w-6 h-6" />
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30">الامتحانات</span>
-            </div>
-            <div className="text-3xl font-black text-slate-900 dark:text-chalk">{quizzesList.length}</div>
-            <div className="text-xs font-bold text-slate-500 dark:text-chalk-muted">اختباراً وورقة امتحان فعالة</div>
-          </div>
-
-          <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-blue-500">
-              <Users className="w-6 h-6" />
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30">الطلاب</span>
-            </div>
-            <div className="text-3xl font-black text-slate-900 dark:text-chalk">{studentsCount}</div>
-            <div className="text-xs font-bold text-slate-500 dark:text-chalk-muted">طالباً مسجلاً في هذا الصف</div>
-          </div>
-        </div>
-
-        {/* Section Navigation Tabs */}
-        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4 overflow-x-auto">
-          <button
-            onClick={() => setActiveSection('videos')}
-            className={`px-5 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeSection === 'videos'
-                ? 'bg-cyan-electric text-black shadow-cyan-glow'
-                : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Video className="w-4 h-4" />
-            <span>1. الكورسات والمحاضرات ودروس الفيديو ({lessons.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSection('exams')}
-            className={`px-5 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeSection === 'exams'
-                ? 'bg-cyan-electric text-black shadow-cyan-glow'
-                : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-800'
-            }`}
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span>2. الامتحانات والأوراق المرفوعة ({quizzesList.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSection('qbank')}
-            className={`px-5 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeSection === 'qbank'
-                ? 'bg-cyan-electric text-black shadow-cyan-glow'
-                : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-800'
-            }`}
-          >
-            <FileQuestion className="w-4 h-4" />
-            <span>3. بنك أسئلة {gradeName}</span>
-          </button>
-        </div>
-
-        {/* SECTION 1: VIDEOS & COURSES */}
-        {activeSection === 'videos' && (
-          <div className="space-y-6">
-            {lessons.length === 0 ? (
-              <div className="chalk-card rounded-3xl p-10 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-electric/15 text-cyan-electric flex items-center justify-center mx-auto">
-                  <Video className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-chalk">
-                  لم يتم نشر دروس أو فيديوهات لـ ({gradeName}) بعد (0 درس)
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted max-w-md mx-auto font-bold">
-                  بمجرد أن يبدأ م/ رضا خيرت بنشر محاضرات لـ {gradeName}، ستظهر المحاضرات ونسب المشاهدات هنا مباشرة!
+        {/* Grade Mismatch Notice Banner (Server-side visibility guard) */}
+        {isGradeMismatch && (
+          <div className="p-5 rounded-3xl bg-amber-950/40 border-2 border-amber-500/30 backdrop-blur-xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-black text-chalk">
+                  أنت مسجل حالياً في <span className="text-cyan-electric font-black">{user.gradeName || 'صف دراسي آخر'}</span>
+                </h4>
+                <p className="text-xs text-chalk-muted leading-relaxed">
+                  هذا المنهج مخصص لطلاب {gradeName}. يمكنك تصفح خطة المنهج أدناه أو العودة فوراً لمنهجك المسجل.
                 </p>
-                {user?.role === 'ADMIN' && (
-                  <Link
-                    href="/admin"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>الذهاب لرفع كورس جديد لهذا الصف</span>
-                  </Link>
-                )}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {lessons.map((les, index) => {
-                  const viewsCount = les.durationMinutes ? les.durationMinutes * 4 + 18 : 35;
-
-                  return (
-                    <div key={les.id} className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-4 hover:border-cyan-electric/50 transition-all">
-                      <div className="space-y-3">
-                        {/* Thumbnail / Header Badge */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                            {les.branchName}
-                          </span>
-                          <span className="text-[11px] font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-cyan-electric" /> {les.durationMinutes} دقيقة
-                          </span>
-                        </div>
-
-                        <span className="text-xs font-bold text-cyan-electric block">{les.unitTitle}</span>
-                        <h3 className="text-lg font-black text-slate-900 dark:text-chalk">{les.title}</h3>
-                        <p className="text-xs text-slate-600 dark:text-chalk-muted leading-relaxed line-clamp-2">{les.description}</p>
-                        
-                        {/* Viewers & Enrolled stats */}
-                        <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold">
-                          <span className="text-slate-500 dark:text-chalk-muted flex items-center gap-1">
-                            <Eye className="w-3.5 h-3.5 text-cyan-electric" />
-                            عدد مشاهدات الطلاب:
-                          </span>
-                          <span className="font-mono text-cyan-electric font-black">{viewsCount} مشاهدة</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
-                        {les.videoPath && (
-                          <button
-                            onClick={() => setActiveMediaModal({ type: 'video', title: les.title, url: les.videoPath! })}
-                            className="flex-1 py-3 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center justify-center gap-1.5"
-                          >
-                            <Play className="w-3.5 h-3.5" />
-                            <span>تشغيل الفيديو 🎬</span>
-                          </button>
-                        )}
-                        {les.pdfPath && (
-                          <button
-                            onClick={() => setActiveMediaModal({ type: 'pdf', title: `مذكرة: ${les.title}`, url: les.pdfPath! })}
-                            className="px-3 py-3 rounded-xl text-xs font-bold text-slate-800 dark:text-chalk bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center gap-1"
-                            title="فتح المذكرة PDF"
-                          >
-                            <FileText className="w-4 h-4 text-cyan-electric" />
-                            <span>الشيت 📄</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SECTION 2: EXAMS & PAPERS */}
-        {activeSection === 'exams' && (
-          <div className="space-y-6">
-            {quizzesList.length === 0 ? (
-              <div className="chalk-card rounded-3xl p-10 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-electric/15 text-cyan-electric flex items-center justify-center mx-auto">
-                  <HelpCircle className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-chalk">
-                  لا توجد امتحانات مرفوعة لـ ({gradeName}) بعد (0 اختبار)
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted max-w-md mx-auto font-bold">
-                  بمجرد أن يبدأ م/ رضا خيرت بنشر اختبار أو رفع ورقة امتحان لـ {gradeName}، ستظهر هنا فوراً!
-                </p>
-                {user?.role === 'ADMIN' && (
-                  <Link
-                    href="/admin"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>إنشاء امتحان ورقي / MCQ جديد</span>
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {quizzesList.map((qz) => (
-                  <div key={qz.id} className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-cyan-electric px-2.5 py-1 rounded-md bg-cyan-electric/15 border border-cyan-electric/30">
-                          {qz.branch}
-                        </span>
-                        {qz.type === 'file' && (
-                          <span className="text-[10px] font-black text-black bg-cyan-electric px-2 py-0.5 rounded-full">
-                            ورقة مرفوعة
-                          </span>
-                        )}
-                      </div>
-
-                      <h3 className="text-lg font-black text-slate-900 dark:text-chalk">{qz.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-chalk-muted font-bold">
-                        {qz.type === 'file' ? 'ورقة امتحان من الجهاز (صورة / PDF)' : `${qz.count} (MCQ)`} • المدة: {qz.duration}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setActiveMediaModal({ type: 'exam', title: qz.title, url: qz.fileUrl || '/sample-lesson-notes.pdf', fileType: qz.fileType })}
-                      className="w-full py-3 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-1.5"
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span>فتح ومعاينة الورقة الامتحانية 📝</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SECTION 3: QUESTION BANK */}
-        {activeSection === 'qbank' && (
-          <div className="chalk-card rounded-3xl p-6 sm:p-8 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
-            <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-chalk">بنك أسئلة {gradeName} المعتمدة</h3>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted">مجموعة التمارين البرهانية والنماذج الاختيارية</p>
-              </div>
-              <span className="text-xs font-extrabold text-cyan-electric px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30">
-                {mockGradeQuestions.length} سؤالاً في البنك
-              </span>
             </div>
 
-            <div className="space-y-4">
-              {mockGradeQuestions.map((q) => (
-                <div key={q.id} className="p-5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-chalk">{q.text}</h4>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                      {q.branch}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    {q.options.map((opt, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-chalk font-semibold">
-                        {opt}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <Link
+                href={`/courses/${encodeURIComponent(user.gradeName || '')}`}
+                className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-cyan-electric text-slate-950 font-bold text-xs flex items-center justify-center gap-2 hover:shadow-cyan-glow transition-all shrink-0"
+              >
+                <span>الذهاب لمنهجي ({user.gradeName})</span>
+                <ChevronLeft className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         )}
 
-      </React.Fragment>
-      )}
-      </main>
-
-      {/* MEDIA PREVIEW MODAL */}
-      {activeMediaModal && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden text-chalk shadow-2xl animate-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+        {/* Hero Grade Banner */}
+        <div className="relative rounded-3xl overflow-hidden p-6 sm:p-8 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-slate-950/90 border border-slate-800 backdrop-blur-xl shadow-2xl space-y-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-2xl">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/30">
-                  {activeMediaModal.type === 'video' ? 'معاينة الفيديو المحاضرة 🎬' : 'معاينة المستند والورقة 📄'}
+                <span className="px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30 text-cyan-electric text-xs font-black">
+                  مادة الرياضيات
                 </span>
-                <h4 className="text-sm font-black text-chalk truncate max-w-md">{activeMediaModal.title}</h4>
+                <span className="text-xs text-chalk-muted font-medium">م/ رضا خيرت</span>
               </div>
-              <button
-                onClick={() => setActiveMediaModal(null)}
-                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
-              >
-                ✕
-              </button>
+
+              <h1 className="text-2xl sm:text-4xl font-black text-chalk tracking-tight">{gradeName}</h1>
+
+              <p className="text-xs sm:text-sm text-chalk-muted leading-relaxed">
+                {curriculum?.description ||
+                  `المنهج المتكامل لطلاب ${gradeName} مع شرح تفصيلي لجميع فروع المادة والامتحانات.`}
+              </p>
             </div>
 
-            {/* Content */}
-            <div className="p-4 flex-1 bg-black flex items-center justify-center overflow-hidden">
-              {activeMediaModal.type === 'video' ? (
-                activeMediaModal.url.includes('iframe') || activeMediaModal.url.includes('youtube') || activeMediaModal.url.includes('drive') ? (
-                  <iframe src={activeMediaModal.url} className="w-full h-[60vh] rounded-2xl border border-slate-800" allowFullScreen />
-                ) : (
-                  <video controls autoPlay src={activeMediaModal.url} className="w-full max-h-[65vh] rounded-2xl border border-slate-800" />
-                )
-              ) : activeMediaModal.fileType === 'image' || activeMediaModal.url.match(/\.(jpg|jpeg|png|webp)/i) ? (
-                <div className="max-h-[70vh] overflow-auto p-2">
-                  <img src={activeMediaModal.url} alt="معاينة المستند الورقي" className="max-w-full h-auto rounded-xl object-contain border border-slate-800" />
-                </div>
+            {/* Progress / Stats Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-3 w-full md:w-72 shrink-0">
+              {isMatchingStudent ? (
+                <>
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-chalk">تقدمك في المنهج:</span>
+                    <span className="text-cyan-electric font-mono">{overallProgressPct}%</span>
+                  </div>
+                  <div className="w-full bg-slate-700/60 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-cyan-electric to-blue-400 h-2 rounded-full shadow-cyan-glow transition-all"
+                      style={{ width: `${overallProgressPct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-chalk-muted">
+                    <span>{completedLessonsCount} درس مكتمل</span>
+                    <span>من إجمالي {totalLessonsCount} درس</span>
+                  </div>
+                </>
               ) : (
-                <iframe src={activeMediaModal.url} className="w-full h-[70vh] rounded-2xl border border-slate-800 bg-white" />
+                <div className="space-y-2 text-center">
+                  <p className="text-xs font-bold text-chalk">إحصائيات المنهج</p>
+                  <div className="grid grid-cols-2 gap-2 text-center pt-1">
+                    <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                      <p className="text-sm font-black text-cyan-electric">{totalLessonsCount}</p>
+                      <p className="text-[10px] text-chalk-muted font-bold">درساً متاحاً</p>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                      <p className="text-sm font-black text-emerald-400">{curriculum?.terms.length || 2}</p>
+                      <p className="text-[10px] text-chalk-muted font-bold">تيرم دراسي</p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
+          </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-slate-800 bg-slate-900 flex justify-between items-center text-xs">
-              <span className="text-slate-400 font-bold">معاينة تفاعلية عالية الدقة من منصة المهندس م/ رضا خيرت</span>
-              <a
-                href={activeMediaModal.url}
-                target="_blank"
-                rel="noreferrer"
-                download
-                className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow"
-              >
-                تحميل المستند / الفيديو 📥
-              </a>
+          {/* Term Switcher Tabs */}
+          {curriculum?.terms && curriculum.terms.length > 0 && (
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80 overflow-x-auto">
+              {curriculum.terms.map((term, idx) => (
+                <button
+                  key={term.id}
+                  onClick={() => {
+                    setSelectedTermIndex(idx);
+                    setSelectedBranchId('ALL');
+                  }}
+                  className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all shrink-0 flex items-center gap-2 ${
+                    selectedTermIndex === idx
+                      ? 'bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 shadow-cyan-glow'
+                      : 'bg-slate-800/60 text-slate-300 hover:bg-slate-800 border border-slate-700'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>{term.name}</span>
+                </button>
+              ))}
             </div>
+          )}
+        </div>
+
+        {/* Filter & Search Bar */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          {/* Branch Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1">
+            <button
+              onClick={() => setSelectedBranchId('ALL')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                selectedBranchId === 'ALL'
+                  ? 'bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/40'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              جميع الفروع
+            </button>
+            {branches.map((branch) => (
+              <button
+                key={branch.id}
+                onClick={() => setSelectedBranchId(branch.id)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  selectedBranchId === branch.id
+                    ? 'bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/40'
+                    : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                }`}
+              >
+                {branch.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Search and Status filter */}
+          <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
+            <div className="relative flex-1 lg:w-64">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="بحث في الدروس..."
+                className="w-full pl-3 pr-9 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-chalk text-xs focus:border-cyan-electric focus:outline-none placeholder:text-slate-500"
+              />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-chalk text-xs font-bold focus:border-cyan-electric focus:outline-none"
+            >
+              <option value="ALL">جميع الحالات</option>
+              <option value="COMPLETED">مكتمل ✓</option>
+              <option value="IN_PROGRESS">قيد المشاهدة</option>
+              <option value="FREE">عينة مجانية</option>
+            </select>
           </div>
         </div>
-      )}
+
+        {/* Units Accordion List */}
+        {filteredUnits.length === 0 ? (
+          <div className="p-12 rounded-3xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
+            <Layers className="w-10 h-10 text-slate-500 mx-auto" />
+            <h4 className="text-sm font-bold text-chalk">لا توجد دروس تطابق بحثك</h4>
+            <p className="text-xs text-chalk-muted">جرب تغيير كلمات البحث أو إزالة التصفية الحالية.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {filteredUnits.map((unit) => {
+              const isCollapsed = collapsedUnits[unit.id] || false;
+              const unitLessonsCount = unit.lessons.length;
+              const unitCompletedCount = unit.lessons.filter((l) => l.isCompleted).length;
+              const unitProgressPct =
+                unitLessonsCount > 0 ? Math.round((unitCompletedCount / unitLessonsCount) * 100) : 0;
+
+              return (
+                <div
+                  key={unit.id}
+                  className="rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl transition-all"
+                >
+                  {/* Unit Header */}
+                  <div
+                    onClick={() => toggleUnitCollapse(unit.id)}
+                    className="p-5 sm:p-6 bg-slate-900/90 border-b border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-850 transition-colors select-none"
+                  >
+                    <div className="space-y-1 text-right flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-cyan-electric bg-cyan-electric/10 px-2.5 py-0.5 rounded-lg border border-cyan-electric/20">
+                          {unit.branchName}
+                        </span>
+                        <h3 className="text-base sm:text-lg font-black text-chalk">{unit.title}</h3>
+                      </div>
+                      {unit.description && (
+                        <p className="text-xs text-chalk-muted leading-relaxed">{unit.description}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                      {isMatchingStudent && (
+                        <div className="text-left">
+                          <span className="text-xs font-mono font-bold text-cyan-electric">
+                            {unitCompletedCount}/{unitLessonsCount} مكتمل ({unitProgressPct}%)
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="p-2 rounded-xl bg-slate-800 text-slate-300">
+                        {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lessons Grid in Unit */}
+                  {!isCollapsed && (
+                    <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {unit.lessons.map((lesson, idx) => {
+                        const canDirectPlay = isMatchingStudent || isAdmin || !lesson.isLocked;
+
+                        return (
+                          <div
+                            key={lesson.id}
+                            className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700/80 hover:border-cyan-electric/40 transition-all flex flex-col justify-between space-y-4 group"
+                          >
+                            {/* Top info row */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="space-y-1 text-right">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-6 h-6 rounded-lg bg-cyan-electric/15 text-cyan-electric font-mono font-bold text-xs flex items-center justify-center">
+                                    #{idx + 1}
+                                  </span>
+                                  <h4 className="text-sm font-bold text-chalk group-hover:text-cyan-electric transition-colors">
+                                    {lesson.title}
+                                  </h4>
+                                </div>
+                                <p className="text-[11px] text-chalk-muted line-clamp-2 leading-relaxed">
+                                  {lesson.description || 'شرح وحلول تمارين المنهج بإشراف م/ رضا خيرت'}
+                                </p>
+                              </div>
+
+                              {/* Status Badges */}
+                              <div className="shrink-0">
+                                {lesson.isCompleted ? (
+                                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    <span>مكتمل</span>
+                                  </span>
+                                ) : !lesson.isLocked ? (
+                                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" />
+                                    <span>عينة مجانية</span>
+                                  </span>
+                                ) : lesson.watchPercentage > 0 ? (
+                                  <span className="px-2.5 py-1 rounded-lg bg-cyan-electric/15 border border-cyan-electric/30 text-cyan-electric text-[10px] font-bold">
+                                    {lesson.watchPercentage}%
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center gap-1">
+                                    <Lock className="w-3 h-3" />
+                                    <span>للمشتركين</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Progress bar if watched */}
+                            {lesson.watchPercentage > 0 && !lesson.isCompleted && (
+                              <div className="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-cyan-electric h-1.5 rounded-full shadow-cyan-glow"
+                                  style={{ width: `${lesson.watchPercentage}%` }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Bottom Actions Row */}
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-700/60 text-xs">
+                              <div className="flex items-center gap-1 text-chalk-muted text-[11px]">
+                                <Clock className="w-3.5 h-3.5 text-cyan-electric" />
+                                <span>{lesson.durationMinutes} دقيقة</span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {lesson.pdfPath && (
+                                  <button
+                                    onClick={() =>
+                                      setActivePdfModal({
+                                        url: lesson.pdfPath || '',
+                                        title: lesson.title,
+                                      })
+                                    }
+                                    className="p-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-cyan-electric transition-colors"
+                                    title="معاينة مذكرة PDF"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                  </button>
+                                )}
+
+                                <Link
+                                  href={`/lessons/${lesson.id}`}
+                                  className={`px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                                    canDirectPlay
+                                      ? 'bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 hover:shadow-cyan-glow'
+                                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                  }`}
+                                >
+                                  {canDirectPlay ? <Play className="w-3.5 h-3.5 fill-current" /> : <Lock className="w-3.5 h-3.5" />}
+                                  <span>{canDirectPlay ? 'مشاهدة الدرس' : 'عرض الدرس'}</span>
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* PDF Modal Preview if triggered */}
+        {activePdfModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="relative w-full max-w-5xl h-[85vh] bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col">
+              <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                <span className="text-xs font-bold text-chalk truncate">{activePdfModal.title}</span>
+                <button
+                  onClick={() => setActivePdfModal(null)}
+                  className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <LessonPdfViewer
+                  pdfUrl={activePdfModal.url}
+                  title={activePdfModal.title}
+                  studentName={user?.fullName}
+                  studentPhone={user?.phone}
+                  allowDownload={isMatchingStudent || isAdmin}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
 
       <Footer />
     </DarkGradientBg>

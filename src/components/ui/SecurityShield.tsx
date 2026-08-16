@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ShieldAlert, X } from 'lucide-react';
 
 export function SecurityShield() {
-  // Silent protections (No popups, no modals, no alerts)
+  const [showDevToolsWarning, setShowDevToolsWarning] = useState(false);
+
   useEffect(() => {
-    // Disable Right Click Context Menu
+    // 1. Disable Right Click Context Menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
     };
 
-    // Prevent Developer Tools & Screenshot Key Combinations
+    // 2. Prevent Developer Tools & Screenshot Key Combinations
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
@@ -18,12 +20,18 @@ export function SecurityShield() {
       // F12
       if (e.key === 'F12') {
         e.preventDefault();
+        setShowDevToolsWarning(true);
         return;
       }
 
       // Ctrl+Shift+I / J / C (DevTools)
-      if (ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+      if (
+        ctrlKey &&
+        e.shiftKey &&
+        (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')
+      ) {
         e.preventDefault();
+        setShowDevToolsWarning(true);
         return;
       }
 
@@ -48,12 +56,22 @@ export function SecurityShield() {
       }
     };
 
-    // Image Dragging Prevention
+    // 3. Image Dragging Prevention
     const handleDragStart = (e: DragEvent) => {
       if ((e.target as HTMLElement).tagName === 'IMG') {
         e.preventDefault();
       }
     };
+
+    // 4. DevTools Open Detection Heuristic
+    const devToolsCheck = setInterval(() => {
+      const threshold = 160;
+      const widthDiff = window.outerWidth - window.innerWidth > threshold;
+      const heightDiff = window.outerHeight - window.innerHeight > threshold;
+      if (widthDiff || heightDiff) {
+        setShowDevToolsWarning(true);
+      }
+    }, 4000);
 
     window.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('keydown', handleKeyDown);
@@ -63,11 +81,33 @@ export function SecurityShield() {
       window.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('dragstart', handleDragStart);
+      clearInterval(devToolsCheck);
     };
   }, []);
 
   return (
     <>
+      {/* DevTools Warning Banner */}
+      {showDevToolsWarning && (
+        <div className="fixed bottom-4 left-4 z-[999] max-w-sm p-4 rounded-2xl bg-slate-900/95 border border-red-500/40 text-chalk shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 font-arabic text-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-red-400 font-black">
+              <ShieldAlert className="w-4 h-4" />
+              <span>تنبيه أمان المحتوى</span>
+            </div>
+            <button
+              onClick={() => setShowDevToolsWarning(false)}
+              className="text-slate-400 hover:text-chalk p-1"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <p className="text-slate-300 leading-relaxed font-semibold">
+            جميع المواد التعليمية والامتحانات في منصة المهندس محمية بحقوق النشر. يرجى إغلاق أدوات المطورين لمتابعة التصفح بأمان.
+          </p>
+        </div>
+      )}
+
       {/* Global CSS Anti-Copy Shield & Video Protection */}
       <style jsx global>{`
         body {

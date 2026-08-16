@@ -39,3 +39,9 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# Security: never commit data files with credentials
+data/
+*.env.local
+.agents/
+

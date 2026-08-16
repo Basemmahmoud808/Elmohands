@@ -1,68 +1,33 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { supabase } from '@/lib/supabase/client';
-import { readJSON, writeJSON } from '@/lib/store/db';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sanitizeInput } from '@/lib/security';
+import {
+  hashPassword,
+  verifyPassword,
+  createAccessToken,
+  createRefreshToken,
+  setAuthCookies,
+  clearAuthCookies,
+  createSessionRecord,
+  getCurrentUser as getJwtCurrentUser,
+} from '@/lib/auth';
 
 export interface UserSession {
   id: string;
   fullName: string;
   phone: string;
   parentPhone?: string;
+  parentEmail?: string;
   governorate?: string;
   email?: string;
-  password?: string;
   role: 'ADMIN' | 'STUDENT';
+  gradeId?: string;
   gradeName?: string;
+  stage?: string;
   activeSessionId?: string;
   createdAt: string;
-}
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  path: '/',
-  maxAge: 60 * 60 * 24 * 365, // 365 Days persistent session
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
-};
-
-const INITIAL_USERS: Record<string, UserSession> = {
-  '01008901896': {
-    id: 'adm_01008901896',
-    fullName: 'م/ رضا خيرت',
-    phone: '01008901896',
-    email: 'Khyratreda@gmail.com',
-    password: 'Reda@Kheyrat#2026!',
-    governorate: 'الدقهلية - منية النصر - النزل',
-    role: 'ADMIN',
-    activeSessionId: 'sess_admin_fixed',
-    createdAt: new Date().toISOString(),
-  },
-  'admin_almohands': {
-    id: 'adm_01008901896',
-    fullName: 'م/ رضا خيرت',
-    phone: '01008901896',
-    email: 'Khyratreda@gmail.com',
-    password: 'Reda@Kheyrat#2026!',
-    governorate: 'الدقهلية - منية النصر - النزل',
-    role: 'ADMIN',
-    activeSessionId: 'sess_admin_fixed',
-    createdAt: new Date().toISOString(),
-  },
-};
-
-function getUsersDb(): Record<string, UserSession> {
-  return readJSON<Record<string, UserSession>>('users.json', INITIAL_USERS);
-}
-
-function saveUsersDb(users: Record<string, UserSession>): void {
-  writeJSON('users.json', users);
-}
-
-// Reset/Wipe all registered users and reset database with Admin only
-export async function wipeAllUsersAndResetAdmin(): Promise<void> {
-  saveUsersDb(INITIAL_USERS);
 }
 
 export async function loginUser(
@@ -71,49 +36,92 @@ export async function loginUser(
 ): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanIdentifier = sanitizeInput(phoneOrUsername.trim());
-    if (!cleanIdentifier) return { success: false, message: 'يرجى كتابة رقم الهاتف أو اسم المستخدم بشكل صحيح.' };
-
-    const usersDb = getUsersDb();
-    const cleanPassword = passwordInput ? sanitizeInput(passwordInput) : '';
-
-    const isDedicatedAdmin = cleanIdentifier === '01008901896' || cleanIdentifier === 'admin_almohands' || cleanIdentifier === '01000000000';
-    const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-    let user: UserSession | undefined = usersDb[cleanIdentifier];
-
-    // Password Check for Admin or Registered User with Password
-    if (isDedicatedAdmin) {
-      if (cleanPassword !== 'Reda@Kheyrat#2026!') {
-        return { success: false, message: 'كلمة المرور الخاصة بحساب الأدمن غير صحيحة.' };
-      }
-      user = INITIAL_USERS['01008901896'];
-      user.activeSessionId = newSessionId;
-    } else if (user && user.password) {
-      if (user.password !== cleanPassword) {
-        return { success: false, message: 'كلمة المرور غير صحيحة. يرجى التأكد من البيانات.' };
-      }
-      user.activeSessionId = newSessionId;
-    } else if (!user) {
-      return { success: false, message: 'هذا الحساب غير مسجل في منصة المهندس. يرجى إنشاء حساب طالب جديد أولاً.' };
-    } else {
-      user.activeSessionId = newSessionId;
+    if (!cleanIdentifier) {
+      return { success: false, message: 'يرجى كتابة رقم الهاتف أو اسم المستخدم بشكل صحيح.' };
     }
 
-    usersDb[cleanIdentifier] = user;
-    saveUsersDb(usersDb);
-
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
-      const { data } = await supabase.from('profiles').select('*').eq('phone', cleanIdentifier).single();
-      if (data) {
-        user.id = data.id;
-        user.fullName = data.full_name;
-        user.role = data.role as 'ADMIN' | 'STUDENT';
-      }
+    const cleanPassword = passwordInput || '';
+    if (!cleanPassword) {
+      return { success: false, message: 'يرجى إدخال كلمة المرور.' };
     }
 
-    cookies().set('almohands_session', JSON.stringify(user), COOKIE_OPTIONS);
-    return { success: true, user };
+    // 1. Special Admin Login
+    const isDedicatedAdmin = cleanIdentifier === '01008901896' || cleanIdentifier === 'admin_almohands';
+    
+    // 2. Fetch from Supabase Profiles Table
+    let { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('phone', cleanIdentifier)
+      .maybeSingle();
+
+    if (!profile && isDedicatedAdmin) {
+      // Auto-create Admin Profile in Supabase if first run
+      const hashedPass = await hashPassword('Reda@Kheyrat#2026!');
+      const { data: newAdmin } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          full_name: 'م/ رضا خيرت',
+          phone: '01008901896',
+          email: 'Khyratreda@gmail.com',
+          password_hash: hashedPass,
+          role: 'ADMIN',
+          is_active: true,
+        })
+        .select()
+        .single();
+      
+      profile = newAdmin;
+    }
+
+    if (!profile) {
+      return { success: false, message: 'هذا الحساب غير مسجل في منصة المهندس. يرجى إنشاء حساب جديد أولاً.' };
+    }
+
+    if (!profile.is_active) {
+      return { success: false, message: 'هذا الحساب معطل حالياً. يرجى التواصل مع إدارة المنصة.' };
+    }
+
+    // 3. Password Verification with Bcrypt
+    const isPasswordValid = await verifyPassword(cleanPassword, profile.password_hash);
+
+    if (!isPasswordValid) {
+      return { success: false, message: 'كلمة المرور غير صحيحة. يرجى التأكد من البيانات وإعادة المحاولة.' };
+    }
+
+    // 4. Update last login
+    await supabaseAdmin
+      .from('profiles')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', profile.id);
+
+    // 5. Issue JWT Tokens & Session Cookies
+    const tokenPayload = {
+      userId: profile.id,
+      phone: profile.phone,
+      role: profile.role as 'ADMIN' | 'STUDENT',
+      fullName: profile.full_name,
+    };
+
+    const accessToken = await createAccessToken(tokenPayload);
+    const refreshToken = await createRefreshToken(tokenPayload);
+    await setAuthCookies(accessToken, refreshToken);
+    await createSessionRecord(profile.id, refreshToken);
+
+    const userSession: UserSession = {
+      id: profile.id,
+      fullName: profile.full_name,
+      phone: profile.phone,
+      email: profile.email,
+      parentEmail: profile.parent_email,
+      role: profile.role as 'ADMIN' | 'STUDENT',
+      gradeId: profile.grade_id,
+      createdAt: profile.created_at || new Date().toISOString(),
+    };
+
+    return { success: true, user: userSession };
   } catch (error: any) {
+    console.error('Login error:', error);
     return { success: false, message: error.message || 'فشل تسجيل الدخول' };
   }
 }
@@ -121,114 +129,164 @@ export async function loginUser(
 export async function registerUser(data: {
   fullName: string;
   phone: string;
-  parentPhone: string;
-  governorate: string;
+  parentPhone?: string;
+  parentEmail?: string;
+  governorate?: string;
   password?: string;
   gradeId?: string;
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
     const cleanPhone = sanitizeInput(data.phone.trim());
-    const cleanParentPhone = sanitizeInput(data.parentPhone.trim());
     const cleanFullName = sanitizeInput(data.fullName.trim());
-    const cleanPassword = data.password ? sanitizeInput(data.password) : '';
+    const cleanPassword = data.password || '';
+    const cleanParentEmail = data.parentEmail ? sanitizeInput(data.parentEmail.trim()) : '';
 
     const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
 
-    // 1. Full Name Validation (at least 2 words)
+    // 1. Validation
     const nameWords = cleanFullName.split(/\s+/).filter(Boolean);
     if (!cleanFullName || nameWords.length < 2 || cleanFullName.length < 5) {
       return { success: false, message: 'يرجى كتابة اسم الطالب بالكامل (الاسم الثنائي أو الثلاثي على الأقل بشكل صحيح).' };
     }
 
-    // 2. Egyptian 11-digit Mobile Phone Validation (^01[0125]\d{8}$)
     const phoneRegex = /^01[0125]\d{8}$/;
-
     if (!isDedicatedAdmin && !phoneRegex.test(cleanPhone)) {
-      return { success: false, message: 'رقم هاتف الطالب غير صحيح! يجب إدخال رقم محمول مصري صحيح مكون من 11 رقماً ويبدأ بـ 01 (مثال: 01012345678).' };
+      return { success: false, message: 'رقم هاتف الطالب غير صحيح! يجب إدخال رقم محمول مصري مكون من 11 رقماً ويبدأ بـ 01.' };
     }
 
-    if (!isDedicatedAdmin && !phoneRegex.test(cleanParentPhone)) {
-      return { success: false, message: 'رقم هاتف ولي الأمر غير صحيح! يجب إدخال رقم محمول مصري صحيح مكون من 11 رقماً ويبدأ بـ 01 (مثال: 01223456789).' };
-    }
-
-    // 3. Password Minimum Length Validation (min 6 characters)
     if (!isDedicatedAdmin && cleanPassword.length < 6) {
-      return { success: false, message: 'كلمة المرور ضعيفة! يرجى اختيار كلمة مرور تتكون من 6 أرقام أو خانات على الأقل لضمان أمان حسابك.' };
+      return { success: false, message: 'كلمة المرور ضعيفة! يرجى اختيار كلمة مرور تتكون من 6 خانات على الأقل.' };
     }
 
-    const usersDb = getUsersDb();
+    // 2. Check existing profile by phone
+    const { data: existingUser } = await supabaseAdmin
+      .from('profiles')
+      .select('id, phone')
+      .eq('phone', cleanPhone)
+      .maybeSingle();
 
-    if (usersDb[cleanPhone] && !isDedicatedAdmin) {
+    if (existingUser && !isDedicatedAdmin) {
       return { success: false, message: 'رقم الهاتف هذا مسجل بالفعل مسبقاً في منصة المهندس. يرجى الذهاب لصفحة تسجيل الدخول.' };
     }
 
-    const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // 3. Hash password
+    const hashedPassword = await hashPassword(cleanPassword || 'DefaultStudent#2026');
 
-    const newUser: UserSession = {
-      id: isDedicatedAdmin ? 'adm_01008901896' : `std_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      fullName: sanitizeInput(data.fullName),
-      phone: cleanPhone,
-      parentPhone: sanitizeInput(data.parentPhone),
-      governorate: sanitizeInput(data.governorate),
-      password: data.password ? sanitizeInput(data.password) : undefined,
-      role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
-      gradeName: sanitizeInput(data.gradeId || 'الصف الأول الإعدادي'),
-      activeSessionId: newSessionId,
-      createdAt: new Date().toISOString(),
-    };
+    // 4. Insert into Supabase Profiles
+    const { data: newProfile, error: dbError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        full_name: cleanFullName,
+        phone: cleanPhone,
+        password_hash: hashedPassword,
+        role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
+        grade_id: data.gradeId || null,
+        parent_email: cleanParentEmail || null,
+        is_active: true,
+        phone_verified_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-    usersDb[cleanPhone] = newUser;
-    saveUsersDb(usersDb);
-
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
-      await supabase.from('profiles').insert([{ id: newUser.id, full_name: newUser.fullName, phone: newUser.phone, parent_phone: newUser.parentPhone, governorate: newUser.governorate, role: newUser.role }]);
+    if (dbError || !newProfile) {
+      console.error('Registration DB Error:', dbError);
+      return { success: false, message: 'حدث خطأ في قاعدة البيانات: ' + (dbError?.message || 'تعذر إنشاء الحساب') };
     }
 
-    cookies().set('almohands_session', JSON.stringify(newUser), COOKIE_OPTIONS);
+    // 5. Issue Tokens & Cookies
+    const tokenPayload = {
+      userId: newProfile.id,
+      phone: newProfile.phone,
+      role: newProfile.role as 'ADMIN' | 'STUDENT',
+      fullName: newProfile.full_name,
+    };
+
+    const accessToken = await createAccessToken(tokenPayload);
+    const refreshToken = await createRefreshToken(tokenPayload);
+    await setAuthCookies(accessToken, refreshToken);
+    await createSessionRecord(newProfile.id, refreshToken);
+
+    const newUser: UserSession = {
+      id: newProfile.id,
+      fullName: newProfile.full_name,
+      phone: newProfile.phone,
+      role: newProfile.role as 'ADMIN' | 'STUDENT',
+      gradeId: newProfile.grade_id,
+      parentEmail: newProfile.parent_email,
+      createdAt: newProfile.created_at || new Date().toISOString(),
+    };
+
     return { success: true, user: newUser };
   } catch (error: any) {
+    console.error('Registration Exception:', error);
     return { success: false, message: error.message || 'فشل إنشاء الحساب' };
   }
 }
 
 export async function getCurrentUser(): Promise<UserSession | null> {
-  const sessionCookie = cookies().get('almohands_session');
-  if (!sessionCookie?.value) return null;
   try {
-    const cookieUser = JSON.parse(sessionCookie.value) as UserSession;
-    const usersDb = getUsersDb();
-    const serverUser = usersDb[cookieUser.phone];
+    const jwtUser = await getJwtCurrentUser();
+    if (!jwtUser) return null;
 
-    // Single Device Session Lock Check
-    if (serverUser && serverUser.activeSessionId && cookieUser.activeSessionId) {
-      if (serverUser.activeSessionId !== cookieUser.activeSessionId) {
-        // Logged in on another device! Terminate current session
-        cookies().delete('almohands_session');
-        return null;
-      }
-    }
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select(`
+        id, full_name, phone, email, role, grade_id, parent_email, created_at,
+        grades (id, name, stage)
+      `)
+      .eq('id', jwtUser.userId)
+      .maybeSingle();
 
-    return cookieUser;
+    if (!profile) return null;
+
+    type GradeRelation = { id?: string; name?: string; stage?: string };
+    const gradeData = (Array.isArray(profile.grades) ? profile.grades[0] : profile.grades) as GradeRelation | null | undefined;
+
+    return {
+      id: profile.id,
+      fullName: profile.full_name,
+      phone: profile.phone,
+      email: profile.email,
+      role: profile.role as 'ADMIN' | 'STUDENT',
+      gradeId: profile.grade_id,
+      gradeName: gradeData?.name || undefined,
+      stage: gradeData?.stage || undefined,
+      parentEmail: profile.parent_email,
+      createdAt: profile.created_at || new Date().toISOString(),
+    };
   } catch {
     return null;
   }
 }
 
 export async function getAllRegisteredUsers(): Promise<UserSession[]> {
-  const usersDb = getUsersDb();
-  return Object.values(usersDb).filter((u) => u.role === 'STUDENT');
-}
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select(`
+      id, full_name, phone, email, role, grade_id, created_at,
+      grades (id, name, stage)
+    `)
+    .eq('role', 'STUDENT');
 
-export async function checkActiveSessionStatus(): Promise<{ valid: boolean; reason?: string }> {
-  const user = await getCurrentUser();
-  if (!user) {
-    return { valid: false, reason: 'تم فتح حسابك من متصفح أو جهاز آخر في نفس الوقت 🛡️' };
-  }
-  return { valid: true };
+  type GradeRelation = { id?: string; name?: string; stage?: string };
+  return (profiles || []).map((p) => {
+    const gradeData = (Array.isArray(p.grades) ? p.grades[0] : p.grades) as GradeRelation | null | undefined;
+    return {
+      id: p.id,
+      fullName: p.full_name,
+      phone: p.phone,
+      email: p.email,
+      role: 'STUDENT' as const,
+      gradeId: p.grade_id,
+      gradeName: gradeData?.name || undefined,
+      stage: gradeData?.stage || undefined,
+      createdAt: p.created_at || new Date().toISOString(),
+    };
+  });
 }
 
 export async function logoutUser() {
-  cookies().delete('almohands_session');
+  await clearAuthCookies();
 }
 
 export async function updateUserPassword(
@@ -239,25 +297,35 @@ export async function updateUserPassword(
     const user = await getCurrentUser();
     if (!user) return { success: false, message: 'يرجى تسجيل الدخول أولاً' };
 
-    const usersDb = getUsersDb();
-    const serverUser = usersDb[user.phone];
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('id, password_hash')
+      .eq('id', user.id)
+      .single();
 
-    if (!serverUser) return { success: false, message: 'المستخدم غير موجود' };
+    if (!profile) return { success: false, message: 'المستخدم غير موجود' };
 
-    if (serverUser.password && serverUser.password !== oldPasswordInput) {
+    const isOldValid = await verifyPassword(oldPasswordInput, profile.password_hash);
+    if (!isOldValid) {
       return { success: false, message: 'كلمة المرور الحالية غير صحيحة' };
     }
 
-    const cleanNewPass = sanitizeInput(newPasswordInput);
-    serverUser.password = cleanNewPass;
+    const cleanNewPass = newPasswordInput;
+    if (cleanNewPass.length < 6) {
+      return { success: false, message: 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل' };
+    }
 
-    usersDb[user.phone] = serverUser;
-    saveUsersDb(usersDb);
+    const newHashedPassword = await hashPassword(cleanNewPass);
 
-    const updatedSession = { ...user, password: cleanNewPass };
-    cookies().set('almohands_session', JSON.stringify(updatedSession), COOKIE_OPTIONS);
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        password_hash: newHashedPassword,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
 
-    return { success: true, message: 'تم تحديث كلمة المرور وحفظ الأمان المشدد بنجاح 🎯' };
+    return { success: true, message: 'تم تحديث كلمة المرور وتأمين الحساب بنجاح 🎯' };
   } catch (err: any) {
     return { success: false, message: err.message || 'فشل تحديث كلمة المرور' };
   }

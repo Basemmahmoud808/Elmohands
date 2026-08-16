@@ -8,7 +8,7 @@
 
 ## 📊 Phase Checklist & Status
 
-### ✅ PHASE 01 — Project Setup (CURRENT)
+### ✅ PHASE 01 — Project Setup
 - [x] Next.js 14+ (App Router) + TypeScript + Tailwind CSS setup
 - [x] Almohands Blackboard visual identity tokens (`blackboard`, `chalk`, `blue-ink`, `red-pen`, `brass-compass`, `notebook-paper`)
 - [x] Font configuration (Cairo Arabic Font & KaTeX Math CSS foundation)
@@ -17,11 +17,12 @@
 - [x] Folder structure & initial git setup
 - [x] README.md & PROGRESS.md documentation
 
-### ⏳ PHASE 02 — Authentication + Database
-- [ ] Clerk integration (Sign-up, Sign-in, OAuth)
-- [ ] Supabase PostgreSQL tables & RLS policies:
-  - `profiles`, `grades`, `terms`, `branches`, `units`, `lessons`
-- [ ] Role-based server redirects (Student → `/student`, Admin → `/admin`)
+### 🔄 PHASE 02 — Authentication + Database (IN PROGRESS)
+- [x] Custom Auth System (Bcrypt password hashing + JWT + HttpOnly Cookies)
+- [x] Supabase PostgreSQL Revised MVP Schema (18 Tables, RLS, Indexes, Unique Constraints):
+  - `profiles`, `sessions`, `grades`, `terms`, `branches`, `units`, `lessons`, `plans`, `activation_codes`, `subscriptions`, `questions`, `quizzes`, `quiz_questions`, `exam_attempts`, `student_answers`, `student_progress`, `audit_logs`, `parent_reports`
+- [x] Custom Auth API Routes (`/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`, `/api/auth/refresh`)
+- [x] Role-based Edge Middleware & redirects (Student → `/student`, Admin → `/admin`)
 - [ ] Seed data for Egyptian Prep & Secondary stages
 
 ### ⏳ PHASE 03 — Course System + Admin CMS
@@ -36,11 +37,12 @@
 - [ ] Voucher Code activation system (Server Action + audit log)
 - [ ] Subscription status badge & expiration alert
 
-### ⏳ PHASE 05 — Question Bank + Quizzes
+### ⏳ PHASE 05 — Question Bank + Quizzes + Parent Reports
 - [ ] Question Bank CMS (MCQ with KaTeX rendering)
 - [ ] Quiz builder & link to lessons
 - [ ] Student Quiz interface (Timer, attempt limits, instant grading)
 - [ ] Detailed result breakdown & explanation display
+- [ ] Parent Email Reports via Resend API (`parent_reports`)
 
 ### ⏳ PHASE 06 — Polish + Security + Launch
 - [ ] Audit logs implementation

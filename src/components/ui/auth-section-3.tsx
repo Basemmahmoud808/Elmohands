@@ -5,9 +5,18 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, GraduationCap, Phone, User, BookOpen, MapPin, Users, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 
+export interface AuthFormData {
+  fullName?: string;
+  phone: string;
+  parentPhone?: string;
+  password: string;
+  governorate?: string;
+  gradeId?: string;
+}
+
 interface AuthSectionProps {
   mode?: 'signup' | 'signin';
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: AuthFormData) => Promise<void>;
   loading: boolean;
   errorMsg: string;
 }
