@@ -77,7 +77,7 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
 
   return (
     <section className="min-h-screen bg-slate-50 dark:bg-slate-950 p-3 sm:p-6 text-slate-900 dark:text-chalk font-arabic antialiased flex items-center justify-center transition-colors">
-      <div className="w-full max-w-7xl grid min-h-[calc(100vh-3rem)] gap-6 lg:grid-cols-[1fr_1fr] items-stretch">
+      <div className="w-full max-w-7xl grid min-h-[calc(100vh-3rem)] gap-6 md:grid-cols-2 items-stretch">
         
         {/* RIGHT SIDE (FORM CONTAINER - LIGHT / DARK MODE SYNCHRONIZED) */}
         <div className="flex min-h-[600px] flex-col justify-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-xl relative overflow-hidden transition-colors">
@@ -280,7 +280,7 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
         </div>
 
         {/* LEFT SIDE - CLEAN TEACHER PORTRAIT PHOTO ONLY (NO OVERLAY TEXT, LIGHT/DARK SYNCHRONIZED) */}
-        <div className="relative min-h-[550px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-900 flex items-center justify-center transition-colors group">
+        <div className="hidden md:flex relative min-h-[500px] lg:min-h-[550px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-900 items-center justify-center transition-colors group">
           <img
             src="/teacher_reda_kheyrat.jpg"
             alt="م/ رضا خيرت — منصة المهندس لتعليم الرياضيات"
