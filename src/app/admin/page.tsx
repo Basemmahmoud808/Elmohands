@@ -132,16 +132,6 @@ export default function AdminDashboard() {
     );
   }
 
-  const adminBadgeCounts: Record<string, number> = {
-    students: students.length,
-    lessons: stats?.totalLessons || 0,
-    questions: questions.length,
-    quizzes: quizzes.length,
-    vouchers: vouchers.length,
-    subscriptions: subscriptions.length,
-    audit: auditLogs.length,
-  };
-
   return (
     <DarkGradientBg>
       <div className="flex min-h-screen w-full font-arabic">
@@ -150,7 +140,6 @@ export default function AdminDashboard() {
           userFullName="م/ رضا خيرت"
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
-          badgeCounts={adminBadgeCounts}
         />
 
         {/* Main Content Area */}

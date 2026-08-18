@@ -87,11 +87,6 @@ export default function StudentDashboard() {
 
   if (!data) return null;
 
-  const studentBadgeCounts: Record<string, number> = {
-    'my-quizzes': data.availableQuizzes.filter((q) => !q.hasPassed).length,
-    'my-results': data.recentResults.length,
-  };
-
   return (
     <DarkGradientBg>
       <div className="flex min-h-screen w-full font-arabic">
@@ -100,7 +95,6 @@ export default function StudentDashboard() {
           userFullName={data.profile.fullName}
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
-          badgeCounts={studentBadgeCounts}
         />
 
         {/* Main Content Container */}
