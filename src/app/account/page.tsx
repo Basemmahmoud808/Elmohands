@@ -16,12 +16,12 @@ import {
   ShieldCheck,
   KeyRound,
   LogOut,
-  ArrowRight,
   CheckCircle2,
   Lock,
-  GraduationCap,
-  CreditCard,
   LayoutDashboard,
+  Crown,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
 
 export default function AccountPage() {
@@ -68,7 +68,7 @@ export default function AccountPage() {
     setIsChangingPass(false);
 
     if (res.success) {
-      setPassMsg({ success: true, text: res.message || 'تم تحديث كلمة المرور وحفظ الأمان المشدد بنجاح 🎯' });
+      setPassMsg({ success: true, text: res.message || 'تم تحديث كلمة المرور وحفظ الأمان بنجاح 🎯' });
       setOldPass('');
       setNewPass('');
       setConfirmPass('');
@@ -87,6 +87,8 @@ export default function AccountPage() {
     );
   }
 
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
     <DarkGradientBg>
       <Navbar />
@@ -97,24 +99,26 @@ export default function AccountPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-electric/10 text-cyan-electric text-xs font-bold border border-cyan-electric/30">
-              <User className="w-3.5 h-3.5" />
-              <span>الصفحة الرسمية لحسابي الشخصي</span>
+              {isAdmin ? <Crown className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+              <span>{isAdmin ? 'حساب مدير المنصة والمشرف العام' : 'الصفحة الرسمية لحساب الطالب'}</span>
             </div>
             <h1 className="text-3xl font-black text-slate-900 dark:text-chalk">
               بيانات الحساب والإعدادات
             </h1>
             <p className="text-xs text-slate-500 dark:text-chalk-muted font-bold">
-              إدارة بياناتك الشخصية، خطة الاشتراك، والأمان مع منصة المهندس م/ رضا خيرت
+              {isAdmin
+                ? 'إدارة بيانات حساب المشرف العام م/ رضا خيرت، وتأمين الدخول وإعدادات المنصة'
+                : 'إدارة بياناتك الشخصية، ومتابعة اشتراكك مع منصة المهندس م/ رضا خيرت'}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
-              href={user?.role === 'ADMIN' ? '/admin' : '/student'}
+              href={isAdmin ? '/admin' : '/student'}
               className="px-5 py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center gap-2"
             >
               <LayoutDashboard className="w-4 h-4" />
-              <span>لوحة التحكم الخاصة بك</span>
+              <span>{isAdmin ? 'فتح لوحة تحكم الإدارة' : 'لوحة تحكم الطالب'}</span>
             </Link>
           </div>
         </div>
@@ -129,65 +133,128 @@ export default function AccountPage() {
             <div className="chalk-card rounded-3xl p-6 sm:p-8 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-6">
               <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div className="w-12 h-12 rounded-2xl bg-cyan-electric/15 text-cyan-electric flex items-center justify-center font-bold">
-                  <User className="w-6 h-6" />
+                  {isAdmin ? <Crown className="w-6 h-6" /> : <User className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">البيانات الشخصية والأساسية</h3>
-                  <p className="text-xs text-slate-500 dark:text-chalk-muted">معلومات التسجيل الخاصة بك بالمنصة</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-chalk">
+                    {isAdmin ? 'البيانات الرسمية للمشرف العام' : 'البيانات الشخصية والأساسية'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted">
+                    {isAdmin ? 'معلومات حساب مدير ومدرس منصة المهندس' : 'معلومات التسجيل الخاصة بك بالمنصة'}
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-cyan-electric" />
-                    اسم المستخدم / الطالب:
-                  </span>
-                  <span className="text-sm font-black text-slate-900 dark:text-chalk block">{user?.fullName}</span>
-                </div>
+              {/* ADMIN VIEW */}
+              {isAdmin ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-cyan-electric" />
+                      اسم المدرس والمدير العام:
+                    </span>
+                    <span className="text-sm font-black text-slate-900 dark:text-chalk block">
+                      {user?.fullName || 'م/ رضا خيرت'}
+                    </span>
+                  </div>
 
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-cyan-electric" />
-                    رقم الهاتف المحمول:
-                  </span>
-                  <span className="text-sm font-mono font-extrabold text-cyan-electric block" dir="ltr">{user?.phone}</span>
-                </div>
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-cyan-electric" />
+                      رقم الهاتف / واتساب التواصل:
+                    </span>
+                    <span className="text-sm font-mono font-extrabold text-cyan-electric block" dir="ltr">
+                      {user?.phone || '01008901896'}
+                    </span>
+                  </div>
 
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-cyan-electric" />
-                    رقم هاتف ولي الأمر:
-                  </span>
-                  <span className="text-sm font-mono font-bold text-slate-800 dark:text-chalk block" dir="ltr">{user?.parentPhone || '01008901896'}</span>
-                </div>
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-electric" />
+                      المحافظة ومقر التدريس:
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-chalk block">
+                      {user?.governorate || 'الدقهلية — منية النصر — النزل'}
+                    </span>
+                  </div>
 
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-cyan-electric" />
-                    المحافظة:
-                  </span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-chalk block">{user?.governorate || 'الدقهلية'}</span>
-                </div>
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-cyan-electric" />
+                      المراحل الدراسية:
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-chalk block">
+                      المرحلة الإعدادية والثانوية (كافة الصفوف)
+                    </span>
+                  </div>
 
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-cyan-electric" />
-                    الصف الدراسي:
-                  </span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-chalk block">{user?.gradeName || 'الصف الأول الإعدادي'}</span>
+                  <div className="sm:col-span-2 p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-cyan-electric/20 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-electric" />
+                      نوع الحساب والصلاحية:
+                    </span>
+                    <span className="text-sm font-black text-emerald-500 flex items-center gap-2">
+                      <span>مدير ومؤسس المنصة (صلاحيات كاملة للتحكم والنشر)</span>
+                      <Crown className="w-4 h-4 text-amber-400" />
+                    </span>
+                  </div>
                 </div>
+              ) : (
+                /* STUDENT VIEW */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-cyan-electric" />
+                      اسم الطالب الثلاثي:
+                    </span>
+                    <span className="text-sm font-black text-slate-900 dark:text-chalk block">{user?.fullName}</span>
+                  </div>
 
-                <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-electric" />
-                    نوع الحساب:
-                  </span>
-                  <span className="text-sm font-black text-emerald-500 block">
-                    {user?.role === 'ADMIN' ? 'مدير المنصة (أدمن)' : 'حساب طالب نشط'}
-                  </span>
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-cyan-electric" />
+                      رقم هاتف الطالب:
+                    </span>
+                    <span className="text-sm font-mono font-extrabold text-cyan-electric block" dir="ltr">{user?.phone}</span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-cyan-electric" />
+                      رقم هاتف ولي الأمر:
+                    </span>
+                    <span className="text-sm font-mono font-bold text-slate-800 dark:text-chalk block" dir="ltr">
+                      {user?.parentPhone || 'غير مسجل'}
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-cyan-electric" />
+                      المحافظة:
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-chalk block">{user?.governorate || 'غير محددة'}</span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-cyan-electric" />
+                      الصف الدراسي:
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-chalk block">{user?.gradeName || 'الصف الأول الإعدادي'}</span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-electric" />
+                      نوع الحساب:
+                    </span>
+                    <span className="text-sm font-black text-emerald-500 block">
+                      طالب مسجل بالمنصة
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Card 2: Security & Change Password */}
@@ -281,24 +348,57 @@ export default function AccountPage() {
           {/* Sidebar Summary Card (4 cols) */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* Subscription Card */}
-            <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-cyan-electric px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30">
-                  خطة الاشتراك
-                </span>
-                <span className="text-xs font-black text-emerald-500">نشط 🟢</span>
-              </div>
+            {/* ADMIN ACCESS CARD OR STUDENT SUBSCRIPTION CARD */}
+            {isAdmin ? (
+              <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border border-cyan-electric/30 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-electric px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30 flex items-center gap-1.5">
+                    <Crown className="w-3 h-3" />
+                    <span>صلاحيات الإدارة</span>
+                  </span>
+                  <span className="text-xs font-black text-emerald-500">مفعل دائماً 🟢</span>
+                </div>
 
-              <div className="space-y-1">
-                <h4 className="text-lg font-black text-slate-900 dark:text-chalk">اشتراك الترم الكامل</h4>
-                <p className="text-xs text-slate-500 dark:text-chalk-muted">وصول كامل لجميع المحاضرات والاختبارات</p>
-              </div>
+                <div className="space-y-1">
+                  <h4 className="text-lg font-black text-slate-900 dark:text-chalk">لوحة تحكم المشرف العام</h4>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted leading-relaxed">
+                    تمتلك كامل الصلاحيات لإدارة الطلاب، نشر وتعديل الدروس، بناء الاختبارات وبنوك الأسئلة، وتوليد أكواد الشحن.
+                  </p>
+                </div>
 
-              <div className="p-3 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/20 text-xs font-bold text-cyan-electric">
-                ينتهي الاشتراك في: 30 سبتمبر 2026
+                <Link
+                  href="/admin"
+                  className="w-full py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center justify-center gap-2 transition-all block text-center"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>الدخول المباشر للوحة التحكم</span>
+                </Link>
               </div>
-            </div>
+            ) : (
+              <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-electric px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30">
+                    حالة الاشتراك
+                  </span>
+                  <span className="text-xs font-black text-cyan-electric">حساب طالب 🎓</span>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="text-lg font-black text-slate-900 dark:text-chalk">الوصول للمحتوى التعليمي</h4>
+                  <p className="text-xs text-slate-500 dark:text-chalk-muted leading-relaxed">
+                    يمكنك تفعيل أكواد الشحن للوصول الفوري للمحاضرات والأوراق الامتحانية.
+                  </p>
+                </div>
+
+                <Link
+                  href="/student"
+                  className="w-full py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center justify-center gap-2 transition-all block text-center"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>الانتقال للوحة الطالب وتفعيل كود</span>
+                </Link>
+              </div>
+            )}
 
             {/* Platform Teacher Badge Card */}
             <div className="chalk-card rounded-3xl p-6 bg-white/90 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 space-y-4">
