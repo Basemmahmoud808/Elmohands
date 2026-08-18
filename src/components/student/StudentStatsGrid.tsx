@@ -38,7 +38,11 @@ export function StudentStatsGrid({ summary }: StudentStatsGridProps) {
             <Award className="w-5 h-5" />
           </div>
           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-            {summary.averageQuizScorePercentage >= 85 ? 'ممتاز' : 'جيد جداً'}
+            {summary.averageQuizScorePercentage === 0
+              ? 'لا يوجد بعد'
+              : summary.averageQuizScorePercentage >= 85
+              ? 'ممتاز'
+              : 'جيد جداً'}
           </span>
         </div>
         <div>

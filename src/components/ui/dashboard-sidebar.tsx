@@ -30,6 +30,7 @@ interface DashboardSidebarProps {
   userFullName?: string;
   selectedTab: string;
   setSelectedTab: (tab: string) => void;
+  badgeCounts?: Record<string, number | string>;
 }
 
 export function DashboardSidebar({
@@ -37,9 +38,21 @@ export function DashboardSidebar({
   userFullName = 'أحمد محمد',
   selectedTab,
   setSelectedTab,
+  badgeCounts = {},
 }: DashboardSidebarProps) {
   const [desktopOpen, setDesktopOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [clearedBadges, setClearedBadges] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('almohands_seen_tabs');
+        if (saved) return new Set(JSON.parse(saved));
+      } catch {
+        // ignore
+      }
+    }
+    return new Set();
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -51,7 +64,6 @@ export function DashboardSidebar({
     id: string;
     title: string;
     icon: React.ComponentType<{ className?: string }>;
-    badge?: string;
   }
 
   // Admin options
@@ -95,8 +107,29 @@ export function DashboardSidebar({
       window.location.href = '/account';
       return;
     }
+    setClearedBadges((prev) => {
+      const next = new Set(prev);
+      next.add(tabId);
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('almohands_seen_tabs', JSON.stringify(Array.from(next)));
+        } catch {
+          // ignore
+        }
+      }
+      return next;
+    });
     setSelectedTab(tabId);
     setMobileDrawerOpen(false);
+  };
+
+  const getOptionBadge = (optId: string) => {
+    if (clearedBadges.has(optId)) return undefined;
+    const rawVal = badgeCounts[optId];
+    if (rawVal === undefined || rawVal === null) return undefined;
+    const num = typeof rawVal === 'number' ? rawVal : Number(rawVal);
+    if (isNaN(num) || num <= 0) return undefined;
+    return num > 99 ? '+99' : String(num);
   };
 
   const handleLogout = async () => {
@@ -178,14 +211,18 @@ export function DashboardSidebar({
                       <Icon className="h-5 w-5 shrink-0" />
                       <span>{opt.title}</span>
                     </div>
-                    {opt.badge && (
-                      <span className={cn(
-                        'px-2.5 py-0.5 rounded-full font-black text-[10px]',
-                        isSelected ? 'bg-black text-cyan-electric' : 'bg-cyan-electric/20 text-cyan-electric'
-                      )}>
-                        {opt.badge}
-                      </span>
-                    )}
+                    {(() => {
+                      const badge = getOptionBadge(opt.id);
+                      if (!badge) return null;
+                      return (
+                        <span className={cn(
+                          'px-2.5 py-0.5 rounded-full font-black text-[10px] animate-pulse',
+                          isSelected ? 'bg-black text-cyan-electric' : 'bg-cyan-electric text-black shadow-cyan-glow'
+                        )}>
+                          {badge}
+                        </span>
+                      );
+                    })()}
                   </button>
                 );
               })}
@@ -280,11 +317,15 @@ export function DashboardSidebar({
                     <Icon className="h-5 w-5" />
                   </div>
                   {desktopOpen && <span className="truncate">{opt.title}</span>}
-                  {opt.badge && desktopOpen && (
-                    <span className="absolute left-3 px-2 py-0.5 rounded-full bg-cyan-electric text-black font-extrabold text-[10px]">
-                      {opt.badge}
-                    </span>
-                  )}
+                  {(() => {
+                    const badge = getOptionBadge(opt.id);
+                    if (!badge || !desktopOpen) return null;
+                    return (
+                      <span className="absolute left-3 px-2 py-0.5 rounded-full bg-cyan-electric text-black font-extrabold text-[10px] shadow-cyan-glow animate-pulse">
+                        {badge}
+                      </span>
+                    );
+                  })()}
                 </button>
               );
             })}
