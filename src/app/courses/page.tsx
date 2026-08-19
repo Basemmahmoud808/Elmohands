@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
@@ -10,17 +9,12 @@ import {
   BookOpen,
   GraduationCap,
   Sparkles,
-  ArrowRight,
   ChevronLeft,
   CheckCircle2,
   Clock,
   Layers,
   Award,
   Search,
-  Lock,
-  Compass,
-  Calculator,
-  Binary,
 } from 'lucide-react';
 
 interface GradeCardData {
@@ -118,44 +112,44 @@ export default function CoursesCatalogPage() {
   });
 
   return (
-    <DarkGradientBg>
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk font-arabic transition-colors duration-200">
       <Navbar />
 
-      <main className="min-h-screen font-arabic py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+      <main className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
         {/* Breadcrumb Header */}
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-bold">
           <Link href="/" className="hover:text-cyan-electric transition-colors">
             الرئيسية
           </Link>
           <span>/</span>
-          <span className="text-cyan-electric font-bold">دليل المناهج والكورسات</span>
+          <span className="text-cyan-electric font-black">دليل المناهج والكورسات</span>
         </div>
 
         {/* Hero Section */}
-        <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950/90 border border-slate-800 backdrop-blur-xl shadow-2xl space-y-6">
+        <div className="rounded-3xl p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30 text-cyan-electric text-xs font-bold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30 text-cyan-electric text-xs font-black">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>مناهج الرياضيات للمرحلتين الإعدادية والثانوية</span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-chalk tracking-tight">
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-chalk tracking-tight">
                 اختر صفك الدراسي وابدأ رحلة التفوق مع <span className="text-cyan-electric">م/ رضا خيرت</span>
               </h1>
-              <p className="text-xs sm:text-sm text-chalk-muted leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed">
                 شرح مبسط، مذكرات PDF مطبوعة بدقة عالية، تدريبات تفاعلية على كل درس، وامتحانات دورية تحاكي اختبارات الوزارة.
               </p>
             </div>
 
             {/* Quick Stats Pill */}
             <div className="grid grid-cols-2 gap-3 w-full md:w-auto shrink-0">
-              <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 text-center">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-center">
                 <p className="text-xl sm:text-2xl font-black text-cyan-electric">4</p>
-                <p className="text-[11px] text-chalk-muted font-bold">صفوف دراسية كاملة</p>
+                <p className="text-[11px] text-slate-500 dark:text-chalk-muted font-bold">صفوف دراسية كاملة</p>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 text-center">
-                <p className="text-xl sm:text-2xl font-black text-emerald-400">80+</p>
-                <p className="text-[11px] text-chalk-muted font-bold">درس وشرح فيديو</p>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-center">
+                <p className="text-xl sm:text-2xl font-black text-emerald-500">80+</p>
+                <p className="text-[11px] text-slate-500 dark:text-chalk-muted font-bold">درس وشرح فيديو</p>
               </div>
             </div>
           </div>
@@ -168,10 +162,10 @@ export default function CoursesCatalogPage() {
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-chalk">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-chalk">
                     أهلاً بك يا {user.fullName}! صفك الدراسي الحالي: <span className="text-cyan-electric font-black">{user.gradeName}</span>
                   </h4>
-                  <p className="text-[11px] text-chalk-muted">
+                  <p className="text-[11px] text-slate-600 dark:text-chalk-muted">
                     انقر هنا للدخول المباشر إلى منهجك ومتابعة الدروس والامتحانات المخصصة لك.
                   </p>
                 </div>
@@ -179,7 +173,7 @@ export default function CoursesCatalogPage() {
 
               <Link
                 href={`/courses/${encodeURIComponent(user.gradeName)}`}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-cyan-electric text-slate-950 font-black text-xs flex items-center justify-center gap-2 hover:shadow-cyan-glow transition-all shrink-0"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-cyan-electric text-black font-black text-xs flex items-center justify-center gap-2 shadow-cyan-glow hover:bg-cyan-electric-hover transition-all shrink-0"
               >
                 <span>دخول منهجي الدراسي</span>
                 <ChevronLeft className="w-4 h-4" />
@@ -198,7 +192,7 @@ export default function CoursesCatalogPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ابحث عن صف، فرع، أو موضوع..."
-              className="w-full pl-4 pr-10 py-2.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-chalk text-xs focus:border-cyan-electric focus:outline-none placeholder:text-slate-500"
+              className="w-full pl-4 pr-10 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs font-bold focus:border-cyan-electric focus:outline-none placeholder:text-slate-400"
             />
           </div>
 
@@ -208,8 +202,8 @@ export default function CoursesCatalogPage() {
               onClick={() => setSelectedStage('ALL')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 selectedStage === 'ALL'
-                  ? 'bg-cyan-electric text-slate-950 shadow-cyan-glow'
-                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                  ? 'bg-cyan-electric text-black font-black shadow-cyan-glow'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-chalk hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
               }`}
             >
               جميع المراحل
@@ -218,8 +212,8 @@ export default function CoursesCatalogPage() {
               onClick={() => setSelectedStage('إعدادي')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 selectedStage === 'إعدادي'
-                  ? 'bg-cyan-electric text-slate-950 shadow-cyan-glow'
-                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                  ? 'bg-cyan-electric text-black font-black shadow-cyan-glow'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-chalk hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
               }`}
             >
               المرحلة الإعدادية
@@ -228,8 +222,8 @@ export default function CoursesCatalogPage() {
               onClick={() => setSelectedStage('ثانوي')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 selectedStage === 'ثانوي'
-                  ? 'bg-cyan-electric text-slate-950 shadow-cyan-glow'
-                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                  ? 'bg-cyan-electric text-black font-black shadow-cyan-glow'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-chalk hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
               }`}
             >
               المرحلة الثانوية
@@ -245,8 +239,8 @@ export default function CoursesCatalogPage() {
             return (
               <div
                 key={grade.id}
-                className={`relative rounded-3xl p-6 sm:p-7 bg-slate-900/80 border transition-all duration-300 backdrop-blur-xl flex flex-col justify-between space-y-6 group hover:border-cyan-electric/50 hover:shadow-2xl ${
-                  isUserGrade ? 'border-cyan-electric shadow-lg shadow-cyan-electric/10' : 'border-slate-800'
+                className={`rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border transition-all duration-300 flex flex-col justify-between space-y-6 group hover:border-cyan-electric/50 hover:shadow-md shadow-sm ${
+                  isUserGrade ? 'border-cyan-electric ring-1 ring-cyan-electric/40 shadow-cyan-glow' : 'border-slate-200 dark:border-slate-800'
                 }`}
               >
                 {/* Top Badge & Stage */}
@@ -255,11 +249,11 @@ export default function CoursesCatalogPage() {
                     <span className="px-3 py-1 rounded-xl bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 text-xs font-black">
                       {grade.badge}
                     </span>
-                    <span className="text-xs text-chalk-muted font-medium">المرحلة الـ{grade.stage}ة</span>
+                    <span className="text-xs text-slate-500 dark:text-chalk-muted font-bold">المرحلة الـ{grade.stage}ة</span>
                   </div>
 
                   {isUserGrade && (
-                    <span className="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1">
+                    <span className="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       صفك المسجل
                     </span>
@@ -268,22 +262,22 @@ export default function CoursesCatalogPage() {
 
                 {/* Grade Title & Description */}
                 <div className="space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-black text-chalk group-hover:text-cyan-electric transition-colors">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk group-hover:text-cyan-electric transition-colors">
                     {grade.name}
                   </h3>
-                  <p className="text-xs sm:text-sm text-chalk-muted leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed">
                     {grade.description}
                   </p>
                 </div>
 
                 {/* Branches List */}
                 <div className="space-y-2">
-                  <span className="text-[11px] font-bold text-slate-400">الفروع المقررة:</span>
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الفروع المقررة:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {grade.branches.map((b, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 text-[11px] font-medium"
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-chalk text-[11px] font-bold"
                       >
                         {b}
                       </span>
@@ -292,18 +286,18 @@ export default function CoursesCatalogPage() {
                 </div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-800 text-center">
+                <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 dark:border-slate-800 text-center">
                   <div>
-                    <p className="text-xs sm:text-sm font-black text-chalk">{grade.lessonsCount} درس</p>
-                    <p className="text-[10px] text-chalk-muted">شرح وتدريبات</p>
+                    <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-chalk">{grade.lessonsCount} درس</p>
+                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">شرح وتدريبات</p>
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm font-black text-cyan-electric">{grade.totalHours} ساعة</p>
-                    <p className="text-[10px] text-chalk-muted">محتوى تفاعلي</p>
+                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">محتوى تفاعلي</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm font-black text-emerald-400">{grade.quizzesCount} امتحان</p>
-                    <p className="text-[10px] text-chalk-muted">تقييم مستمر</p>
+                    <p className="text-xs sm:text-sm font-black text-emerald-500">{grade.quizzesCount} امتحان</p>
+                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">تقييم مستمر</p>
                   </div>
                 </div>
 
@@ -311,7 +305,7 @@ export default function CoursesCatalogPage() {
                 <div>
                   <Link
                     href={`/courses/${encodeURIComponent(grade.name)}`}
-                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 hover:shadow-cyan-glow transition-all"
+                    className="w-full py-3.5 rounded-2xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-cyan-glow transition-all"
                   >
                     <span>استكشاف المنهج والدروس</span>
                     <ChevronLeft className="w-4 h-4" />
@@ -324,6 +318,6 @@ export default function CoursesCatalogPage() {
       </main>
 
       <Footer />
-    </DarkGradientBg>
+    </div>
   );
 }
