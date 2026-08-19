@@ -43,7 +43,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Consolidated Data State
-  const [stats, setStats] = useState<AdminOverviewStatsDTO | null>(null);
+  const initialAdminStats: AdminOverviewStatsDTO = {
+    totalStudents: 0,
+    activeSubscriptions: 0,
+    totalLessons: 0,
+    totalQuestions: 0,
+    totalQuizzes: 0,
+    unusedVouchers: 0,
+    recentAuditLogs: [],
+  };
+  const [stats, setStats] = useState<AdminOverviewStatsDTO>(initialAdminStats);
   const [students, setStudents] = useState<AdminStudentDTO[]>([]);
   const [curriculum, setCurriculum] = useState<CurriculumGradeDTO[]>([]);
   const [vouchers, setVouchers] = useState<AdminVoucherDTO[]>([]);
@@ -91,7 +100,20 @@ export default function AdminDashboard() {
         getAdminAuditLogsAction(),
       ]);
 
-      if (statsRes.success && statsRes.data) setStats(statsRes.data);
+      if (statsRes.success && statsRes.data) {
+        setStats(statsRes.data);
+      } else {
+        setStats({
+          totalStudents: studentsRes.data?.length || 0,
+          activeSubscriptions: subsRes.data?.length || 0,
+          totalLessons: 0,
+          totalQuestions: questionsRes.data?.length || 0,
+          totalQuizzes: quizzesRes.data?.length || 0,
+          unusedVouchers: vouchersRes.data?.filter((v) => v.status === 'UNUSED').length || 0,
+          recentAuditLogs: logsRes.data || [],
+        });
+      }
+
       if (studentsRes.success && studentsRes.data) setStudents(studentsRes.data);
       if (curriculumRes.success && curriculumRes.data) setCurriculum(curriculumRes.data);
       if (vouchersRes.success && vouchersRes.data) setVouchers(vouchersRes.data);
@@ -145,7 +167,7 @@ export default function AdminDashboard() {
         {/* Main Content Area */}
         <main className="flex-1 p-4 sm:p-6 lg:p-10 pt-20 md:pt-6 overflow-y-auto space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden">
           {/* TAB 1: OVERVIEW */}
-          {selectedTab === 'dashboard' && stats && (
+          {selectedTab === 'dashboard' && (
             <AdminOverviewTab
               stats={stats}
               onSelectTab={(tabId) => setSelectedTab(tabId)}
