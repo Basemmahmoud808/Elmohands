@@ -10,11 +10,11 @@ interface StudentResultsTableProps {
 
 export function StudentResultsTable({ results }: StudentResultsTableProps) {
   const getAppreciation = (percentage: number) => {
-    if (percentage >= 90) return { label: 'ممتاز 🌟', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30' };
-    if (percentage >= 80) return { label: 'جيد جداً 🎯', color: 'text-cyan-electric bg-cyan-electric/10 border-cyan-electric/30' };
-    if (percentage >= 65) return { label: 'جيد 👍', color: 'text-amber-500 bg-amber-500/10 border-amber-500/30' };
-    if (percentage >= 50) return { label: 'مقبول ⚠️', color: 'text-blue-500 bg-blue-500/10 border-blue-500/30' };
-    return { label: 'يحتاج تحسين ❌', color: 'text-red-500 bg-red-500/10 border-red-500/30' };
+    if (percentage >= 90) return { label: 'ممتاز ', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30' };
+    if (percentage >= 80) return { label: 'جيد جداً ', color: 'text-cyan-electric bg-cyan-electric/10 border-cyan-electric/30' };
+    if (percentage >= 65) return { label: 'جيد ', color: 'text-amber-500 bg-amber-500/10 border-amber-500/30' };
+    if (percentage >= 50) return { label: 'مقبول ', color: 'text-blue-500 bg-blue-500/10 border-blue-500/30' };
+    return { label: 'يحتاج تحسين ', color: 'text-red-500 bg-red-500/10 border-red-500/30' };
   };
 
   return (

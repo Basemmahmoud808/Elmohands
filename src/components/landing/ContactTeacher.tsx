@@ -122,7 +122,7 @@ export default function ContactTeacher() {
 
             <div className="pt-2">
               <div className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                <span className="text-xs font-bold text-cyan-electric">📍 مواعيد الحضور متاحة في السنتر</span>
+                <span className="text-xs font-bold text-cyan-electric"> مواعيد الحضور متاحة في السنتر</span>
               </div>
             </div>
           </div>

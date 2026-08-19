@@ -181,7 +181,7 @@ export async function loginUser(
         createdAt: adminProfile.created_at || new Date().toISOString(),
       };
 
-      return { success: true, user: adminSession, message: 'تم تسجيل دخول المشرف العام بنجاح 👑' };
+      return { success: true, user: adminSession, message: 'تم تسجيل دخول المشرف العام بنجاح ' };
     }
 
     // 6. Test Student Aliases Support
@@ -493,7 +493,7 @@ export async function updateUserPassword(
       })
       .eq('id', user.id);
 
-    return { success: true, message: 'تم تحديث كلمة المرور وتأمين الحساب بنجاح 🎯' };
+    return { success: true, message: 'تم تحديث كلمة المرور وتأمين الحساب بنجاح ' };
   } catch (err: any) {
     return { success: false, message: err.message || 'فشل تحديث كلمة المرور' };
   }

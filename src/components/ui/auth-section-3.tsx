@@ -99,7 +99,7 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
               </Link>
 
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk tracking-tight pt-2">
-                {mode === 'signup' ? 'إنشاء حساب طالب جديد 🎓' : 'تسجيل الدخول لمنصة المهندس 🔐'}
+                {mode === 'signup' ? 'إنشاء حساب طالب جديد ' : 'تسجيل الدخول لمنصة المهندس '}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
                 {mode === 'signup'

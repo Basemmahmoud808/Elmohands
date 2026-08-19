@@ -364,7 +364,7 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
       {
         id: 'notif-1',
         type: 'ANNOUNCEMENT' as const,
-        title: 'مرحباً بك في منصة المهندس 🚀',
+        title: 'مرحباً بك في منصة المهندس ',
         description: `تم تجهيز خطة دراسية متكاملة لـ ${matchingGrade?.name || 'صفك الدراسي'} مع م/ رضا خيرت.`,
         createdAt: new Date().toISOString(),
         isRead: false,

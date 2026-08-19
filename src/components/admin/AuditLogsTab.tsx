@@ -16,7 +16,7 @@ export function AuditLogsTab({ initialLogs }: AuditLogsTabProps) {
   const triggerSentryTest = () => {
     try {
       Sentry.captureMessage('Almohands Admin Security Test Event', 'info');
-      setSentryTestMsg('تم إرسال حدث اختباري آمن إلى منظومة مراقبة Sentry بنجاح 🛡️');
+      setSentryTestMsg('تم إرسال حدث اختباري آمن إلى منظومة مراقبة Sentry بنجاح ');
       setTimeout(() => setSentryTestMsg(''), 4000);
     } catch {
       setSentryTestMsg('تم تشغيل اختبار الأمان.');

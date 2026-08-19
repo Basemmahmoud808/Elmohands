@@ -46,7 +46,7 @@ export function QuickAccessCards({
 
         <div className="p-4 rounded-2xl bg-cyan-electric/10 border border-cyan-electric/20 space-y-2 text-xs font-semibold text-slate-800 dark:text-chalk/90 leading-relaxed">
           <p>
-            💡 <strong>خطة التفوق الأسبوعية:</strong> شاهد كل درس بتركيز، واكتب خطوات البرهان
+             <strong>خطة التفوق الأسبوعية:</strong> شاهد كل درس بتركيز، واكتب خطوات البرهان
             الهندسي بيدك، ثم اختبر فهمك في الاختبار الإلكتروني المخصص للدرس فوراً. الرياضيات علم يُبنى
             بالتدريب والممارسة!
           </p>
@@ -146,7 +146,7 @@ export function QuickAccessCards({
                       : 'bg-red-500/10 text-red-600 dark:text-red-400'
                   }`}
                 >
-                  {res.passed ? 'ناجح ✓' : 'إعادة'}
+                  {res.passed ? 'ناجح ' : 'إعادة'}
                 </span>
               </div>
             ))}
@@ -155,7 +155,7 @@ export function QuickAccessCards({
 
         <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">
           <span className="text-[11px] text-slate-500 dark:text-chalk-muted font-semibold">
-            جميع النتائج والدرجات محفوظة في سجلك الأكاديمي 🎯
+            جميع النتائج والدرجات محفوظة في سجلك الأكاديمي 
           </span>
         </div>
       </div>

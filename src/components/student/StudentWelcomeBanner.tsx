@@ -20,7 +20,7 @@ export function StudentWelcomeBanner({ profile, subscription }: StudentWelcomeBa
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk tracking-tight">
-            أهلاً يا {profile.fullName || 'بطل الرياضيات'} 👋
+            أهلاً يا {profile.fullName || 'بطل الرياضيات'} 
           </h1>
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
             <Sparkles className="w-3 h-3" />

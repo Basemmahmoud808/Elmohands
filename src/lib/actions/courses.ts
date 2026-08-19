@@ -492,7 +492,7 @@ export async function createUnitAction(input: CreateUnitInput): Promise<ActionRe
       metadata: { title: input.title },
     });
 
-    return { success: true, data: data.id, message: 'تم إنشاء الوحدة بنجاح 🎯' };
+    return { success: true, data: data.id, message: 'تم إنشاء الوحدة بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل إنشاء الوحدة';
     return { success: false, error: msg };
@@ -563,7 +563,7 @@ export async function createLessonAction(input: CreateLessonInput): Promise<Acti
       console.warn('DB lesson insert exception:', e);
     }
 
-    return { success: true, data: newLessonObj, message: 'تم رفع ونشر الدرس بنجاح 🎬' };
+    return { success: true, data: newLessonObj, message: 'تم رفع ونشر الدرس بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل رفع الدرس';
     return { success: false, error: msg };

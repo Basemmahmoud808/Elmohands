@@ -178,7 +178,7 @@ export default function StudentDashboard() {
                         </span>
                         {quiz.hasPassed ? (
                           <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                            تم الاجتياز ({quiz.bestScorePercentage}%) ✓
+                            تم الاجتياز ({quiz.bestScorePercentage}%) 
                           </span>
                         ) : (
                           <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">

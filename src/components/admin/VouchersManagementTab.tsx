@@ -53,7 +53,7 @@ export function VouchersManagementTab({ initialVouchers, onRefresh }: VouchersMa
           createdAt: c.createdAt,
         }));
         setVouchers((prev) => [...mapped, ...prev]);
-        setSuccessMsg(`تم توليد وحفظ ${res.codes.length} كود شحن بنجاح! 🔑✨`);
+        setSuccessMsg(`تم توليد وحفظ ${res.codes.length} كود شحن بنجاح! `);
         if (onRefresh) onRefresh();
       } else {
         setErrorMsg(res.message || 'فشل توليد الأكواد');

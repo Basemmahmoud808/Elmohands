@@ -288,7 +288,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                     {lessonDetails.description}
                   </p>
                   <div className="p-4 rounded-2xl bg-cyan-electric/5 border border-cyan-electric/20 space-y-2">
-                    <h5 className="text-xs font-bold text-cyan-electric">💡 نصائح للمذاكرة الفعالة:</h5>
+                    <h5 className="text-xs font-bold text-cyan-electric"> نصائح للمذاكرة الفعالة:</h5>
                     <ul className="text-xs text-chalk-muted space-y-1 list-disc list-inside leading-relaxed">
                       <li>احرص على تدوين القوانين والملاحظات في كشكول الرياضيات الخاص بك.</li>
                       <li>قم بحل الأمثلة المحلولة في المذكرة بنفسك بعد مشاهدة الشرح مباشرة.</li>

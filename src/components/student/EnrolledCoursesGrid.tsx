@@ -195,7 +195,7 @@ export function EnrolledCoursesGrid({
                                   {isDone ? (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                                       <CheckCircle2 className="w-3.5 h-3.5" />
-                                      <span>مكتمل ✓</span>
+                                      <span>مكتمل </span>
                                     </span>
                                   ) : inProgress ? (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">

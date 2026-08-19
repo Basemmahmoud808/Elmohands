@@ -223,7 +223,7 @@ export default function Navbar() {
                   <User className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-chalk">جميع بيانات حسابي 👤</h3>
+                  <h3 className="text-lg font-black text-chalk">جميع بيانات حسابي </h3>
                   <p className="text-xs text-slate-400 font-semibold">منصة المهندس — م/ رضا خيرت</p>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function Navbar() {
                 onClick={() => setAccountModalOpen(false)}
                 className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -277,7 +277,7 @@ export default function Navbar() {
                     <KeyRound className="w-4 h-4" />
                     تغيير كلمة المرور الخاصة بحسابي
                   </span>
-                  <span>{showPassSection ? 'إغلاق ▲' : 'فتح 💡 ▼'}</span>
+                  <span>{showPassSection ? 'إغلاق ▲' : 'فتح  ▼'}</span>
                 </button>
 
                 {showPassSection && (

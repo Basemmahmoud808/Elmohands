@@ -101,7 +101,7 @@ export function ExamViewerModal({ quiz, onClose, onSubmitPaper }: ExamViewerModa
                   تم تسليم ورقة الإجابة بنجاح!
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-chalk-muted max-w-md mx-auto">
-                  سيتم مراجعة إجابتك وتصحيحها بواسطة م/ رضا خيرت وإرسال التقرير لولي الأمر 🌟
+                  سيتم مراجعة إجابتك وتصحيحها بواسطة م/ رضا خيرت وإرسال التقرير لولي الأمر 
                 </p>
               </div>
             ) : (

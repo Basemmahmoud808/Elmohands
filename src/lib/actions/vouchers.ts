@@ -258,7 +258,7 @@ export async function redeemVoucherCode(
         FAILED_ATTEMPTS[userKey].lockUntil = now + 15 * 60 * 1000; // 15 Min Lock
         return {
           success: false,
-          message: 'تنبيه أمان: تم حظر محاولات الشحن لمدة 15 دقيقة بسبب تكرار إدخال أكواد خاطئة 🛡️',
+          message: 'تنبيه أمان: تم حظر محاولات الشحن لمدة 15 دقيقة بسبب تكرار إدخال أكواد خاطئة ',
         };
       }
 

@@ -58,7 +58,7 @@ export default function Hero() {
                   className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm sm:text-base font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
                 >
                   <LayoutDashboard className="w-5 h-5" />
-                  <span>دخول كورسات {user.gradeName || 'صفك الدراسي'} ➔</span>
+                  <span>دخول كورسات {user.gradeName || 'صفك الدراسي'} ←</span>
                 </Link>
               ) : (
                 <Link

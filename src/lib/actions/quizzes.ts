@@ -594,7 +594,7 @@ export async function createQuizAction(input: CreateQuizInput): Promise<ActionRe
     }
 
     FALLBACK_QUIZZES.unshift(newQuiz);
-    return { success: true, data: newQuiz, message: 'تم إنشاء الاختبار وربطه بالدرس بنجاح 🏆' };
+    return { success: true, data: newQuiz, message: 'تم إنشاء الاختبار وربطه بالدرس بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل إنشاء الاختبار';
     return { success: false, error: msg };
@@ -680,7 +680,7 @@ export async function updateQuizAction(
       FALLBACK_QUIZZES.unshift(updatedQuiz);
     }
 
-    return { success: true, data: updatedQuiz, message: 'تم تحديث بيانات الاختبار بنجاح ✨' };
+    return { success: true, data: updatedQuiz, message: 'تم تحديث بيانات الاختبار بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل تحديث الاختبار';
     return { success: false, error: msg };
@@ -895,8 +895,8 @@ export async function submitQuizAttemptAction(
         breakdown,
       },
       message: passed
-        ? 'مبروك! لقد اجتزت الاختبار بنجاح 🏆'
-        : 'حاول مرة أخرى لتحسين نتيجتك وفهم الحلول النموذجية 💡',
+        ? 'مبروك! لقد اجتزت الاختبار بنجاح '
+        : 'حاول مرة أخرى لتحسين نتيجتك وفهم الحلول النموذجية ',
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل تسليم الاختبار';

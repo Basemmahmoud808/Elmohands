@@ -71,7 +71,7 @@ export function VideoPreviewModal({ video, onClose }: VideoPreviewModalProps) {
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/80">
           <span className="text-xs font-semibold text-slate-500 dark:text-chalk-muted">
-            ملاحظة: يمكنك فتح المشغل الكامل للدرس مع المذكرات وشات الأسئلة 🎬
+            ملاحظة: يمكنك فتح المشغل الكامل للدرس مع المذكرات وشات الأسئلة 
           </span>
           <button
             onClick={onClose}

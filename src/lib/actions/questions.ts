@@ -371,7 +371,7 @@ export async function createQuestionAction(input: CreateQuestionInput): Promise<
     }
 
     IN_MEMORY_QUESTIONS.unshift(newQuestion);
-    return { success: true, data: newQuestion, message: 'تم حفظ السؤال في بنك الأسئلة بنجاح 🎯' };
+    return { success: true, data: newQuestion, message: 'تم حفظ السؤال في بنك الأسئلة بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل إضافة السؤال';
     return { success: false, error: msg };
@@ -449,7 +449,7 @@ export async function updateQuestionAction(
       IN_MEMORY_QUESTIONS.unshift(updatedQuestion);
     }
 
-    return { success: true, data: updatedQuestion, message: 'تم تحديث السؤال بنجاح ✨' };
+    return { success: true, data: updatedQuestion, message: 'تم تحديث السؤال بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل تحديث السؤال';
     return { success: false, error: msg };

@@ -812,7 +812,7 @@ export function ExamSolver({ session, onFinish, onExit }: ExamSolverProps) {
 
             <div className="space-y-2">
               <h2 className="text-2xl sm:text-3xl font-black text-chalk">
-                {result.passed ? 'أحسنت صنعاً! اجتزت الامتحان بنجاح 🏆' : 'حاول مرة أخرى لتحسين مستواك 💡'}
+                {result.passed ? 'أحسنت صنعاً! اجتزت الامتحان بنجاح ' : 'حاول مرة أخرى لتحسين مستواك '}
               </h2>
               <p className="text-xs sm:text-sm text-chalk-muted font-bold">
                 {quiz.title} • {quiz.branchName}
@@ -838,7 +838,7 @@ export function ExamSolver({ session, onFinish, onExit }: ExamSolverProps) {
                     result.passed ? 'text-emerald-400' : 'text-red-400'
                   }`}
                 >
-                  {result.passed ? 'ناجح ✓' : 'لم يجتز ✗'}
+                  {result.passed ? 'ناجح ' : 'لم يجتز '}
                 </span>
               </div>
               <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
@@ -937,7 +937,7 @@ export function ExamSolver({ session, onFinish, onExit }: ExamSolverProps) {
                   {/* Explanation */}
                   {item.explanation && (
                     <div className="p-3.5 rounded-2xl bg-cyan-electric/5 border border-cyan-electric/20 text-xs leading-relaxed">
-                      <span className="font-bold text-cyan-electric block mb-1">💡 التفسير والشرح النموذجي:</span>
+                      <span className="font-bold text-cyan-electric block mb-1"> التفسير والشرح النموذجي:</span>
                       <p className="text-chalk/90">{item.explanation}</p>
                     </div>
                   )}

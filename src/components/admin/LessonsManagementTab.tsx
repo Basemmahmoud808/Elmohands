@@ -173,7 +173,7 @@ export function LessonsManagementTab({
       if (actionRes.success) {
         setFeedbackMsg({
           success: true,
-          text: 'تم رفع ونشر الدرس بنجاح للطلاب! 🎉',
+          text: 'تم رفع ونشر الدرس بنجاح للطلاب! ',
         });
         setTitle('');
         setDescription('');
@@ -533,14 +533,14 @@ export function LessonsManagementTab({
                     onClick={() => setThumbMode('file')}
                     className={`px-2 py-0.5 rounded ${thumbMode === 'file' ? 'bg-cyan-electric text-black font-bold' : 'text-slate-400'}`}
                   >
-                    رفع صورة 🖼️
+                    رفع صورة 
                   </button>
                   <button
                     type="button"
                     onClick={() => setThumbMode('url')}
                     className={`px-2 py-0.5 rounded ${thumbMode === 'url' ? 'bg-cyan-electric text-black font-bold' : 'text-slate-400'}`}
                   >
-                    رابط 🔗
+                    رابط 
                   </button>
                 </div>
               </div>
@@ -554,7 +554,7 @@ export function LessonsManagementTab({
                     className="hidden"
                   />
                   <span className="text-[11px] text-slate-700 dark:text-chalk truncate block">
-                    {selectedThumbnailFile ? `✅ ${selectedThumbnailFile.name}` : 'اضغط لاختيار صورة من جهازك (PNG, JPG)'}
+                    {selectedThumbnailFile ? ` ${selectedThumbnailFile.name}` : 'اضغط لاختيار صورة من جهازك (PNG, JPG)'}
                   </span>
                 </label>
               ) : (

@@ -68,7 +68,7 @@ export default function AccountPage() {
     setIsChangingPass(false);
 
     if (res.success) {
-      setPassMsg({ success: true, text: res.message || 'تم تحديث كلمة المرور وحفظ الأمان بنجاح 🎯' });
+      setPassMsg({ success: true, text: res.message || 'تم تحديث كلمة المرور وحفظ الأمان بنجاح ' });
       setOldPass('');
       setNewPass('');
       setConfirmPass('');
@@ -356,7 +356,7 @@ export default function AccountPage() {
                     <Crown className="w-3 h-3" />
                     <span>صلاحيات الإدارة</span>
                   </span>
-                  <span className="text-xs font-black text-emerald-500">مفعل دائماً 🟢</span>
+                  <span className="text-xs font-black text-emerald-500">مفعل دائماً </span>
                 </div>
 
                 <div className="space-y-1">
@@ -380,7 +380,7 @@ export default function AccountPage() {
                   <span className="text-xs font-bold text-cyan-electric px-3 py-1 rounded-full bg-cyan-electric/15 border border-cyan-electric/30">
                     حالة الاشتراك
                   </span>
-                  <span className="text-xs font-black text-cyan-electric">حساب طالب 🎓</span>
+                  <span className="text-xs font-black text-cyan-electric">حساب طالب </span>
                 </div>
 
                 <div className="space-y-1">

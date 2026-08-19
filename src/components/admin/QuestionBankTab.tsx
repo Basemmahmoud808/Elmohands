@@ -173,7 +173,7 @@ export function QuestionBankTab({ initialQuestions, onRefresh }: QuestionBankTab
           setQuestions((prev) =>
             prev.map((q) => (q.id === editingQuestionId ? (res.data as QuestionItemDTO) : q))
           );
-          setSuccessMsg('تم تحديث بيانات السؤال بنجاح ✨');
+          setSuccessMsg('تم تحديث بيانات السؤال بنجاح ');
           setIsFormOpen(false);
           resetForm();
           if (onRefresh) onRefresh();
@@ -196,7 +196,7 @@ export function QuestionBankTab({ initialQuestions, onRefresh }: QuestionBankTab
 
         if (res.success && res.data) {
           setQuestions((prev) => [res.data as QuestionItemDTO, ...prev]);
-          setSuccessMsg('تم حفظ السؤال بنجاح في بنك الأسئلة! 🎯');
+          setSuccessMsg('تم حفظ السؤال بنجاح في بنك الأسئلة! ');
           setIsFormOpen(false);
           resetForm();
           if (onRefresh) onRefresh();
@@ -798,7 +798,7 @@ export function QuestionBankTab({ initialQuestions, onRefresh }: QuestionBankTab
                         <span className="truncate">{opt.text}</span>
                         {isCorrect && (
                           <span className="text-[10px] font-black bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-md shrink-0">
-                            الإجابة الصحيحة ✓
+                            الإجابة الصحيحة 
                           </span>
                         )}
                       </div>
@@ -809,7 +809,7 @@ export function QuestionBankTab({ initialQuestions, onRefresh }: QuestionBankTab
                 {/* Explanation */}
                 {q.explanation && (
                   <p className="text-[11px] text-slate-500 dark:text-chalk-muted italic bg-slate-50/50 dark:bg-slate-950/30 p-2.5 rounded-xl">
-                    💡 <span className="font-bold">التفسير والحل النموذجي:</span> {q.explanation}
+                     <span className="font-bold">التفسير والحل النموذجي:</span> {q.explanation}
                   </p>
                 )}
               </div>

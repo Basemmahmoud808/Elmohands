@@ -252,7 +252,7 @@ export function QuizBuilderTab({
           setQuizzes((prev) =>
             prev.map((item) => (item.id === editingQuizId ? updated : item))
           );
-          setSuccessMsg('تم تحديث بيانات الشيت والملفات المرتبطة بنجاح ✨');
+          setSuccessMsg('تم تحديث بيانات الشيت والملفات المرتبطة بنجاح ');
           setIsFormOpen(false);
           resetForm();
           if (onRefresh) onRefresh();
@@ -282,7 +282,7 @@ export function QuizBuilderTab({
             questionsCount: examMode === 'file' ? customQuestionsCount : selectedQuestionIds.length,
           };
           setQuizzes((prev) => [newQ, ...prev]);
-          setSuccessMsg('تم رفع وحفظ الشيت/الامتحان وربطه بالدرس بنجاح! 🏆');
+          setSuccessMsg('تم رفع وحفظ الشيت/الامتحان وربطه بالدرس بنجاح! ');
           setIsFormOpen(false);
           resetForm();
           if (onRefresh) onRefresh();
@@ -416,7 +416,7 @@ export function QuizBuilderTab({
               }`}
             >
               <FileText className="w-4 h-4" />
-              <span>📄 رفع شيت / امتحان من الجهاز (PDF أو صورة بدون إدخال MCQ)</span>
+              <span> رفع شيت / امتحان من الجهاز (PDF أو صورة بدون إدخال MCQ)</span>
             </button>
 
             <button
@@ -429,7 +429,7 @@ export function QuizBuilderTab({
               }`}
             >
               <HelpCircle className="w-4 h-4" />
-              <span>✍️ بناء امتحان إلكتروني تفاعلي (اختيار من بنك الأسئلة)</span>
+              <span> بناء امتحان إلكتروني تفاعلي (اختيار من بنك الأسئلة)</span>
             </button>
           </div>
 
@@ -550,7 +550,7 @@ export function QuizBuilderTab({
                         fileInputType === 'upload' ? 'bg-cyan-electric text-black font-black' : 'text-slate-500'
                       }`}
                     >
-                      رفع ملف من جهازك 💻
+                      رفع ملف من جهازك 
                     </button>
                     <button
                       type="button"
@@ -559,7 +559,7 @@ export function QuizBuilderTab({
                         fileInputType === 'url' ? 'bg-cyan-electric text-black font-black' : 'text-slate-500'
                       }`}
                     >
-                      رابط خارجي / Google Drive 🔗
+                      رابط خارجي / Google Drive 
                     </button>
                   </div>
                 </div>
@@ -753,7 +753,7 @@ export function QuizBuilderTab({
                   {quiz.gradeName} • {quiz.branchName}
                 </span>
                 <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                  {quiz.pdfPath || quiz.type === 'file' ? '📄 شيت PDF مرفوع' : '✍️ امتحان إلكتروني'}
+                  {quiz.pdfPath || quiz.type === 'file' ? ' شيت PDF مرفوع' : ' امتحان إلكتروني'}
                 </span>
               </div>
 

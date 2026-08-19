@@ -281,12 +281,12 @@ export function VideoPlayer({
       {showCompletedBanner && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-2xl bg-emerald-950/90 border border-emerald-500/40 text-emerald-400 text-xs font-bold shadow-lg shadow-emerald-950/50 flex items-center gap-2 animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>أحسنت! تم إكمال 90% من الدرس وتسجيله كـ "مكتمل" بنجاح 🎯</span>
+          <span>أحسنت! تم إكمال 90% من الدرس وتسجيله كـ "مكتمل" بنجاح </span>
           <button
             onClick={() => setShowCompletedBanner(false)}
             className="text-emerald-300 hover:text-white mr-1 text-sm font-bold"
           >
-            ✕
+            
           </button>
         </div>
       )}

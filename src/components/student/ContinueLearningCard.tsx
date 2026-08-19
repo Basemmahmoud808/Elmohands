@@ -91,7 +91,7 @@ export function ContinueLearningCard({ lesson, onOpenVideo }: ContinueLearningCa
             <ChevronLeft className="w-4 h-4 mr-auto sm:mr-0 lg:mr-auto" />
           </Link>
           <span className="text-[11px] text-center text-slate-500 dark:text-chalk-muted font-medium">
-            يتم حفظ نقطة التوقف تلقائياً ⏱️
+            يتم حفظ نقطة التوقف تلقائياً ⏱
           </span>
         </div>
       </div>

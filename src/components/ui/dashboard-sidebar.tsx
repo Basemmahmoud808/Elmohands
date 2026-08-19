@@ -153,7 +153,7 @@ export function DashboardSidebar({
                 </div>
               </div>
               <button onClick={() => setMobileDrawerOpen(false)} className="text-slate-500 dark:text-slate-400 text-xs font-bold p-1">
-                إغلاق ✕
+                إغلاق 
               </button>
             </div>
 
