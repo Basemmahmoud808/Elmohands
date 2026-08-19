@@ -102,27 +102,24 @@ export function VouchersManagementTab({ initialVouchers, onRefresh }: VouchersMa
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Header */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">
-          توليد وإدارة أكواد الشحن (Vouchers)
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-chalk-muted mt-0.5">
-          إنشاء دفعات أكواد شحن مؤمنة مرتبطة بمدد الاشتراك وتوزيعها على السناتر والطلاب
+      <div className="pb-2 border-b border-slate-200 dark:border-slate-800">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
+          أكواد الشحن والاشتراكات
+        </h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          توليد وتوزيع أكواد تفعيل الاشتراكات للطلاب
         </p>
       </div>
 
       {/* Generator Box */}
-      <div className="chalk-card rounded-3xl p-6 sm:p-8 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
-        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div className="w-10 h-10 rounded-xl bg-cyan-electric/15 flex items-center justify-center text-cyan-electric">
-            <KeyRound className="w-5 h-5" />
-          </div>
+      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-sm">
+        <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-chalk">
-              توليد دفعة أكواد جديدة
+            <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+              توليد أكواد جديدة
             </h3>
-            <span className="text-xs text-slate-500 dark:text-chalk-muted">
-              توليد أكواد فريدة برمجياً ومطابقة لقواعد التشفير في قاعدة البيانات
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              اختر نوع الاشتراك وعدد الأكواد المطلوبة للتوليد الفوري
             </span>
           </div>
         </div>

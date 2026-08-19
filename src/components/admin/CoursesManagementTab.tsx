@@ -11,11 +11,7 @@ import { createUnitAction } from '@/lib/actions/courses';
 import katex from 'katex';
 import {
   BookOpen,
-  Layers,
   Plus,
-  ChevronDown,
-  ChevronUp,
-  GraduationCap,
   Video,
   CheckCircle2,
   Loader2,
@@ -25,18 +21,10 @@ import {
   Award,
   Play,
   Download,
-  ArrowLeft,
-  Sparkles,
   Search,
-  Filter,
-  Eye,
-  Calendar,
-  Phone,
   Clock,
   Lock,
   Unlock,
-  FolderPlus,
-  Library,
   ChevronLeft,
 } from 'lucide-react';
 
@@ -55,29 +43,21 @@ const DEFAULT_GRADES = [
     id: 'grade-prep-1',
     name: 'الصف الأول الإعدادي',
     stage: 'المرحلة الإعدادية',
-    tag: '1st Prep',
-    accent: 'blue',
   },
   {
     id: 'grade-prep-2',
     name: 'الصف الثاني الإعدادي',
     stage: 'المرحلة الإعدادية',
-    tag: '2nd Prep',
-    accent: 'emerald',
   },
   {
     id: 'grade-prep-3',
     name: 'الصف الثالث الإعدادي',
     stage: 'الشهادة الإعدادية',
-    tag: '3rd Prep',
-    accent: 'purple',
   },
   {
     id: 'grade-sec-1',
     name: 'الصف الأول الثانوي',
     stage: 'المرحلة الثانوية',
-    tag: '1st Secondary',
-    accent: 'amber',
   },
 ];
 
@@ -92,7 +72,7 @@ export function CoursesManagementTab({
 }: CoursesManagementTabProps) {
   const [curriculum, setCurriculum] = useState<CurriculumGradeDTO[]>(initialCurriculum);
 
-  // Selected Grade State
+  // Selected Grade
   const [selectedGradeId, setSelectedGradeId] = useState<string>(
     initialCurriculum[0]?.id || DEFAULT_GRADES[0].id
   );
@@ -101,17 +81,17 @@ export function CoursesManagementTab({
   // Active Sub-Tab: 'curriculum' | 'pdfs' | 'exams' | 'questions' | 'students'
   const [activeSubTab, setActiveSubTab] = useState<'curriculum' | 'pdfs' | 'exams' | 'questions' | 'students'>('curriculum');
 
-  // Search in Grade Content
+  // Search
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Unit creation modal state
+  // Unit creation modal
   const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState('');
   const [newUnitTitle, setNewUnitTitle] = useState('');
   const [newUnitDesc, setNewUnitDesc] = useState('');
   const [unitLoading, setUnitLoading] = useState(false);
 
-  // Math KaTeX Renderer
+  // KaTeX
   const renderMath = (latex: string) => {
     try {
       return katex.renderToString(latex, { throwOnError: false, displayMode: false });
@@ -161,7 +141,7 @@ export function CoursesManagementTab({
   const terms = selectedGrade.terms || [];
   const currentTerm = terms.find((t) => t.id === selectedTermId) || terms[0];
 
-  // Grade Statistics & Aggregations
+  // Grade Metrics
   const gradeStatsMap = useMemo(() => {
     const stats: Record<
       string,
@@ -227,7 +207,7 @@ export function CoursesManagementTab({
     return stats;
   }, [curriculum, quizzes, students, questions]);
 
-  // Lessons belonging to current grade & term
+  // Filtered Lessons
   const allGradeLessons = useMemo(() => {
     const list: Array<{
       id: string;
@@ -276,7 +256,7 @@ export function CoursesManagementTab({
     );
   }, [selectedGrade, selectedTermId, searchQuery]);
 
-  // Grade Filtered Quizzes
+  // Filtered Quizzes
   const gradeQuizzes = useMemo(() => {
     const list = quizzes.filter(
       (q) =>
@@ -292,7 +272,7 @@ export function CoursesManagementTab({
     return list.filter((item) => item.title.toLowerCase().includes(q));
   }, [quizzes, selectedGrade, searchQuery]);
 
-  // Grade Filtered Students
+  // Filtered Students
   const gradeStudents = useMemo(() => {
     const list = students.filter(
       (s) => s.gradeId === selectedGrade.id || s.gradeName === selectedGrade.name
@@ -307,7 +287,7 @@ export function CoursesManagementTab({
     );
   }, [students, selectedGrade, searchQuery]);
 
-  // Grade Filtered Questions
+  // Filtered Questions
   const gradeQuestions = useMemo(() => {
     if (!searchQuery.trim()) return questions;
     const q = searchQuery.toLowerCase();
@@ -342,35 +322,29 @@ export function CoursesManagementTab({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Banner */}
-      <div className="rounded-2xl p-6 bg-gradient-to-l from-cyan-900/10 via-slate-900/5 to-transparent dark:from-cyan-950/40 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs font-bold border border-cyan-500/20">
-            <GraduationCap className="w-3.5 h-3.5" />
-            <span>بوابة المناهج والمراحل الدراسية</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
-            مناهج الرياضيات — م/ رضا خيرت
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium max-w-xl">
-            اختر أي مرحلة دراسية للدخول إلى مركز التحكم الخاص بها ومتابعة الفيديوهات، الشيتات، الامتحانات، وبنك الأسئلة المخصص لها.
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
+            المناهج والصفوف الدراسية
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            إدارة ومتابعة محتوى الصفوف الدراسية والدروس والاختبارات
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onNavigateTab && onNavigateTab('lessons')}
-            className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" />
-            <span>إضافة درس جديد</span>
-          </button>
-        </div>
+        <button
+          onClick={() => onNavigateTab && onNavigateTab('lessons')}
+          className="px-4 py-2.5 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs shadow-cyan-glow transition-all flex items-center justify-center gap-1.5 self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>إضافة درس جديد</span>
+        </button>
       </div>
 
-      {/* 4 GRADE CARDS (الصفوف الأربعة الرئيسية) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 GRADE CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {DEFAULT_GRADES.map((dg) => {
           const isSelected = selectedGradeId === dg.id;
           const stats = gradeStatsMap[dg.id] || {
@@ -388,57 +362,45 @@ export function CoursesManagementTab({
                 setSelectedGradeId(dg.id);
                 setSelectedTermId('');
               }}
-              className={`rounded-2xl p-5 cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-4 border ${
+              className={`p-4 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-3.5 border ${
                 isSelected
-                  ? 'border-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/20 shadow-md ring-2 ring-cyan-500/20'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-cyan-300 dark:hover:border-slate-700 shadow-sm'
+                  ? 'border-cyan-500 bg-cyan-500/10 dark:bg-cyan-500/10 shadow-sm ring-1 ring-cyan-500'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    {dg.stage}
-                  </span>
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      isSelected
-                        ? 'bg-cyan-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    <BookOpen className="w-4 h-4" />
-                  </div>
-                </div>
-
+              <div className="space-y-1">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+                  {dg.stage}
+                </span>
                 <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
                   {dg.name}
                 </h3>
               </div>
 
               {/* Metrics */}
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/50">
-                  <span className="text-slate-900 dark:text-slate-100 block font-black text-xs">{stats.lessonsCount}</span>
-                  <span className="text-slate-400 text-[10px]">دروس</span>
+              <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-center">
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60">
+                  <span className="text-slate-900 dark:text-slate-100 block font-bold text-xs">{stats.lessonsCount}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[10px]">دروس</span>
                 </div>
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/50">
-                  <span className="text-slate-900 dark:text-slate-100 block font-black text-xs">{stats.quizzesCount}</span>
-                  <span className="text-slate-400 text-[10px]">امتحانات</span>
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60">
+                  <span className="text-slate-900 dark:text-slate-100 block font-bold text-xs">{stats.quizzesCount}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[10px]">امتحانات</span>
                 </div>
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/50">
-                  <span className="text-slate-900 dark:text-slate-100 block font-black text-xs">{stats.studentsCount}</span>
-                  <span className="text-slate-400 text-[10px]">طلاب</span>
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60">
+                  <span className="text-slate-900 dark:text-slate-100 block font-bold text-xs">{stats.studentsCount}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[10px]">طلاب</span>
                 </div>
               </div>
 
               <div
-                className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
+                className={`w-full py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors ${
                   isSelected
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-cyan-electric text-black font-black'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                <span>{isSelected ? 'الصف النشط حالياً' : 'عرض محتوى الصف'}</span>
+                <span>{isSelected ? 'الصف المحدد' : 'عرض المحتوى'}</span>
                 <ChevronLeft className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -446,102 +408,99 @@ export function CoursesManagementTab({
         })}
       </div>
 
-      {/* SELECTED GRADE COMMAND CENTER */}
-      <div className="rounded-2xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
-        {/* Hub Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-                {selectedGrade.stage || 'المرحلة الإعدادية'}
-              </span>
-              <span className="text-xs text-slate-400">• رياضيات منصة المهندس</span>
-            </div>
-            <h3 className="text-xl font-black text-slate-900 dark:text-slate-100">
-              إدارة محتوى: {selectedGrade.name}
-            </h3>
+      {/* SELECTED GRADE CONTENT PANEL */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-sm">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
+              {selectedGrade.name}
+            </h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {selectedGrade.stage}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigateTab && onNavigateTab('lessons')}
-              className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl bg-cyan-electric text-black font-bold text-xs hover:bg-cyan-electric-hover transition-all flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>إضافة درس جديد</span>
+              <span>إضافة درس</span>
             </button>
             <button
               onClick={() => onNavigateTab && onNavigateTab('quizzes')}
-              className="px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-xs border border-purple-200 dark:border-purple-800 transition-all flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>إضافة شيت أو امتحان</span>
+              <span>إضافة امتحان</span>
             </button>
           </div>
         </div>
 
-        {/* Subtabs and Term Filter */}
+        {/* Sub-tabs & Term Filter */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Segmented Subtabs */}
+          {/* Subtabs */}
           <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setActiveSubTab('curriculum')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'curriculum'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <Video className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-              <span>الدروس والفيديوهات ({allGradeLessons.length})</span>
+              <Video className="w-3.5 h-3.5 text-cyan-500" />
+              <span>الدروس ({allGradeLessons.length})</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('pdfs')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'pdfs'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>الشيتات والمذكرات ({allGradeLessons.filter((l) => l.pdfPath).length})</span>
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>المذكرات ({allGradeLessons.filter((l) => l.pdfPath).length})</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('exams')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'exams'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <Award className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <Award className="w-3.5 h-3.5 text-slate-500" />
               <span>الامتحانات ({gradeQuizzes.length})</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('questions')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'questions'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <HelpCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
               <span>بنك الأسئلة</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('students')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'students'
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>طلاب الصف ({gradeStudents.length})</span>
+              <Users className="w-3.5 h-3.5 text-slate-500" />
+              <span>الطلاب ({gradeStudents.length})</span>
             </button>
           </div>
 
@@ -549,7 +508,7 @@ export function CoursesManagementTab({
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setSelectedTermId('')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 !selectedTermId
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                   : 'text-slate-500 dark:text-slate-400'
@@ -561,7 +520,7 @@ export function CoursesManagementTab({
               <button
                 key={t.id}
                 onClick={() => setSelectedTermId(t.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                   selectedTermId === t.id
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
                     : 'text-slate-500 dark:text-slate-400'
@@ -587,30 +546,23 @@ export function CoursesManagementTab({
 
         {/* SUBTAB 1: LESSONS & VIDEOS */}
         {activeSubTab === 'curriculum' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {allGradeLessons.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-3">
+              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
                 <Video className="w-8 h-8 text-slate-400 mx-auto" />
                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   لم يتم رفع دروس لهذا الصف بعد
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                  اضغط على زر &quot;إضافة درس جديد&quot; لنشر أول محاضرة فيديو ومذكرة لطلاب {selectedGrade.name}.
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  اضغط على زر &quot;إضافة درس&quot; لنشر أول محاضرة لطلاب {selectedGrade.name}.
                 </p>
-                <button
-                  onClick={() => onNavigateTab && onNavigateTab('lessons')}
-                  className="px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>رفع أول درس</span>
-                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {allGradeLessons.map((lesson) => (
                   <div
                     key={lesson.id}
-                    className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-cyan-400 dark:hover:border-slate-700 transition-all flex flex-col justify-between space-y-3"
+                    className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between space-y-3"
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[11px] font-semibold">
@@ -632,22 +584,22 @@ export function CoursesManagementTab({
 
                       <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-amber-500" />
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
                           {lesson.durationMinutes} دقيقة
                         </span>
                         {lesson.pdfPath && (
-                          <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
+                          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                             <FileText className="w-3.5 h-3.5" />
-                            مذكرة PDF
+                            مذكرة
                           </span>
                         )}
                         {lesson.isLocked ? (
-                          <span className="flex items-center gap-1 text-red-500">
+                          <span className="flex items-center gap-1 text-amber-500">
                             <Lock className="w-3.5 h-3.5" />
                             مشتركين
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 text-emerald-600">
+                          <span className="flex items-center gap-1 text-emerald-500">
                             <Unlock className="w-3.5 h-3.5" />
                             مجاني
                           </span>
@@ -666,7 +618,7 @@ export function CoursesManagementTab({
                               url: lesson.videoPath || '',
                             })
                           }
-                          className="flex-1 py-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-bold text-xs hover:bg-cyan-600 hover:text-white transition-all flex items-center justify-center gap-1"
+                          className="flex-1 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-cyan-electric hover:text-black transition-all flex items-center justify-center gap-1"
                         >
                           <Play className="w-3.5 h-3.5" />
                           <span>معاينة الفيديو</span>
@@ -682,7 +634,7 @@ export function CoursesManagementTab({
                               url: lesson.pdfPath || '',
                             })
                           }
-                          className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-cyan-600 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-cyan-500 transition-colors"
                           title="معاينة المذكرة PDF"
                         >
                           <FileText className="w-4 h-4" />
@@ -716,7 +668,7 @@ export function CoursesManagementTab({
                       className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div>
@@ -733,7 +685,7 @@ export function CoursesManagementTab({
                         href={l.pdfPath || '#'}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-cyan-600 text-white font-bold text-xs flex items-center gap-1 shadow-sm shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-cyan-electric hover:text-black text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1 transition-colors shrink-0"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>تحميل</span>
@@ -754,16 +706,9 @@ export function CoursesManagementTab({
                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   لم يتم إضافة امتحانات أو شيتات لهذا الصف بعد
                 </h4>
-                <button
-                  onClick={() => onNavigateTab && onNavigateTab('quizzes')}
-                  className="px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>إضافة شيت أو امتحان</span>
-                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {gradeQuizzes.map((quiz) => (
                   <div
                     key={quiz.id}
@@ -771,8 +716,8 @@ export function CoursesManagementTab({
                   >
                     <div className="flex items-center justify-between text-[11px] font-semibold">
                       <span className="text-cyan-600 dark:text-cyan-400">{quiz.branchName || 'رياضيات'}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold">
-                        {quiz.pdfPath || quiz.type === 'file' ? 'شيت PDF مرفوع' : 'امتحان إلكتروني'}
+                      <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                        {quiz.pdfPath || quiz.type === 'file' ? 'شيت PDF' : 'اختبار إلكتروني'}
                       </span>
                     </div>
 
@@ -809,7 +754,7 @@ export function CoursesManagementTab({
                 >
                   <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
                     <span>{q.branchName || 'فرع عام'}</span>
-                    <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-cyan-600 dark:text-cyan-400">
+                    <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                       {q.difficulty === 'EASY' ? 'سهل' : q.difficulty === 'MEDIUM' ? 'متوسط' : 'متقدم'}
                     </span>
                   </div>
@@ -820,7 +765,7 @@ export function CoursesManagementTab({
 
                   {q.questionLatex && (
                     <div
-                      className="text-cyan-600 dark:text-cyan-400 text-xs py-1"
+                      className="text-cyan-500 text-xs py-1"
                       dangerouslySetInnerHTML={{ __html: renderMath(q.questionLatex) }}
                     />
                   )}
@@ -928,7 +873,7 @@ export function CoursesManagementTab({
                 <button
                   type="submit"
                   disabled={unitLoading}
-                  className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-sm flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black shadow-cyan-glow flex items-center gap-1.5"
                 >
                   {unitLoading ? (
                     <>
