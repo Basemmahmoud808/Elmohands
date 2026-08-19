@@ -3,11 +3,8 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { checkIpRateLimit } from '@/lib/security';
 
-const JWT_SECRET_VALUE = process.env.JWT_SECRET;
-if (!JWT_SECRET_VALUE) {
-  // Middleware runs on every request — if JWT_SECRET is missing, allow public routes but block protected ones
-}
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE || '');
+const JWT_SECRET_VALUE = process.env.JWT_SECRET || 'almohands-platform-secure-jwt-secret-key-2026-math-reda-kheyrat';
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE);
 
 interface TokenPayload {
   userId: string;
