@@ -50,11 +50,11 @@ export function LessonsManagementTab({
 
   // Media Source Mode: 'file' | 'url'
   const [videoMode, setVideoMode] = useState<'file' | 'url'>('url');
-  const [videoUrl, setVideoUrl] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4');
+  const [videoUrl, setVideoUrl] = useState('');
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
 
   const [pdfMode, setPdfMode] = useState<'file' | 'url'>('url');
-  const [pdfUrl, setPdfUrl] = useState('/sample-lesson-notes.pdf');
+  const [pdfUrl, setPdfUrl] = useState('');
   const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
 
   const [thumbnailUrl, setThumbnailUrl] = useState('/teacher_reda_kheyrat.jpg');
