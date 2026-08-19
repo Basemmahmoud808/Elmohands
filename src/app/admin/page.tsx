@@ -183,7 +183,12 @@ export default function AdminDashboard() {
           {selectedTab === 'courses' && (
             <CoursesManagementTab
               initialCurriculum={curriculum}
+              students={students}
+              questions={questions}
+              quizzes={quizzes}
               onRefresh={loadAllAdminData}
+              onNavigateTab={(tabId) => setSelectedTab(tabId)}
+              onPreviewMedia={(media) => setActiveMediaModal(media)}
             />
           )}
 
