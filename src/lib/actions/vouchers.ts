@@ -39,16 +39,35 @@ export async function generateVoucherCodes(
     const price = planType === '1month' ? 150 : planType === 'term' ? 450 : 850;
     const prefix = planType === '1month' ? 'ALM-M1-' : planType === 'term' ? 'ALM-TR-' : 'ALM-YR-';
 
-    // Find or fetch corresponding plan from Supabase
+    const isValidUuid = (id?: string | null) =>
+      Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+
+    // Find or create corresponding plan in Supabase
     let planId: string | null = null;
     try {
       const { data: planData } = await supabaseAdmin
         .from('plans')
         .select('id')
         .eq('duration_days', durationDays)
+        .limit(1)
         .maybeSingle();
-      if (planData) {
+
+      if (planData && isValidUuid(planData.id)) {
         planId = planData.id;
+      } else {
+        const { data: createdPlan } = await supabaseAdmin
+          .from('plans')
+          .insert({
+            name: planName,
+            duration_days: durationDays,
+            price,
+            is_active: true,
+          })
+          .select('id')
+          .single();
+        if (createdPlan && isValidUuid(createdPlan.id)) {
+          planId = createdPlan.id;
+        }
       }
     } catch {
       // Plan query fallback
@@ -85,8 +104,8 @@ export async function generateVoucherCodes(
         code,
         status: 'UNUSED',
       };
-      if (planId) payload.plan_id = planId;
-      if (user.id) payload.created_by = user.id;
+      if (isValidUuid(planId)) payload.plan_id = planId!;
+      if (isValidUuid(user.id)) payload.created_by = user.id;
 
       dbPayloads.push(payload);
 
@@ -111,12 +130,14 @@ export async function generateVoucherCodes(
         console.warn('activation_codes insert error:', insertErr.message);
       } else {
         // Record audit log
-        await supabaseAdmin.from('audit_logs').insert({
-          user_id: user.id,
-          action: 'VOUCHERS_GENERATED',
-          entity_type: 'activation_codes',
-          metadata: { planName, count, durationDays },
-        });
+        if (isValidUuid(user.id)) {
+          await supabaseAdmin.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'VOUCHERS_GENERATED',
+            entity_type: 'activation_codes',
+            metadata: { planName, count, durationDays },
+          });
+        }
       }
     } catch (e) {
       console.warn('Exception persisting activation codes:', e);

@@ -57,6 +57,7 @@ export function LessonsManagementTab({
   const [pdfUrl, setPdfUrl] = useState('');
   const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
 
+  const [thumbMode, setThumbMode] = useState<'file' | 'url'>('file');
   const [thumbnailUrl, setThumbnailUrl] = useState('/teacher_reda_kheyrat.jpg');
   const [selectedThumbnailFile, setSelectedThumbnailFile] = useState<File | null>(null);
 
@@ -519,19 +520,52 @@ export function LessonsManagementTab({
               )}
             </div>
 
-            {/* Thumbnail */}
+            {/* Thumbnail / Cover Image */}
             <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
-              <label className="text-slate-800 dark:text-chalk flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-cyan-electric" />
-                <span>الصورة المصغرة:</span>
-              </label>
-              <input
-                type="text"
-                value={thumbnailUrl}
-                onChange={(e) => setThumbnailUrl(e.target.value)}
-                placeholder="/teacher_reda_kheyrat.jpg"
-                className="w-full h-10 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
-              />
+              <div className="flex items-center justify-between">
+                <label className="text-slate-800 dark:text-chalk flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-cyan-electric" />
+                  <span>صورة غلاف / واجهة الدرس:</span>
+                </label>
+                <div className="flex items-center gap-1 bg-slate-200 dark:bg-slate-900 p-0.5 rounded-lg text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setThumbMode('file')}
+                    className={`px-2 py-0.5 rounded ${thumbMode === 'file' ? 'bg-cyan-electric text-black font-bold' : 'text-slate-400'}`}
+                  >
+                    رفع صورة 🖼️
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setThumbMode('url')}
+                    className={`px-2 py-0.5 rounded ${thumbMode === 'url' ? 'bg-cyan-electric text-black font-bold' : 'text-slate-400'}`}
+                  >
+                    رابط 🔗
+                  </button>
+                </div>
+              </div>
+
+              {thumbMode === 'file' ? (
+                <label className="block p-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center cursor-pointer hover:border-cyan-electric bg-white dark:bg-slate-900 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={(e) => setSelectedThumbnailFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                  <span className="text-[11px] text-slate-700 dark:text-chalk truncate block">
+                    {selectedThumbnailFile ? `✅ ${selectedThumbnailFile.name}` : 'اضغط لاختيار صورة من جهازك (PNG, JPG)'}
+                  </span>
+                </label>
+              ) : (
+                <input
+                  type="text"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  placeholder="/teacher_reda_kheyrat.jpg أو رابط صورة خارجي"
+                  className="w-full h-10 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
+                />
+              )}
             </div>
           </div>
 

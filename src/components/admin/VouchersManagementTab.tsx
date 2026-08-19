@@ -30,13 +30,18 @@ export function VouchersManagementTab({ initialVouchers, onRefresh }: VouchersMa
   const [generating, setGenerating] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setGenerating(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+
     try {
       const res = await generateVoucherCodes(planType, count);
-      if (res.success && res.codes) {
+      if (res.success && res.codes && res.codes.length > 0) {
         const mapped: AdminVoucherDTO[] = res.codes.map((c) => ({
           id: c.id,
           code: c.code,
@@ -48,10 +53,13 @@ export function VouchersManagementTab({ initialVouchers, onRefresh }: VouchersMa
           createdAt: c.createdAt,
         }));
         setVouchers((prev) => [...mapped, ...prev]);
+        setSuccessMsg(`تم توليد وحفظ ${res.codes.length} كود شحن بنجاح! 🔑✨`);
         if (onRefresh) onRefresh();
+      } else {
+        setErrorMsg(res.message || 'فشل توليد الأكواد');
       }
     } catch {
-      // ignore
+      setErrorMsg('حدث خطأ أثناء الاتصال بالسيرفر لتوليد الأكواد');
     } finally {
       setGenerating(false);
     }
@@ -118,6 +126,20 @@ export function VouchersManagementTab({ initialVouchers, onRefresh }: VouchersMa
             </span>
           </div>
         </div>
+
+        {successMsg && (
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
+            <XCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         <form onSubmit={handleGenerate} className="space-y-4 text-xs font-bold">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
