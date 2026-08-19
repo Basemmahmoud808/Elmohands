@@ -225,10 +225,6 @@ export default function GradeCoursesPage() {
             الرئيسية
           </Link>
           <span>/</span>
-          <Link href="/courses" className="hover:text-cyan-electric transition-colors">
-            الكورسات
-          </Link>
-          <span>/</span>
           <span className="text-cyan-electric font-black">{gradeName}</span>
         </div>
 
