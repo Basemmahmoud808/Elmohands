@@ -139,7 +139,6 @@ export function CoursesManagementTab({
   }, [curriculum, selectedGradeId]);
 
   const terms = selectedGrade.terms || [];
-  const currentTerm = terms.find((t) => t.id === selectedTermId) || terms[0];
 
   // Grade Metrics
   const gradeStatsMap = useMemo(() => {
@@ -322,21 +321,21 @@ export function CoursesManagementTab({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">
             المناهج والصفوف الدراسية
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            إدارة ومتابعة محتوى الصفوف الدراسية والدروس والاختبارات
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-chalk-muted mt-0.5">
+            استعراض وإدارة المحتوى التعليمي لكل صف دراسي لمادة الرياضيات
           </p>
         </div>
 
         <button
           onClick={() => onNavigateTab && onNavigateTab('lessons')}
-          className="px-4 py-2.5 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs shadow-cyan-glow transition-all flex items-center justify-center gap-1.5 self-start sm:self-auto"
+          className="px-5 py-3 rounded-2xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs shadow-cyan-glow transition-all flex items-center justify-center gap-2 self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>إضافة درس جديد</span>
@@ -344,7 +343,7 @@ export function CoursesManagementTab({
       </div>
 
       {/* 4 GRADE CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {DEFAULT_GRADES.map((dg) => {
           const isSelected = selectedGradeId === dg.id;
           const stats = gradeStatsMap[dg.id] || {
@@ -362,46 +361,46 @@ export function CoursesManagementTab({
                 setSelectedGradeId(dg.id);
                 setSelectedTermId('');
               }}
-              className={`p-4 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-3.5 border ${
+              className={`chalk-card rounded-3xl p-5 sm:p-6 cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-4 border ${
                 isSelected
-                  ? 'border-cyan-500 bg-cyan-500/10 dark:bg-cyan-500/10 shadow-sm ring-1 ring-cyan-500'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                  ? 'border-cyan-electric/60 bg-cyan-electric/5 dark:bg-cyan-electric/10 ring-1 ring-cyan-electric/40 shadow-cyan-glow'
+                  : 'bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 hover:border-cyan-electric/40'
               }`}
             >
-              <div className="space-y-1">
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-chalk-muted block">
                   {dg.stage}
                 </span>
-                <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-black text-slate-900 dark:text-chalk">
                   {dg.name}
                 </h3>
               </div>
 
               {/* Metrics */}
-              <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-center">
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60">
-                  <span className="text-slate-900 dark:text-slate-100 block font-bold text-xs">{stats.lessonsCount}</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px]">دروس</span>
+              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-center">
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80">
+                  <span className="text-slate-900 dark:text-chalk block font-black text-xs">{stats.lessonsCount}</span>
+                  <span className="text-slate-500 dark:text-chalk-muted text-[10px] font-semibold">دروس</span>
                 </div>
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60">
-                  <span className="text-slate-900 dark:text-slate-100 block font-bold text-xs">{stats.quizzesCount}</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px]">امتحانات</span>
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80">
+                  <span className="text-slate-900 dark:text-chalk block font-black text-xs">{stats.quizzesCount}</span>
+                  <span className="text-slate-500 dark:text-chalk-muted text-[10px] font-semibold">امتحانات</span>
                 </div>
-                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60">
-                  <span className="text-slate-900 dark:text-slate-100 block font-bold text-xs">{stats.studentsCount}</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px]">طلاب</span>
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80">
+                  <span className="text-slate-900 dark:text-chalk block font-black text-xs">{stats.studentsCount}</span>
+                  <span className="text-slate-500 dark:text-chalk-muted text-[10px] font-semibold">طلاب</span>
                 </div>
               </div>
 
               <div
-                className={`w-full py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors ${
+                className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                   isSelected
-                    ? 'bg-cyan-electric text-black font-black'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-cyan-electric text-black font-black shadow-cyan-glow'
+                    : 'bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-chalk hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
                 }`}
               >
-                <span>{isSelected ? 'الصف المحدد' : 'عرض المحتوى'}</span>
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>{isSelected ? 'الصف المحدد حالياً' : 'استعراض المحتوى'}</span>
+                <ChevronLeft className="w-4 h-4" />
               </div>
             </div>
           );
@@ -409,31 +408,31 @@ export function CoursesManagementTab({
       </div>
 
       {/* SELECTED GRADE CONTENT PANEL */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-sm">
+      <div className="chalk-card rounded-3xl p-6 sm:p-8 bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-cyan-electric/15 space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
+            <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-chalk">
               {selectedGrade.name}
-            </h2>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {selectedGrade.stage}
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-chalk-muted font-bold">
+              {selectedGrade.stage} • رياضيات منصة المهندس
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => onNavigateTab && onNavigateTab('lessons')}
-              className="px-3 py-1.5 rounded-xl bg-cyan-electric text-black font-bold text-xs hover:bg-cyan-electric-hover transition-all flex items-center gap-1"
+              className="px-4 py-2.5 rounded-2xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs shadow-cyan-glow transition-all flex items-center gap-1.5"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               <span>إضافة درس</span>
             </button>
             <button
               onClick={() => onNavigateTab && onNavigateTab('quizzes')}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1"
+              className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-800 dark:text-chalk border border-slate-200 dark:border-slate-800 font-bold text-xs transition-all flex items-center gap-1.5"
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-4 h-4 text-cyan-electric" />
               <span>إضافة امتحان</span>
             </button>
           </div>
@@ -442,76 +441,76 @@ export function CoursesManagementTab({
         {/* Sub-tabs & Term Filter */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           {/* Subtabs */}
-          <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setActiveSubTab('curriculum')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'curriculum'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                  : 'text-slate-700 dark:text-chalk hover:text-slate-900 dark:hover:text-cyan-electric'
               }`}
             >
-              <Video className="w-3.5 h-3.5 text-cyan-500" />
+              <Video className="w-4 h-4" />
               <span>الدروس ({allGradeLessons.length})</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('pdfs')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'pdfs'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                  : 'text-slate-700 dark:text-chalk hover:text-slate-900 dark:hover:text-cyan-electric'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <FileText className="w-4 h-4" />
               <span>المذكرات ({allGradeLessons.filter((l) => l.pdfPath).length})</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('exams')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'exams'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                  : 'text-slate-700 dark:text-chalk hover:text-slate-900 dark:hover:text-cyan-electric'
               }`}
             >
-              <Award className="w-3.5 h-3.5 text-slate-500" />
+              <Award className="w-4 h-4" />
               <span>الامتحانات ({gradeQuizzes.length})</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('questions')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'questions'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                  : 'text-slate-700 dark:text-chalk hover:text-slate-900 dark:hover:text-cyan-electric'
               }`}
             >
-              <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
+              <HelpCircle className="w-4 h-4" />
               <span>بنك الأسئلة</span>
             </button>
 
             <button
               onClick={() => setActiveSubTab('students')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activeSubTab === 'students'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                  : 'text-slate-700 dark:text-chalk hover:text-slate-900 dark:hover:text-cyan-electric'
               }`}
             >
-              <Users className="w-3.5 h-3.5 text-slate-500" />
+              <Users className="w-4 h-4" />
               <span>الطلاب ({gradeStudents.length})</span>
             </button>
           </div>
 
           {/* Term Filter */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-950/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setSelectedTermId('')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 !selectedTermId
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400'
+                  ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                  : 'text-slate-600 dark:text-chalk-muted'
               }`}
             >
               الترمين معاً
@@ -520,10 +519,10 @@ export function CoursesManagementTab({
               <button
                 key={t.id}
                 onClick={() => setSelectedTermId(t.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   selectedTermId === t.id
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
+                    ? 'bg-cyan-electric text-black shadow-cyan-glow font-black'
+                    : 'text-slate-600 dark:text-chalk-muted'
                 }`}
               >
                 {t.name}
@@ -540,55 +539,55 @@ export function CoursesManagementTab({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="بحث في دروس ومذكرات واختبارات هذا الصف..."
-            className="w-full h-10 pr-10 pl-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500"
+            className="w-full h-11 pr-10 pl-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
           />
         </div>
 
         {/* SUBTAB 1: LESSONS & VIDEOS */}
         {activeSubTab === 'curriculum' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {allGradeLessons.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
+              <div className="p-10 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <Video className="w-8 h-8 text-slate-400 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">
                   لم يتم رفع دروس لهذا الصف بعد
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-chalk-muted">
                   اضغط على زر &quot;إضافة درس&quot; لنشر أول محاضرة لطلاب {selectedGrade.name}.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allGradeLessons.map((lesson) => (
                   <div
                     key={lesson.id}
-                    className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between space-y-3"
+                    className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-cyan-electric/40 transition-all flex flex-col justify-between space-y-3.5"
                   >
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-semibold">
-                        <span className="text-cyan-600 dark:text-cyan-400">{lesson.branchName}</span>
-                        <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px]">
+                      <div className="flex items-center justify-between text-[11px] font-bold">
+                        <span className="text-cyan-electric">{lesson.branchName}</span>
+                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-chalk-muted text-[10px]">
                           {lesson.termName} • {lesson.unitTitle}
                         </span>
                       </div>
 
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
+                      <h4 className="text-sm font-black text-slate-900 dark:text-chalk line-clamp-2">
                         {lesson.title}
                       </h4>
 
                       {lesson.description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                        <p className="text-xs text-slate-500 dark:text-chalk-muted line-clamp-2 font-medium">
                           {lesson.description}
                         </p>
                       )}
 
-                      <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-2.5 pt-1 text-[11px] text-slate-500 dark:text-chalk-muted font-bold">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <Clock className="w-3.5 h-3.5 text-cyan-electric" />
                           {lesson.durationMinutes} دقيقة
                         </span>
                         {lesson.pdfPath && (
-                          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                          <span className="flex items-center gap-1 text-cyan-electric">
                             <FileText className="w-3.5 h-3.5" />
                             مذكرة
                           </span>
@@ -607,7 +606,7 @@ export function CoursesManagementTab({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                       {lesson.videoPath && (
                         <button
                           onClick={() =>
@@ -618,7 +617,7 @@ export function CoursesManagementTab({
                               url: lesson.videoPath || '',
                             })
                           }
-                          className="flex-1 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-cyan-electric hover:text-black transition-all flex items-center justify-center gap-1"
+                          className="flex-1 py-2 rounded-xl bg-cyan-electric/15 hover:bg-cyan-electric text-cyan-electric hover:text-black font-black text-xs transition-all flex items-center justify-center gap-1.5"
                         >
                           <Play className="w-3.5 h-3.5" />
                           <span>معاينة الفيديو</span>
@@ -634,7 +633,7 @@ export function CoursesManagementTab({
                               url: lesson.pdfPath || '',
                             })
                           }
-                          className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-cyan-500 transition-colors"
+                          className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-chalk hover:text-cyan-electric transition-colors"
                           title="معاينة المذكرة PDF"
                         >
                           <FileText className="w-4 h-4" />
@@ -652,30 +651,30 @@ export function CoursesManagementTab({
         {activeSubTab === 'pdfs' && (
           <div className="space-y-3">
             {allGradeLessons.filter((l) => l.pdfPath).length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
+              <div className="p-10 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <FileText className="w-8 h-8 text-slate-400 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">
                   لا توجد مذكرات أو شيتات PDF مرفوعة لهذا الصف حالياً
                 </h4>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {allGradeLessons
                   .filter((l) => l.pdfPath)
                   .map((l) => (
                     <div
                       key={l.id}
-                      className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
+                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
-                          <FileText className="w-4 h-4" />
+                        <div className="w-10 h-10 rounded-xl bg-cyan-electric/15 text-cyan-electric flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-chalk">
                             {l.title}
                           </h4>
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="text-[11px] text-slate-500 dark:text-chalk-muted font-bold">
                             {l.branchName} • {l.unitTitle}
                           </span>
                         </div>
@@ -685,7 +684,7 @@ export function CoursesManagementTab({
                         href={l.pdfPath || '#'}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-cyan-electric hover:text-black text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1 transition-colors shrink-0"
+                        className="px-3.5 py-2 rounded-xl bg-cyan-electric text-black font-black text-xs flex items-center gap-1 shadow-cyan-glow transition-all shrink-0"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>تحميل</span>
@@ -701,38 +700,38 @@ export function CoursesManagementTab({
         {activeSubTab === 'exams' && (
           <div className="space-y-3">
             {gradeQuizzes.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-3">
+              <div className="p-10 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <Award className="w-8 h-8 text-slate-400 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">
                   لم يتم إضافة امتحانات أو شيتات لهذا الصف بعد
                 </h4>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {gradeQuizzes.map((quiz) => (
                   <div
                     key={quiz.id}
-                    className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-3"
+                    className="p-5 rounded-3xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3"
                   >
-                    <div className="flex items-center justify-between text-[11px] font-semibold">
-                      <span className="text-cyan-600 dark:text-cyan-400">{quiz.branchName || 'رياضيات'}</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="text-cyan-electric">{quiz.branchName || 'رياضيات'}</span>
+                      <span className="px-2.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-chalk text-[10px] font-bold">
                         {quiz.pdfPath || quiz.type === 'file' ? 'شيت PDF' : 'اختبار إلكتروني'}
                       </span>
                     </div>
 
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-chalk">
                       {quiz.title}
                     </h4>
 
-                    <div className="grid grid-cols-3 gap-1.5 pt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400 text-center">
-                      <div className="p-1.5 rounded bg-slate-200 dark:bg-slate-900">
+                    <div className="grid grid-cols-3 gap-2 pt-2 text-[10px] font-bold text-slate-500 dark:text-chalk-muted text-center">
+                      <div className="p-1.5 rounded-xl bg-slate-200 dark:bg-slate-900">
                         <span>{quiz.durationMinutes} دقيقة</span>
                       </div>
-                      <div className="p-1.5 rounded bg-slate-200 dark:bg-slate-900">
+                      <div className="p-1.5 rounded-xl bg-slate-200 dark:bg-slate-900">
                         <span>النجاح: {quiz.passScore}%</span>
                       </div>
-                      <div className="p-1.5 rounded bg-slate-200 dark:bg-slate-900">
+                      <div className="p-1.5 rounded-xl bg-slate-200 dark:bg-slate-900">
                         <span>{quiz.questionsCount || 10} سؤال</span>
                       </div>
                     </div>
@@ -746,26 +745,26 @@ export function CoursesManagementTab({
         {/* SUBTAB 4: QUESTION BANK */}
         {activeSubTab === 'questions' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {gradeQuestions.map((q) => (
                 <div
                   key={q.id}
-                  className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-2 text-xs"
+                  className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2 text-xs"
                 >
                   <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
                     <span>{q.branchName || 'فرع عام'}</span>
-                    <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-chalk">
                       {q.difficulty === 'EASY' ? 'سهل' : q.difficulty === 'MEDIUM' ? 'متوسط' : 'متقدم'}
                     </span>
                   </div>
 
-                  <p className="font-bold text-slate-900 dark:text-slate-100 leading-relaxed">
+                  <p className="font-black text-slate-900 dark:text-chalk leading-relaxed">
                     {q.questionText}
                   </p>
 
                   {q.questionLatex && (
                     <div
-                      className="text-cyan-500 text-xs py-1"
+                      className="text-cyan-electric text-xs py-1"
                       dangerouslySetInnerHTML={{ __html: renderMath(q.questionLatex) }}
                     />
                   )}
@@ -779,46 +778,46 @@ export function CoursesManagementTab({
         {activeSubTab === 'students' && (
           <div className="space-y-3">
             {gradeStudents.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
+              <div className="p-10 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <Users className="w-8 h-8 text-slate-400 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">
                   لا يوجد طلاب مسجلون في هذا الصف حتى الآن
                 </h4>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-right text-xs">
+                <table className="w-full text-right text-xs font-bold">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
-                      <th className="py-2.5 px-3">اسم الطالب</th>
-                      <th className="py-2.5 px-3">رقم الهاتف</th>
-                      <th className="py-2.5 px-3">هاتف ولي الأمر</th>
-                      <th className="py-2.5 px-3">حالة الاشتراك</th>
-                      <th className="py-2.5 px-3">تاريخ التسجيل</th>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400">
+                      <th className="py-3 px-3">اسم الطالب</th>
+                      <th className="py-3 px-3">رقم الهاتف</th>
+                      <th className="py-3 px-3">هاتف ولي الأمر</th>
+                      <th className="py-3 px-3">حالة الاشتراك</th>
+                      <th className="py-3 px-3">تاريخ التسجيل</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                     {gradeStudents.map((st) => (
                       <tr key={st.id} className="hover:bg-slate-50 dark:hover:bg-slate-950/40">
-                        <td className="py-2.5 px-3 text-slate-900 dark:text-slate-100 font-bold">
+                        <td className="py-3 px-3 text-slate-900 dark:text-chalk font-black">
                           {st.fullName}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-cyan-600 dark:text-cyan-400">{st.phone}</td>
-                        <td className="py-2.5 px-3 font-mono text-slate-500">
+                        <td className="py-3 px-3 font-mono text-cyan-electric">{st.phone}</td>
+                        <td className="py-3 px-3 font-mono text-slate-500">
                           {st.parentPhone || '—'}
                         </td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-3 px-3">
                           {st.hasActiveSubscription ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                               مشترك نشط
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                               غير مشترك
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-400 text-[11px]">
+                        <td className="py-3 px-3 text-slate-400 text-[11px]">
                           {new Date(st.createdAt).toLocaleDateString('ar-EG')}
                         </td>
                       </tr>
@@ -833,47 +832,47 @@ export function CoursesManagementTab({
 
       {/* Add Unit Modal */}
       {isAddUnitOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="rounded-2xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md space-y-4 animate-in zoom-in-95 duration-200 shadow-xl">
-            <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="chalk-card rounded-3xl p-6 sm:p-8 bg-slate-900 border border-cyan-electric/30 w-full max-w-md space-y-5 animate-in zoom-in-95 duration-200 shadow-2xl">
+            <h3 className="text-base font-black text-chalk">
               إضافة وحدة دراسية جديدة
             </h3>
-            <form onSubmit={handleCreateUnit} className="space-y-3 text-xs font-bold">
-              <div className="space-y-1">
-                <label className="text-slate-800 dark:text-slate-200 block">عنوان الوحدة:</label>
+            <form onSubmit={handleCreateUnit} className="space-y-4 text-xs font-bold">
+              <div className="space-y-1.5">
+                <label className="text-chalk block">عنوان الوحدة:</label>
                 <input
                   type="text"
                   required
                   value={newUnitTitle}
                   onChange={(e) => setNewUnitTitle(e.target.value)}
                   placeholder="مثال: الوحدة الأولى: الأعداد النسبية"
-                  className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500"
+                  className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk focus:outline-none focus:border-cyan-electric"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-slate-800 dark:text-slate-200 block">وصف الوحدة (اختياري):</label>
+              <div className="space-y-1.5">
+                <label className="text-chalk block">وصف الوحدة (اختياري):</label>
                 <textarea
                   value={newUnitDesc}
                   onChange={(e) => setNewUnitDesc(e.target.value)}
                   placeholder="أدخل وصفاً تفصيلياً لموضوعات الوحدة..."
                   rows={3}
-                  className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500"
+                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk focus:outline-none focus:border-cyan-electric"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsAddUnitOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200"
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-chalk font-bold hover:bg-slate-700"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={unitLoading}
-                  className="px-5 py-2 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black shadow-cyan-glow flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black shadow-cyan-glow flex items-center gap-1.5"
                 >
                   {unitLoading ? (
                     <>
