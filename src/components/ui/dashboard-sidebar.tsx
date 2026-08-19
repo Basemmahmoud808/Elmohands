@@ -110,15 +110,15 @@ export function DashboardSidebar({
       {/* ==================================================== */}
       <div className="md:hidden fixed top-0 inset-x-0 h-16 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 px-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black font-extrabold shadow-cyan-glow">
-            <GraduationCap className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black shadow-cyan-glow">
+            <GraduationCap className="w-5 h-5 text-black font-extrabold" />
           </div>
           <div className="flex flex-col">
             <span className="font-black text-sm text-slate-900 dark:text-chalk leading-tight">
-              {role === 'ADMIN' ? 'التحكم' : 'منصة المهندس'}
+              المهندس
             </span>
-            <span className="text-[11px] font-bold text-cyan-electric">
-              {currentTabObj ? currentTabObj.title : 'الرئيسية'}
+            <span className="text-[10px] font-medium text-slate-500 dark:text-chalk-muted">
+              مع م/ رضا خيرت
             </span>
           </div>
         </Link>
@@ -127,32 +127,32 @@ export function DashboardSidebar({
           <ThemeToggle />
           <button
             onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-            className="p-2 rounded-xl text-slate-800 dark:text-chalk bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+            className="p-2 rounded-xl text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
             aria-label="قائمة التحكم"
           >
-            {mobileDrawerOpen ? <X className="w-6 h-6 text-cyan-electric" /> : <Menu className="w-6 h-6" />}
+            {mobileDrawerOpen ? <X className="w-6 h-6 text-slate-900 dark:text-white" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
       {/* MOBILE SLIDE-OVER DRAWER */}
       {mobileDrawerOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col justify-between p-4 pt-16 animate-in slide-in-from-top duration-200">
+        <div className="md:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex flex-col justify-between p-4 pt-16 animate-in slide-in-from-top duration-200">
           <div className="space-y-4 pt-4 overflow-y-auto">
             {/* User Info Badge */}
-            <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="w-3 h-3 rounded-full bg-emerald-500" />
                 <div>
-                  <span className="text-xs font-black text-chalk block">
-                    {role === 'ADMIN' ? 'م/ رضا خيرت (أدمن)' : userFullName}
+                  <span className="text-xs font-black text-slate-900 dark:text-slate-100 block">
+                    {role === 'ADMIN' ? 'م/ رضا خيرت' : userFullName}
                   </span>
-                  <span className="text-[10px] text-cyan-electric font-semibold">
-                    {role === 'ADMIN' ? 'مدير المنصة' : 'طالب نشط'}
+                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-semibold">
+                    {role === 'ADMIN' ? 'مدير المنصة' : 'طالب'}
                   </span>
                 </div>
               </div>
-              <button onClick={() => setMobileDrawerOpen(false)} className="text-slate-400 text-xs font-bold p-1">
+              <button onClick={() => setMobileDrawerOpen(false)} className="text-slate-500 dark:text-slate-400 text-xs font-bold p-1">
                 إغلاق ✕
               </button>
             </div>
@@ -167,14 +167,14 @@ export function DashboardSidebar({
                     key={opt.id}
                     onClick={() => handleSelectTab(opt.id)}
                     className={cn(
-                      'flex h-12 w-full items-center justify-between px-4 rounded-2xl transition-all font-extrabold text-sm',
+                      'flex h-12 w-full items-center justify-between px-4 rounded-xl transition-all font-bold text-sm',
                       isSelected
-                        ? 'bg-cyan-electric text-black shadow-cyan-glow'
-                        : 'text-chalk/90 bg-slate-900/80 hover:bg-slate-800 border border-slate-800'
+                        ? 'bg-[#00D2EE] text-black font-black shadow-sm'
+                        : 'text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="h-5 w-5 shrink-0" />
+                      <Icon className={cn('h-5 w-5 shrink-0', isSelected ? 'text-black' : 'text-slate-500')} />
                       <span>{opt.title}</span>
                     </div>
                   </button>
@@ -218,14 +218,17 @@ export function DashboardSidebar({
         {/* Top Header */}
         <div>
           <div className="pb-4 mb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5 overflow-hidden group" title="الرئيسية">
+            <Link href="/" className="flex items-center gap-3 overflow-hidden group" title="العودة للرئيسية">
+              <div className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-br from-cyan-electric to-blue-ink flex items-center justify-center text-black shadow-cyan-glow group-hover:scale-105 transition-transform duration-200">
+                <GraduationCap className="w-6 h-6 text-black font-extrabold" />
+              </div>
               {desktopOpen && (
                 <div className="flex flex-col truncate">
-                  <span className="font-black text-base text-slate-900 dark:text-slate-100 truncate tracking-tight">
-                    منصة المهندس
+                  <span className="font-extrabold text-xl text-slate-900 dark:text-chalk tracking-tight">
+                    المهندس
                   </span>
-                  <span className="text-xs text-cyan-600 dark:text-cyan-400 font-bold truncate">
-                    {role === 'ADMIN' ? 'م/ رضا خيرت' : userFullName}
+                  <span className="text-xs text-slate-500 dark:text-chalk-muted font-medium">
+                    مع م/ رضا خيرت
                   </span>
                 </div>
               )}
@@ -233,7 +236,7 @@ export function DashboardSidebar({
           </div>
 
           {/* Options List */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {options.map((opt) => {
               const Icon = opt.icon;
               const isSelected = selectedTab === opt.id;
@@ -242,17 +245,17 @@ export function DashboardSidebar({
                   key={opt.id}
                   onClick={() => handleSelectTab(opt.id)}
                   className={cn(
-                    'relative flex h-11 w-full items-center rounded-xl transition-all duration-200 font-bold text-sm',
+                    'relative flex h-11 w-full items-center rounded-xl transition-all duration-200 font-bold text-sm px-2.5',
                     isSelected
-                      ? 'bg-cyan-electric/15 text-cyan-electric border-r-4 border-cyan-electric shadow-cyan-glow'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-cyan-electric text-black font-black shadow-cyan-glow'
+                      : 'text-slate-700 dark:text-chalk hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
                   )}
                   title={!desktopOpen ? opt.title : undefined}
                 >
-                  <div className="grid h-full w-12 shrink-0 place-content-center">
-                    <Icon className="h-5 w-5" />
+                  <div className="grid h-full w-9 shrink-0 place-content-center">
+                    <Icon className={cn('h-5 w-5', isSelected ? 'text-black font-bold' : 'text-slate-500 dark:text-slate-400')} />
                   </div>
-                  {desktopOpen && <span className="truncate">{opt.title}</span>}
+                  {desktopOpen && <span className="truncate pr-1">{opt.title}</span>}
                 </button>
               );
             })}
