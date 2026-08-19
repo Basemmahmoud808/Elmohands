@@ -67,7 +67,22 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: #0284c7;
+  background-color: #334155;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
+
+#sentry-feedback,
+.sentry-feedback,
+[data-sentry-feedback-widget],
+.sentry-feedback-button {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
