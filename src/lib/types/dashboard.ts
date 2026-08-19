@@ -267,6 +267,8 @@ export interface QuizDetailsDTO {
   isPublished: boolean;
   questionsCount: number;
   questions?: QuestionItemDTO[];
+  pdfPath?: string | null;
+  type?: 'mcq' | 'file';
   createdAt: string;
 }
 

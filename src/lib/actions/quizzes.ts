@@ -35,6 +35,8 @@ export interface UpdateQuizInput {
   maxAttempts?: number;
   isPublished?: boolean;
   questionIds?: string[];
+  pdfPath?: string;
+  type?: 'mcq' | 'file';
 }
 
 export interface SubmitQuizAttemptInput {
@@ -545,7 +547,9 @@ export async function createQuizAction(input: CreateQuizInput): Promise<ActionRe
       passScore: input.passScore || 50,
       maxAttempts: input.maxAttempts || 3,
       isPublished: input.isPublished !== false,
-      questionsCount: input.questionIds?.length || 4,
+      questionsCount: input.questionIds?.length || (input.pdfPath ? 1 : 0),
+      pdfPath: input.pdfPath || null,
+      type: input.type || (input.pdfPath ? 'file' : 'mcq'),
       createdAt: new Date().toISOString(),
     };
 
