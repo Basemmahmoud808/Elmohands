@@ -119,11 +119,10 @@ export default function Stages() {
 
                 {/* Course Cover Image Banner */}
                 <div className="relative w-full h-44 bg-slate-950 overflow-hidden">
-                  <Image
+                  <img
                     src={stage.image}
                     alt={stage.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-between p-3.5">
                     <div className="flex items-center justify-between">

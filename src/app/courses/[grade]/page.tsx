@@ -175,12 +175,10 @@ export default function GradeCoursesPage() {
       <main className="flex-1 py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
         {/* Course Cover Hero Banner */}
         <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-lg min-h-[220px] sm:min-h-[260px] flex flex-col justify-end p-6 sm:p-8">
-          <Image
+          <img
             src={curriculum?.coverImage || curriculum?.thumbnailPath || defaultGradeCover}
             alt={gradeName}
-            fill
-            className="object-cover opacity-35"
-            priority
+            className="absolute inset-0 w-full h-full object-cover opacity-35"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
 
