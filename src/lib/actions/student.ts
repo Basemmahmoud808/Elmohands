@@ -458,20 +458,7 @@ export async function getStudentExamResultsAction(): Promise<ActionResult<Studen
     if (error || !data || data.length === 0) {
       return {
         success: true,
-        data: [
-          {
-            attemptId: 'att-1',
-            quizId: 'quiz-1',
-            quizTitle: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية',
-            branchName: 'فرع الجبر والإحصاء',
-            attemptNumber: 1,
-            score: 28,
-            maxScore: 30,
-            percentage: 94,
-            passed: true,
-            submittedAt: new Date().toISOString(),
-          },
-        ],
+        data: [],
       };
     }
 

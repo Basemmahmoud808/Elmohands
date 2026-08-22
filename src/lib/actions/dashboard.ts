@@ -343,20 +343,11 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
     };
 
     // 10. Notifications Feed
-    const notifications: StudentDashboardData['notifications'] = [
-      {
-        id: 'notif-1',
-        type: 'ANNOUNCEMENT' as const,
-        title: 'مرحباً بك في منصة المهندس',
-        description: `تم تجهيز خطة دراسية متكاملة لـ ${matchingGrade?.name || 'صفك الدراسي'} مع م/ رضا خيرت.`,
-        createdAt: new Date().toISOString(),
-        isRead: false,
-      },
-    ];
+    const notifications: StudentDashboardData['notifications'] = [];
 
     if (subscriptionData.hasActiveSubscription && subscriptionData.subscription) {
       notifications.push({
-        id: 'notif-3',
+        id: `notif-sub-${subscriptionData.subscription.id}`,
         type: 'SUBSCRIPTION' as const,
         title: `اشتراكك نشط — متبقي ${subscriptionData.subscription.daysRemaining} يوماً`,
         description: 'يمكنك شحن رصيدك وتمديد الاشتراك في أي وقت عبر قسم تفعيل كود الشحن.',
