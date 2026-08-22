@@ -3,6 +3,8 @@
 import React from 'react';
 import { X, PlayCircle } from 'lucide-react';
 
+import { parseMediaUrlHelper } from '@/lib/utils';
+
 interface VideoPreviewModalProps {
   video: { title: string; url: string } | null;
   onClose: () => void;
@@ -11,12 +13,7 @@ interface VideoPreviewModalProps {
 export function VideoPreviewModal({ video, onClose }: VideoPreviewModalProps) {
   if (!video) return null;
 
-  const isEmbed =
-    video.url.includes('youtube.com') ||
-    video.url.includes('youtu.be') ||
-    video.url.includes('vimeo.com') ||
-    video.url.includes('drive.google.com') ||
-    video.url.includes('b-cdn.net');
+  const parsed = parseMediaUrlHelper(video.url);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
@@ -48,17 +45,17 @@ export function VideoPreviewModal({ video, onClose }: VideoPreviewModalProps) {
 
         {/* Video Player Area */}
         <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-          {isEmbed ? (
+          {parsed.type === 'iframe' ? (
             <iframe
-              src={video.url}
+              src={parsed.src}
               title={video.title}
               className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
             />
           ) : (
             <video
-              src={video.url}
+              src={parsed.src}
               controls
               autoPlay
               className="w-full h-full object-contain"

@@ -254,7 +254,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                 <VideoPlayer
                   lessonId={lessonDetails.id}
                   lessonTitle={lessonDetails.title}
-                  media={lessonDetails.parsedMedia}
+                  media={lessonDetails.parsedMedia || { type: 'video', src: '' }}
                   poster={lessonDetails.thumbnailPath || undefined}
                   initialPosition={lessonDetails.studentProgress?.lastPosition || 0}
                   initialWatchPercentage={lessonDetails.studentProgress?.watchPercentage || 0}

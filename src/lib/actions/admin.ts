@@ -10,8 +10,7 @@ import {
   AdminSubscriptionDTO,
 } from '@/lib/types/dashboard';
 
-// Fallback student records for offline sandbox/preview
-const FALLBACK_STUDENTS: AdminStudentDTO[] = [];
+// Admin Actions
 
 /**
  * Fetches overview metrics and recent activity for the Admin Control Center.
@@ -158,20 +157,7 @@ export async function getAdminStudentsListAction(params?: {
     const { data, error } = await query;
 
     if (error || !data || data.length === 0) {
-      let filtered = [...FALLBACK_STUDENTS];
-      if (params?.search) {
-        const s = params.search.toLowerCase();
-        filtered = filtered.filter(
-          (std) =>
-            std.fullName.toLowerCase().includes(s) ||
-            std.phone.includes(s) ||
-            (std.parentPhone && std.parentPhone.includes(s))
-        );
-      }
-      if (params?.gradeId && params.gradeId !== 'all') {
-        filtered = filtered.filter((std) => std.gradeId === params.gradeId);
-      }
-      return { success: true, data: filtered };
+      return { success: true, data: [] };
     }
 
     interface DbSubJoin {
@@ -259,9 +245,6 @@ export async function toggleStudentActiveStatusAction(
       .from('profiles')
       .update({ is_active: isActive })
       .eq('id', studentId);
-
-    const fallbackTarget = FALLBACK_STUDENTS.find((s) => s.id === studentId);
-    if (fallbackTarget) fallbackTarget.isActive = isActive;
 
     await supabaseAdmin.from('audit_logs').insert({
       user_id: user.id,

@@ -205,6 +205,7 @@ export default function AdminDashboard() {
           {selectedTab === 'questions' && (
             <QuestionBankTab
               initialQuestions={questions}
+              curriculum={curriculum}
               onRefresh={loadAllAdminData}
             />
           )}

@@ -13,11 +13,17 @@ export interface CreateQuestionInput {
   questionLatex?: string;
   imageUrl?: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  questionType: 'MCQ' | 'TRUE_FALSE';
+  questionType: 'MCQ' | 'TRUE_FALSE' | 'FILE';
   options: QuestionOptionDTO[];
   correctAnswer: string;
   explanation?: string;
   branchName?: string;
+  gradeName?: string;
+  targetAudience?: 'ALL_STUDENTS' | 'SUBSCRIBERS_ONLY' | 'PUBLIC';
+  entryType?: 'QUESTION' | 'FILE';
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
 }
 
 export interface UpdateQuestionInput {
@@ -25,17 +31,26 @@ export interface UpdateQuestionInput {
   questionLatex?: string;
   imageUrl?: string;
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-  questionType?: 'MCQ' | 'TRUE_FALSE';
+  questionType?: 'MCQ' | 'TRUE_FALSE' | 'FILE';
   options?: QuestionOptionDTO[];
   correctAnswer?: string;
   explanation?: string;
   branchName?: string;
+  gradeName?: string;
+  targetAudience?: 'ALL_STUDENTS' | 'SUBSCRIBERS_ONLY' | 'PUBLIC';
+  entryType?: 'QUESTION' | 'FILE';
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
 }
 
 export interface QuestionFilters {
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-  questionType?: 'MCQ' | 'TRUE_FALSE';
+  questionType?: 'MCQ' | 'TRUE_FALSE' | 'FILE';
   branchName?: string;
+  gradeName?: string;
+  targetAudience?: 'ALL_STUDENTS' | 'SUBSCRIBERS_ONLY' | 'PUBLIC';
+  entryType?: 'QUESTION' | 'FILE';
   search?: string;
 }
 
@@ -45,10 +60,17 @@ interface DbQuestionRaw {
   question_latex?: string | null;
   image_url?: string | null;
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD' | null;
-  question_type?: 'MCQ' | 'TRUE_FALSE' | null;
+  question_type?: 'MCQ' | 'TRUE_FALSE' | 'FILE' | null;
   options?: string | QuestionOptionDTO[] | null;
   correct_answer: string;
   explanation?: string | null;
+  branch_name?: string | null;
+  grade_name?: string | null;
+  target_audience?: 'ALL_STUDENTS' | 'SUBSCRIBERS_ONLY' | 'PUBLIC' | null;
+  entry_type?: 'QUESTION' | 'FILE' | null;
+  file_url?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
   created_by?: string | null;
   created_at?: string | null;
 }
@@ -61,6 +83,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: '\\frac{3}{5} \\in \\mathbb{Q}',
     difficulty: 'EASY',
     questionType: 'MCQ',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: '5 / 0' },
       { label: 'B', text: '3 / 4' },
@@ -70,6 +93,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'B',
     explanation: 'العدد 3/4 مكتوب على صورة أ/ب حيث أ، ب عددان صحيحان والمقام لا يساوي صفراً.',
     branchName: 'فرع الجبر والإحصاء',
+    gradeName: 'الصف الأول الإعدادي',
+    targetAudience: 'ALL_STUDENTS',
     createdAt: new Date('2026-01-10T10:00:00Z').toISOString(),
   },
   {
@@ -78,6 +103,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: 'a^2 + b^2 = c^2',
     difficulty: 'MEDIUM',
     questionType: 'MCQ',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: 'مجموع مربعي طولي ضلعي القائمة' },
       { label: 'B', text: 'الفرق بين طولي ضلعي القائمة' },
@@ -87,6 +113,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'وفقاً لنظرية فيثاغورس الشهيرة في الهندسة الإقليدية، مربع الوتر = مجموع مربعي ضلعي القائمة.',
     branchName: 'فرع الهندسة والقياس',
+    gradeName: 'الصف الثاني الإعدادي',
+    targetAudience: 'SUBSCRIBERS_ONLY',
     createdAt: new Date('2026-01-12T11:00:00Z').toISOString(),
   },
   {
@@ -95,6 +123,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: '0.35 = \\frac{35}{100} = \\frac{7}{20}',
     difficulty: 'EASY',
     questionType: 'MCQ',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: '7 / 20' },
       { label: 'B', text: '35 / 10' },
@@ -104,6 +133,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'بالقسمة على 5 لكل من البسط والمقام: 35 ÷ 5 = 7، 100 ÷ 5 = 20، إذن 7/20.',
     branchName: 'فرع الجبر والإحصاء',
+    gradeName: 'الصف الأول الإعدادي',
+    targetAudience: 'PUBLIC',
     createdAt: new Date('2026-01-14T12:00:00Z').toISOString(),
   },
   {
@@ -112,6 +143,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: 'L_1 \\parallel L_2 \\implies \\angle 1 = \\angle 2',
     difficulty: 'EASY',
     questionType: 'MCQ',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: 'متساويين في القياس' },
       { label: 'B', text: 'متكاملين (مجموعهما 180°)' },
@@ -121,6 +153,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'من خواص التوازي: كل زاويتين متبادلتين متساويتان في القياس (على شكل حرف Z).',
     branchName: 'فرع الهندسة والقياس',
+    gradeName: 'الصف الأول الإعدادي',
+    targetAudience: 'ALL_STUDENTS',
     createdAt: new Date('2026-01-16T13:00:00Z').toISOString(),
   },
   {
@@ -129,6 +163,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: '2x + 6 = 16 \\implies 2x = 10 \\implies x = 5',
     difficulty: 'MEDIUM',
     questionType: 'MCQ',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: '{ 5 }' },
       { label: 'B', text: '{ 10 }' },
@@ -138,6 +173,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'بطرح 6 من الطرفين: 2س = 10، ثم بالقسمة على 2: س = 5، وهو ينتمي إلى ص.',
     branchName: 'فرع الجبر والإحصاء',
+    gradeName: 'الصف الأول الإعدادي',
+    targetAudience: 'SUBSCRIBERS_ONLY',
     createdAt: new Date('2026-01-18T14:00:00Z').toISOString(),
   },
   {
@@ -146,6 +183,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: '\\alpha + \\beta = 90^\\circ',
     difficulty: 'EASY',
     questionType: 'TRUE_FALSE',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: 'صواب (True)' },
       { label: 'B', text: 'خطأ (False)' },
@@ -153,6 +191,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'الزاويتان المتتامتان هما زاويتان مجموع قياسيهما 90°، بينما المتكاملتان 180°.',
     branchName: 'فرع الهندسة والقياس',
+    gradeName: 'الصف الأول الإعدادي',
+    targetAudience: 'PUBLIC',
     createdAt: new Date('2026-01-20T15:00:00Z').toISOString(),
   },
   {
@@ -161,6 +201,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: '\\sin(x) = 0.5 \\implies x = 30^\\circ',
     difficulty: 'MEDIUM',
     questionType: 'MCQ',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: '30°' },
       { label: 'B', text: '45°' },
@@ -170,6 +211,8 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'النسب المثلثية الأساسية: جا(30°) = 1/2 = 0.5.',
     branchName: 'فرع حساب المثلثات',
+    gradeName: 'الصف الثالث الإعدادي',
+    targetAudience: 'ALL_STUDENTS',
     createdAt: new Date('2026-01-22T16:00:00Z').toISOString(),
   },
   {
@@ -178,6 +221,7 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     questionLatex: '5x^2y^3 \\implies 2 + 3 = 5',
     difficulty: 'HARD',
     questionType: 'TRUE_FALSE',
+    entryType: 'QUESTION',
     options: [
       { label: 'A', text: 'صواب (True)' },
       { label: 'B', text: 'خطأ (False)' },
@@ -185,7 +229,26 @@ const IN_MEMORY_QUESTIONS: QuestionItemDTO[] = [
     correctAnswer: 'A',
     explanation: 'درجة الحد الجبري هي مجموع أسس العوامل الجبرية (الرموز): 2 + 3 = 5.',
     branchName: 'فرع الجبر والإحصاء',
+    gradeName: 'الصف الأول الثانوي',
+    targetAudience: 'SUBSCRIBERS_ONLY',
     createdAt: new Date('2026-01-24T17:00:00Z').toISOString(),
+  },
+  {
+    id: 'q-9',
+    questionText: 'شيت تدريبات بنك الأسئلة الشامل - مراجعة ليلة الامتحان في الجبر',
+    difficulty: 'HARD',
+    questionType: 'FILE',
+    entryType: 'FILE',
+    options: [],
+    correctAnswer: '',
+    explanation: 'ملف PDF يحتوي على 50 سؤالاً نموذجياً مع نماذج الإجابة التفصيلية.',
+    branchName: 'فرع الجبر والإحصاء',
+    gradeName: 'الصف الأول الإعدادي',
+    targetAudience: 'SUBSCRIBERS_ONLY',
+    fileUrl: '/sample-question-bank.pdf',
+    fileName: 'مراجعة_الجبر_الشاملة_2026.pdf',
+    fileType: 'pdf',
+    createdAt: new Date('2026-01-28T18:00:00Z').toISOString(),
   },
 ];
 
@@ -212,6 +275,15 @@ export async function getQuestionsListAction(
     if (filters?.questionType) {
       query = query.eq('question_type', filters.questionType);
     }
+    if (filters?.gradeName && filters.gradeName !== 'ALL') {
+      query = query.eq('grade_name', filters.gradeName);
+    }
+    if (filters?.targetAudience) {
+      query = query.eq('target_audience', filters.targetAudience);
+    }
+    if (filters?.entryType) {
+      query = query.eq('entry_type', filters.entryType);
+    }
 
     const { data, error } = await query;
 
@@ -226,9 +298,16 @@ export async function getQuestionsListAction(
         imageUrl: q.image_url,
         difficulty: q.difficulty || 'MEDIUM',
         questionType: q.question_type || 'MCQ',
+        entryType: q.entry_type || (q.question_type === 'FILE' ? 'FILE' : 'QUESTION'),
         options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options || [],
         correctAnswer: q.correct_answer,
         explanation: q.explanation,
+        branchName: q.branch_name || 'فرع الجبر والإحصاء',
+        gradeName: q.grade_name || 'الصف الأول الإعدادي',
+        targetAudience: q.target_audience || 'ALL_STUDENTS',
+        fileUrl: q.file_url,
+        fileName: q.file_name,
+        fileType: q.file_type,
         createdBy: q.created_by,
         createdAt: q.created_at || new Date().toISOString(),
       }));
@@ -240,6 +319,15 @@ export async function getQuestionsListAction(
       if (filters?.questionType) {
         results = results.filter((q) => q.questionType === filters.questionType);
       }
+      if (filters?.gradeName && filters.gradeName !== 'ALL') {
+        results = results.filter((q) => q.gradeName === filters.gradeName);
+      }
+      if (filters?.targetAudience) {
+        results = results.filter((q) => q.targetAudience === filters.targetAudience);
+      }
+      if (filters?.entryType) {
+        results = results.filter((q) => (q.entryType || 'QUESTION') === filters.entryType);
+      }
     }
 
     // Search filter
@@ -250,7 +338,9 @@ export async function getQuestionsListAction(
           q.questionText.toLowerCase().includes(s) ||
           (q.questionLatex && q.questionLatex.toLowerCase().includes(s)) ||
           (q.explanation && q.explanation.toLowerCase().includes(s)) ||
-          (q.branchName && q.branchName.toLowerCase().includes(s))
+          (q.branchName && q.branchName.toLowerCase().includes(s)) ||
+          (q.gradeName && q.gradeName.toLowerCase().includes(s)) ||
+          (q.fileName && q.fileName.toLowerCase().includes(s))
       );
     }
 
@@ -288,9 +378,16 @@ export async function getQuestionByIdAction(questionId: string): Promise<ActionR
           imageUrl: q.image_url,
           difficulty: q.difficulty || 'MEDIUM',
           questionType: q.question_type || 'MCQ',
+          entryType: q.entry_type || (q.question_type === 'FILE' ? 'FILE' : 'QUESTION'),
           options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options || [],
           correctAnswer: q.correct_answer,
           explanation: q.explanation,
+          branchName: q.branch_name || 'فرع الجبر والإحصاء',
+          gradeName: q.grade_name || 'الصف الأول الإعدادي',
+          targetAudience: q.target_audience || 'ALL_STUDENTS',
+          fileUrl: q.file_url,
+          fileName: q.file_name,
+          fileType: q.file_type,
           createdBy: q.created_by,
           createdAt: q.created_at || new Date().toISOString(),
         },
@@ -320,7 +417,7 @@ export async function createQuestionAction(input: CreateQuestionInput): Promise<
     }
 
     if (!input.questionText || !input.questionText.trim()) {
-      return { success: false, error: 'يرجى كتابة نص السؤال' };
+      return { success: false, error: 'يرجى كتابة نص أو عنوان السؤال / الملف' };
     }
 
     const newQuestion: QuestionItemDTO = {
@@ -329,13 +426,19 @@ export async function createQuestionAction(input: CreateQuestionInput): Promise<
       questionLatex: input.questionLatex?.trim() || null,
       imageUrl: input.imageUrl || null,
       difficulty: input.difficulty || 'MEDIUM',
-      questionType: input.questionType || 'MCQ',
-      options: input.options,
-      correctAnswer: input.correctAnswer,
+      questionType: input.questionType || (input.entryType === 'FILE' ? 'FILE' : 'MCQ'),
+      entryType: input.entryType || (input.questionType === 'FILE' ? 'FILE' : 'QUESTION'),
+      options: input.options || [],
+      correctAnswer: input.correctAnswer || '',
       explanation: input.explanation?.trim() || null,
       createdBy: user.id,
       createdAt: new Date().toISOString(),
       branchName: input.branchName || 'فرع الجبر والإحصاء',
+      gradeName: input.gradeName || 'الصف الأول الإعدادي',
+      targetAudience: input.targetAudience || 'ALL_STUDENTS',
+      fileUrl: input.fileUrl || null,
+      fileName: input.fileName || null,
+      fileType: input.fileType || null,
     };
 
     try {
@@ -350,6 +453,13 @@ export async function createQuestionAction(input: CreateQuestionInput): Promise<
           options: newQuestion.options,
           correct_answer: newQuestion.correctAnswer,
           explanation: newQuestion.explanation,
+          branch_name: newQuestion.branchName,
+          grade_name: newQuestion.gradeName,
+          target_audience: newQuestion.targetAudience,
+          entry_type: newQuestion.entryType,
+          file_url: newQuestion.fileUrl,
+          file_name: newQuestion.fileName,
+          file_type: newQuestion.fileType,
           created_by: user.id,
         })
         .select('id')
@@ -363,7 +473,12 @@ export async function createQuestionAction(input: CreateQuestionInput): Promise<
           action: 'QUESTION_CREATED',
           entity_type: 'questions',
           entity_id: data.id,
-          metadata: { text: newQuestion.questionText, difficulty: newQuestion.difficulty },
+          metadata: {
+            text: newQuestion.questionText,
+            gradeName: newQuestion.gradeName,
+            targetAudience: newQuestion.targetAudience,
+            entryType: newQuestion.entryType,
+          },
         });
       }
     } catch (e) {
@@ -371,7 +486,7 @@ export async function createQuestionAction(input: CreateQuestionInput): Promise<
     }
 
     IN_MEMORY_QUESTIONS.unshift(newQuestion);
-    return { success: true, data: newQuestion, message: 'تم حفظ السؤال في بنك الأسئلة بنجاح ' };
+    return { success: true, data: newQuestion, message: 'تم حفظ السؤال/الملف في بنك الأسئلة بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل إضافة السؤال';
     return { success: false, error: msg };
@@ -397,9 +512,16 @@ export async function updateQuestionAction(
     if (input.imageUrl !== undefined) updates.image_url = input.imageUrl;
     if (input.difficulty !== undefined) updates.difficulty = input.difficulty;
     if (input.questionType !== undefined) updates.question_type = input.questionType;
+    if (input.entryType !== undefined) updates.entry_type = input.entryType;
     if (input.options !== undefined) updates.options = input.options;
     if (input.correctAnswer !== undefined) updates.correct_answer = input.correctAnswer;
     if (input.explanation !== undefined) updates.explanation = input.explanation?.trim() || null;
+    if (input.branchName !== undefined) updates.branch_name = input.branchName;
+    if (input.gradeName !== undefined) updates.grade_name = input.gradeName;
+    if (input.targetAudience !== undefined) updates.target_audience = input.targetAudience;
+    if (input.fileUrl !== undefined) updates.file_url = input.fileUrl;
+    if (input.fileName !== undefined) updates.file_name = input.fileName;
+    if (input.fileType !== undefined) updates.file_type = input.fileType;
 
     try {
       await supabaseAdmin.from('questions').update(updates).eq('id', questionId);
@@ -426,10 +548,16 @@ export async function updateQuestionAction(
         imageUrl: input.imageUrl !== undefined ? input.imageUrl : IN_MEMORY_QUESTIONS[idx].imageUrl,
         difficulty: input.difficulty !== undefined ? input.difficulty : IN_MEMORY_QUESTIONS[idx].difficulty,
         questionType: input.questionType !== undefined ? input.questionType : IN_MEMORY_QUESTIONS[idx].questionType,
+        entryType: input.entryType !== undefined ? input.entryType : IN_MEMORY_QUESTIONS[idx].entryType,
         options: input.options !== undefined ? input.options : IN_MEMORY_QUESTIONS[idx].options,
         correctAnswer: input.correctAnswer !== undefined ? input.correctAnswer : IN_MEMORY_QUESTIONS[idx].correctAnswer,
         explanation: input.explanation !== undefined ? input.explanation : IN_MEMORY_QUESTIONS[idx].explanation,
         branchName: input.branchName !== undefined ? input.branchName : IN_MEMORY_QUESTIONS[idx].branchName,
+        gradeName: input.gradeName !== undefined ? input.gradeName : IN_MEMORY_QUESTIONS[idx].gradeName,
+        targetAudience: input.targetAudience !== undefined ? input.targetAudience : IN_MEMORY_QUESTIONS[idx].targetAudience,
+        fileUrl: input.fileUrl !== undefined ? input.fileUrl : IN_MEMORY_QUESTIONS[idx].fileUrl,
+        fileName: input.fileName !== undefined ? input.fileName : IN_MEMORY_QUESTIONS[idx].fileName,
+        fileType: input.fileType !== undefined ? input.fileType : IN_MEMORY_QUESTIONS[idx].fileType,
       };
       updatedQuestion = IN_MEMORY_QUESTIONS[idx];
     } else {
@@ -440,16 +568,22 @@ export async function updateQuestionAction(
         imageUrl: input.imageUrl || null,
         difficulty: input.difficulty || 'MEDIUM',
         questionType: input.questionType || 'MCQ',
+        entryType: input.entryType || 'QUESTION',
         options: input.options || [],
         correctAnswer: input.correctAnswer || 'A',
         explanation: input.explanation || null,
         branchName: input.branchName || 'فرع الجبر والإحصاء',
+        gradeName: input.gradeName || 'الصف الأول الإعدادي',
+        targetAudience: input.targetAudience || 'ALL_STUDENTS',
+        fileUrl: input.fileUrl || null,
+        fileName: input.fileName || null,
+        fileType: input.fileType || null,
         createdAt: new Date().toISOString(),
       };
       IN_MEMORY_QUESTIONS.unshift(updatedQuestion);
     }
 
-    return { success: true, data: updatedQuestion, message: 'تم تحديث السؤال بنجاح ' };
+    return { success: true, data: updatedQuestion, message: 'تم تحديث السؤال/الملف بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل تحديث السؤال';
     return { success: false, error: msg };

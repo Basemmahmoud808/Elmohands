@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { KeyRound, Sparkles, CheckCircle2, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { redeemVoucherCode } from '@/lib/actions/vouchers';
 
@@ -9,6 +10,7 @@ interface VoucherActivationCardProps {
 }
 
 export function VoucherActivationCard({ onVoucherRedeemed }: VoucherActivationCardProps) {
+  const router = useRouter();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
@@ -33,6 +35,8 @@ export function VoucherActivationCard({ onVoucherRedeemed }: VoucherActivationCa
         if (onVoucherRedeemed && res.durationDays) {
           onVoucherRedeemed(res.durationDays);
         }
+        // Force server re-fetch of subscription state
+        router.refresh();
       }
     } catch {
       setFeedback({

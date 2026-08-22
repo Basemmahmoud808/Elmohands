@@ -21,9 +21,9 @@
 - **Framework:** Next.js 14+ (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS + shadcn/ui
-- **Icons:** Lucide React
-- **Auth:** Clerk (Phase 02)
-- **Database & Storage:** Supabase PostgreSQL + RLS + Supabase Storage (Phase 02)
+- **Auth:** Custom JWT + Refresh Token Rotation + bcrypt (Secure password hashing in Supabase PostgreSQL)
+- **Database & Storage:** Supabase PostgreSQL + Row Level Security (RLS) + Supabase Storage
+- **Security:** Anti-DDoS rate limiting, HTTP-only SameSite cookies, Server-side role RBAC, Short-lived tokens
 - **Math Rendering:** KaTeX
 
 ---

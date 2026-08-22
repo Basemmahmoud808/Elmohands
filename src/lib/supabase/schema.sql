@@ -295,7 +295,20 @@ CREATE POLICY "grades_public_read" ON public.grades FOR SELECT USING (is_active 
 CREATE POLICY "terms_public_read" ON public.terms FOR SELECT USING (true);
 CREATE POLICY "branches_public_read" ON public.branches FOR SELECT USING (true);
 CREATE POLICY "units_public_read" ON public.units FOR SELECT USING (is_active = TRUE);
+-- SECURITY NOTE: lessons table has a public SELECT policy for metadata only.
+-- video_path and pdf_path are sensitive columns — they MUST NOT be exposed via anon key.
+-- All lesson content (video, PDF) must be fetched server-side via supabaseAdmin, never client-side.
+-- The policy below allows public read of lesson metadata but the app MUST NOT use the anon client to fetch lessons.
+-- Instead use supabaseAdmin in server actions only.
 CREATE POLICY "lessons_public_read" ON public.lessons FOR SELECT USING (is_published = TRUE);
+
+-- RECOMMENDED: If you want to fully block anon clients from reading video_path/pdf_path,
+-- replace the above policy with a column-level security approach or a Supabase view:
+-- CREATE VIEW public.lessons_public AS
+--   SELECT id, unit_id, title, description, thumbnail_path, duration, sort_order, is_published, is_locked, min_pass_score, created_at
+--   FROM public.lessons WHERE is_published = TRUE;
+-- Then grant SELECT on the view and revoke on the base table.
+
 CREATE POLICY "plans_public_read" ON public.plans FOR SELECT USING (is_active = TRUE);
 
 -- No client-side INSERT/UPDATE/DELETE policies are defined for any table:

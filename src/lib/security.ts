@@ -1,35 +1,33 @@
 /**
- * Cyber Security Shield: Input Sanitization (Anti-SQLi & Anti-XSS) and IP Rate Limiter (Anti-DDoS)
+ * Cyber Security Shield: Safe Input Sanitization and IP Rate Limiter (Anti-DDoS)
  */
 
-// 1. Anti-SQL Injection & Anti-XSS Input Sanitizer
+// 1. Safe Input Sanitizer (Prevents HTML/Script injection without corrupting text or Math)
 export function sanitizeInput(input: unknown): string {
   if (typeof input !== 'string') return '';
 
   let sanitized = input.trim();
 
-  // Strip HTML / Script Tags (Anti-XSS)
-  sanitized = sanitized.replace(/<[^>]*>?/gm, '');
-
-  // Strip Dangerous SQL Injection Keywords & Syntax
+  // Strip dangerous script and iframe elements and executable javascript handlers
   sanitized = sanitized
-    .replace(/'/g, "''")
-    .replace(/;/g, '')
-    .replace(/--/g, '')
-    .replace(/\/\*/g, '')
-    .replace(/\*\//g, '')
-    .replace(/\b(DROP|DELETE|UPDATE|INSERT|EXEC|UNION|SELECT|ALTER|CREATE|TRUNCATE)\b/gi, '');
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/\bon\w+\s*=\s*(['"]).*?\1/gi, '') // Event handlers like onerror=, onload=
+    .replace(/javascript:/gi, '');
 
   return sanitized;
 }
 
-// 2. Sliding Window In-Memory IP Rate Limiter (Anti-DDoS & Flooding)
+// 2. Sliding Window In-Memory IP Rate Limiter with Auto-Eviction
 interface IpLog {
   count: number;
   resetTime: number;
 }
 
-const IP_RATE_STORE: Record<string, IpLog> = {};
+const IP_RATE_STORE: Map<string, IpLog> = new Map();
+const MAX_STORE_ENTRIES = 10000;
 
 export function checkIpRateLimit(
   ip: string = '127.0.0.1',
@@ -37,13 +35,23 @@ export function checkIpRateLimit(
   windowMs: number = 60000 // per 1 minute (60,000ms)
 ): { allowed: boolean; remaining: number; resetInSeconds: number } {
   const now = Date.now();
-  const log = IP_RATE_STORE[ip];
+
+  // Periodic eviction if store grows too large
+  if (IP_RATE_STORE.size > MAX_STORE_ENTRIES) {
+    IP_RATE_STORE.forEach((val, key) => {
+      if (now > val.resetTime) {
+        IP_RATE_STORE.delete(key);
+      }
+    });
+  }
+
+  const log = IP_RATE_STORE.get(ip);
 
   if (!log || now > log.resetTime) {
-    IP_RATE_STORE[ip] = {
+    IP_RATE_STORE.set(ip, {
       count: 1,
       resetTime: now + windowMs,
-    };
+    });
     return { allowed: true, remaining: maxRequests - 1, resetInSeconds: Math.ceil(windowMs / 1000) };
   }
 
@@ -58,3 +66,4 @@ export function checkIpRateLimit(
 
   return { allowed: true, remaining, resetInSeconds };
 }
+

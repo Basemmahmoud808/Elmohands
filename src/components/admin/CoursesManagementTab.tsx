@@ -191,7 +191,10 @@ export function CoursesManagementTab({
       );
 
       const gradeQuestions = questions.filter(
-        (q) => q.branchName && (dg.name.includes('إعدادي') ? !q.branchName.includes('ثانوي') : true)
+        (q) =>
+          q.gradeName === dg.name ||
+          q.gradeName === 'جميع الصفوف' ||
+          (!q.gradeName && q.branchName && (dg.name.includes('إعدادي') ? !q.branchName.includes('ثانوي') : true))
       );
 
       stats[dg.id] = {
@@ -288,14 +291,21 @@ export function CoursesManagementTab({
 
   // Filtered Questions
   const gradeQuestions = useMemo(() => {
-    if (!searchQuery.trim()) return questions;
+    const list = questions.filter(
+      (q) =>
+        q.gradeName === selectedGrade.name ||
+        q.gradeName === 'جميع الصفوف' ||
+        (!q.gradeName && q.branchName && (selectedGrade.name.includes('إعدادي') ? !q.branchName.includes('ثانوي') : true))
+    );
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
-    return questions.filter(
+    return list.filter(
       (item) =>
         item.questionText.toLowerCase().includes(q) ||
-        (item.questionLatex && item.questionLatex.toLowerCase().includes(q))
+        (item.questionLatex && item.questionLatex.toLowerCase().includes(q)) ||
+        (item.fileName && item.fileName.toLowerCase().includes(q))
     );
-  }, [questions, searchQuery]);
+  }, [questions, selectedGrade, searchQuery]);
 
   const handleCreateUnit = async (e: React.FormEvent) => {
     e.preventDefault();

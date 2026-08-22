@@ -55,266 +55,15 @@ export interface UpdateLessonInput extends Partial<CreateLessonInput> {
   id: string;
 }
 
+import { parseMediaUrlHelper } from '@/lib/utils';
+
 /**
- * Parses video URLs to handle external embeds (YouTube, Vimeo, BunnyCDN, Google Drive, direct MP4)
+ * Parses video URLs to handle external embeds (YouTube, Vimeo, BunnyCDN, Google Drive, Cloudflare, direct MP4)
  */
 export async function parseMediaUrl(url: string): Promise<{ type: 'video' | 'iframe'; src: string }> {
-  if (!url) {
-    return { type: 'video', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' };
-  }
-
-  // BunnyStream / BunnyCDN
-  if (url.includes('b-cdn.net') || url.includes('bunnycdn.com') || url.includes('iframe.mediadelivery.net')) {
-    return { type: 'iframe', src: url };
-  }
-
-  // Wistia
-  if (url.includes('wistia.com') || url.includes('wistia.net')) {
-    return { type: 'iframe', src: url };
-  }
-
-  // Vimeo
-  if (url.includes('vimeo.com')) {
-    const vimeoId = url.split('vimeo.com/')[1]?.split('?')[0];
-    if (vimeoId) {
-      return { type: 'iframe', src: `https://player.vimeo.com/video/${vimeoId}?autoplay=1` };
-    }
-  }
-
-  // Google Drive
-  if (url.includes('drive.google.com')) {
-    const fileIdMatch = url.match(/\/file\/d\/([^\/]+)/);
-    if (fileIdMatch && fileIdMatch[1]) {
-      return { type: 'iframe', src: `https://drive.google.com/file/d/${fileIdMatch[1]}/preview` };
-    }
-  }
-
-  // YouTube
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    let videoId = '';
-    if (url.includes('youtu.be')) {
-      videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
-    } else if (url.includes('v=')) {
-      videoId = url.split('v=')[1]?.split('&')[0] || '';
-    }
-    if (videoId) {
-      return { type: 'iframe', src: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0` };
-    }
-  }
-
-  return { type: 'video', src: url };
+  const res = parseMediaUrlHelper(url);
+  return { type: res.type, src: res.src };
 }
-
-// Fallback seed tree data for seamless local rendering
-const FALLBACK_CURRICULUM: CurriculumGradeDTO[] = [
-  {
-    id: 'g-prep-1',
-    name: 'الصف الأول الإعدادي',
-    stage: 'إعدادي',
-    description: 'منهج الرياضيات المتكامل لطلاب الصف الأول الإعدادي',
-    sortOrder: 1,
-    terms: [
-      {
-        id: 't-1',
-        gradeId: 'g-prep-1',
-        name: 'الترم الأول',
-        sortOrder: 1,
-        branches: [
-          {
-            id: 'b-1',
-            termId: 't-1',
-            name: 'فرع الجبر والإحصاء',
-            sortOrder: 1,
-            units: [
-              {
-                id: 'u-1',
-                branchId: 'b-1',
-                title: 'الوحدة الأولى: الأعداد النسبية والعمليات عليها',
-                description: 'مفهوم الأعداد النسبية والعمليات الحسابية الأساسية مع التمارين التطبيقية',
-                sortOrder: 1,
-                lessons: [
-                  {
-                    id: 'les-1',
-                    unitId: 'u-1',
-                    title: 'الدرس الأول: مجموعة الأعداد النسبية وخواصها',
-                    description: 'شرح مبسط ومفصل لمفهوم الأعداد النسبية والصور المختلفة لها مع م/ رضا خيرت.',
-                    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                    pdfPath: '/sample-lesson-notes.pdf',
-                    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-                    durationMinutes: 45,
-                    sortOrder: 1,
-                    isPublished: true,
-                    isLocked: false,
-                    minPassScore: 50,
-                    watchPercentage: 68,
-                    isCompleted: false,
-                    lastPosition: 1836,
-                  },
-                  {
-                    id: 'les-2',
-                    unitId: 'u-1',
-                    title: 'الدرس الثاني: مقارنة وترتيب الأعداد النسبية',
-                    description: 'كيفية تمثيل ومقارنة الأعداد النسبية على خط الأعداد والعمليات الرياضية عليها.',
-                    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                    pdfPath: '/sample-lesson-notes.pdf',
-                    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-                    durationMinutes: 38,
-                    sortOrder: 2,
-                    isPublished: true,
-                    isLocked: false,
-                    minPassScore: 50,
-                    watchPercentage: 100,
-                    isCompleted: true,
-                    lastPosition: 2280,
-                  },
-                ],
-              },
-              {
-                id: 'u-2',
-                branchId: 'b-1',
-                title: 'الوحدة الثانية: الحدود والمقادير الجبرية',
-                description: 'الحدود والمقادير الجبرية وجمعها وطرحها وضربها وقسمتها',
-                sortOrder: 2,
-                lessons: [
-                  {
-                    id: 'les-3',
-                    unitId: 'u-2',
-                    title: 'الدرس الأول: الحدود الجبرية والمقادير الجبرية المتشابهة',
-                    description: 'درجة الحد الجبري والمقدار الجبري والعمليات الجبرية المتنوعة.',
-                    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                    pdfPath: '/sample-lesson-notes.pdf',
-                    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-                    durationMinutes: 40,
-                    sortOrder: 1,
-                    isPublished: true,
-                    isLocked: false,
-                    minPassScore: 50,
-                    watchPercentage: 0,
-                    isCompleted: false,
-                    lastPosition: 0,
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            id: 'b-2',
-            termId: 't-1',
-            name: 'فرع الهندسة والقياس',
-            sortOrder: 2,
-            units: [
-              {
-                id: 'u-3',
-                branchId: 'b-2',
-                title: 'الوحدة الأولى: المفاهيم الهندسية والإنشاءات',
-                description: 'العلاقات بين الزوايا والتوازي والتطابق والإنشاءات الهندسية الأساسية',
-                sortOrder: 1,
-                lessons: [
-                  {
-                    id: 'les-4',
-                    unitId: 'u-3',
-                    title: 'الدرس الأول: المفاهيم والتعاريف الهندسية الأساسية',
-                    description: 'القطعة المستقيمة، الشعاع، الخط المستقيم، والزوايا وأنواعها والعلاقات بينها.',
-                    videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-                    pdfPath: '/sample-lesson-notes.pdf',
-                    thumbnailPath: '/teacher_reda_kheyrat.jpg',
-                    durationMinutes: 50,
-                    sortOrder: 1,
-                    isPublished: true,
-                    isLocked: false,
-                    minPassScore: 50,
-                    watchPercentage: 0,
-                    isCompleted: false,
-                    lastPosition: 0,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 't-2',
-        gradeId: 'g-prep-1',
-        name: 'الترم الثاني',
-        sortOrder: 2,
-        branches: [
-          {
-            id: 'b-3',
-            termId: 't-2',
-            name: 'فرع الجبر والإحصاء',
-            sortOrder: 1,
-            units: [],
-          },
-          {
-            id: 'b-4',
-            termId: 't-2',
-            name: 'فرع الهندسة والقياس',
-            sortOrder: 2,
-            units: [],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'g-prep-2',
-    name: 'الصف الثاني الإعدادي',
-    stage: 'إعدادي',
-    description: 'منهج الرياضيات لطلاب الصف الثاني الإعدادي',
-    sortOrder: 2,
-    terms: [
-      {
-        id: 't-3',
-        gradeId: 'g-prep-2',
-        name: 'الترم الأول',
-        sortOrder: 1,
-        branches: [
-          { id: 'b-5', termId: 't-3', name: 'فرع الجبر والإحصاء', sortOrder: 1, units: [] },
-          { id: 'b-6', termId: 't-3', name: 'فرع الهندسة والقياس', sortOrder: 2, units: [] },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'g-prep-3',
-    name: 'الصف الثالث الإعدادي',
-    stage: 'إعدادي',
-    description: 'الشهادة الإعدادية — منهج الرياضيات التأسيسي للثانوية العامة',
-    sortOrder: 3,
-    terms: [
-      {
-        id: 't-4',
-        gradeId: 'g-prep-3',
-        name: 'الترم الأول',
-        sortOrder: 1,
-        branches: [
-          { id: 'b-7', termId: 't-4', name: 'فرع الجبر والإحصاء', sortOrder: 1, units: [] },
-          { id: 'b-8', termId: 't-4', name: 'فرع الهندسة وحساب المثلثات', sortOrder: 2, units: [] },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'g-sec-1',
-    name: 'الصف الأول الثانوي',
-    stage: 'ثانوي',
-    description: 'المرحلة الثانوية — الجبر وحساب المثلثات والهندسة التحليلية',
-    sortOrder: 4,
-    terms: [
-      {
-        id: 't-5',
-        gradeId: 'g-sec-1',
-        name: 'الترم الأول',
-        sortOrder: 1,
-        branches: [
-          { id: 'b-9', termId: 't-5', name: 'فرع الجبر والمصفوفات', sortOrder: 1, units: [] },
-          { id: 'b-10', termId: 't-5', name: 'فرع الهندسة التحليلية وحساب المثلثات', sortOrder: 2, units: [] },
-        ],
-      },
-    ],
-  },
-];
 
 /**
  * Fetches the entire curriculum tree (Grades -> Terms -> Branches -> Units -> Lessons).
@@ -342,7 +91,7 @@ export async function getFullCurriculumTreeAction(): Promise<ActionResult<Curric
       .order('sort_order', { ascending: true });
 
     if (gErr || !gradesData || gradesData.length === 0) {
-      return { success: true, data: FALLBACK_CURRICULUM };
+      return { success: true, data: [] };
     }
 
     interface DbTreeLesson {
@@ -452,7 +201,7 @@ export async function getFullCurriculumTreeAction(): Promise<ActionResult<Curric
     return { success: true, data: tree };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل جلب شجرة المنهج الدراسي';
-    return { success: true, data: FALLBACK_CURRICULUM, message: msg };
+    return { success: true, data: [], message: msg };
   }
 }
 

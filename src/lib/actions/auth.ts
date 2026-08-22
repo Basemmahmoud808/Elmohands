@@ -35,13 +35,13 @@ export async function loginUser(
   passwordInput?: string
 ): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    // 1. Normalize identifier (convert Arabic numerals if any, trim)
+    // 1. Normalize identifier (convert Arabic numerals, trim whitespace)
     let cleanIdentifier = sanitizeInput(phoneOrUsername.trim())
       .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
       .replace(/\s+/g, '');
 
     if (!cleanIdentifier) {
-      return { success: false, message: 'يرجى كتابة رقم الهاتف أو اسم المستخدم بشكل صحيح.' };
+      return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
     }
 
     const cleanPassword = passwordInput ? passwordInput.trim() : '';
@@ -49,190 +49,51 @@ export async function loginUser(
       return { success: false, message: 'يرجى إدخال كلمة المرور.' };
     }
 
-    // 2. Normalize admin phone format (e.g. +201008901896 or 201008901896 -> 01008901896)
+    // 2. Normalize Egyptian phone format (+201... or 201... → 01...)
     if (cleanIdentifier.startsWith('+20')) {
       cleanIdentifier = '0' + cleanIdentifier.slice(3);
     } else if (cleanIdentifier.startsWith('20') && cleanIdentifier.length === 12) {
       cleanIdentifier = '0' + cleanIdentifier.slice(2);
     }
 
-    // 3. Admin Detection
-    const adminAliases = [
-      '01008901896',
-      'admin',
-      'admin_almohands',
-      'almohands_admin',
-      'khyratreda@gmail.com',
-      'reda',
-      'reda_kheyrat',
-      'م/رضاخيرت',
-      'رضاخيرت',
-    ];
-    const isDedicatedAdmin = adminAliases.some(
-      (alias) => alias.toLowerCase() === cleanIdentifier.toLowerCase()
-    );
-
-    const masterAdminPasswords = [
-      'Reda@Kheyrat#2026!',
-      '01008901896',
-      'Khyratreda@2026',
-      'Admin@123456',
-      'admin123',
-      'Almohands@2026',
-      '123456',
-      '12345678',
-    ];
-
-    // 4. Query Supabase Profiles
+    // 3. Query profile by phone or email — no aliases, no fallbacks
     let profile: any = null;
-
     try {
-      if (isDedicatedAdmin) {
-        const { data: dbAdmin } = await supabaseAdmin
-          .from('profiles')
-          .select('*')
-          .or('phone.eq.01008901896,email.eq.Khyratreda@gmail.com,role.eq.ADMIN')
-          .limit(1)
-          .maybeSingle();
-        profile = dbAdmin;
-      } else {
-        const { data: dbUser } = await supabaseAdmin
-          .from('profiles')
-          .select('*')
-          .eq('phone', cleanIdentifier)
-          .maybeSingle();
-        profile = dbUser;
-      }
+      const { data: dbUser } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .or(`phone.eq.${cleanIdentifier},email.eq.${cleanIdentifier}`)
+        .maybeSingle();
+      profile = dbUser;
     } catch {
-      // Supabase query error fallback
+      // DB unreachable — fail closed, no fallback
     }
 
-    // 5. If Admin and not in DB or DB unreachable, auto-create / handle admin
-    if (isDedicatedAdmin) {
-      const isMasterPassMatch = masterAdminPasswords.includes(cleanPassword);
-      let isDbPassMatch = false;
-
-      if (profile && profile.password_hash) {
-        isDbPassMatch = await verifyPassword(cleanPassword, profile.password_hash);
-      }
-
-      if (!isMasterPassMatch && !isDbPassMatch) {
-        return { success: false, message: 'كلمة المرور الخاصة بحساب الأدمن غير صحيحة. يرجى إعادة المحاولة.' };
-      }
-
-      // If profile was missing from DB, insert or use standard admin profile
-      if (!profile) {
-        const hashedPass = await hashPassword('Reda@Kheyrat#2026!');
-        try {
-          const { data: insertedAdmin } = await supabaseAdmin
-            .from('profiles')
-            .upsert({
-              id: 'admin-reda-01008901896',
-              full_name: 'م/ رضا خيرت',
-              phone: '01008901896',
-              email: 'Khyratreda@gmail.com',
-              password_hash: hashedPass,
-              role: 'ADMIN',
-              is_active: true,
-              governorate: 'الدقهلية — منية النصر — النزل',
-            })
-            .select()
-            .single();
-          profile = insertedAdmin;
-        } catch {
-          // fallback object
-        }
-      }
-
-      const adminProfile = profile || {
-        id: 'admin-reda-01008901896',
-        full_name: 'م/ رضا خيرت',
-        phone: '01008901896',
-        email: 'Khyratreda@gmail.com',
-        role: 'ADMIN',
-        governorate: 'الدقهلية — منية النصر — النزل',
-        created_at: new Date().toISOString(),
-      };
-
-      const tokenPayload = {
-        userId: adminProfile.id,
-        phone: adminProfile.phone || '01008901896',
-        role: 'ADMIN' as const,
-        fullName: adminProfile.full_name || 'م/ رضا خيرت',
-      };
-
-      const accessToken = await createAccessToken(tokenPayload);
-      const refreshToken = await createRefreshToken(tokenPayload);
-      await setAuthCookies(accessToken, refreshToken);
-
-      try {
-        await createSessionRecord(adminProfile.id, refreshToken);
-      } catch {
-        // ignore session db error
-      }
-
-      const adminSession: UserSession = {
-        id: adminProfile.id,
-        fullName: adminProfile.full_name || 'م/ رضا خيرت',
-        phone: adminProfile.phone || '01008901896',
-        email: adminProfile.email,
-        governorate: adminProfile.governorate,
-        role: 'ADMIN',
-        createdAt: adminProfile.created_at || new Date().toISOString(),
-      };
-
-      return { success: true, user: adminSession, message: 'تم تسجيل دخول المشرف العام بنجاح ' };
-    }
-
-    // 6. Test Student Aliases Support
-    const testStudentAliases = ['student', 'student1', '01011112222', '01112223334', '01234567890', 'طالب'];
-    const isTestStudent = testStudentAliases.includes(cleanIdentifier.toLowerCase());
-
-    if (isTestStudent) {
-      const isTestPassMatch = ['123456', '12345678', 'Student@2026', '01011112222', 'student123'].includes(cleanPassword);
-      if (!isTestPassMatch) {
-        return { success: false, message: 'كلمة المرور غير صحيحة لحساب الطالب التجريبي. استخدم 123456' };
-      }
-
-      if (!profile) {
-        profile = {
-          id: 'test-student-01011112222',
-          full_name: 'أحمد محمد (طالب تجريبي)',
-          phone: '01011112222',
-          parent_phone: '01008901896',
-          role: 'STUDENT',
-          grade_id: 'grade-prep-1',
-          is_active: true,
-          created_at: new Date().toISOString(),
-        };
-      }
-    }
-
-    // 7. Regular Student Authentication
     if (!profile) {
-      return { success: false, message: 'هذا الحساب غير مسجل في منصة المهندس. يرجى إنشاء حساب طالب جديد أولاً.' };
+      return { success: false, message: 'رقم الهاتف أو كلمة المرور غير صحيحة.' };
     }
 
     if (!profile.is_active) {
       return { success: false, message: 'هذا الحساب معطل حالياً. يرجى التواصل مع إدارة المنصة.' };
     }
 
-    // Verify student password if not pre-verified test student
-    if (!isTestStudent) {
-      const isPasswordValid = await verifyPassword(cleanPassword, profile.password_hash);
-      if (!isPasswordValid) {
-        return { success: false, message: 'كلمة المرور غير صحيحة. يرجى التأكد من البيانات وإعادة المحاولة.' };
-      }
+    // 4. Verify password via bcrypt only — no hardcoded master passwords
+    if (!profile.password_hash) {
+      return { success: false, message: 'رقم الهاتف أو كلمة المرور غير صحيحة.' };
+    }
+    const isPasswordValid = await verifyPassword(cleanPassword, profile.password_hash);
+    if (!isPasswordValid) {
+      return { success: false, message: 'رقم الهاتف أو كلمة المرور غير صحيحة.' };
     }
 
-    // Update last login in background
+    // 5. Update last login timestamp
     try {
       await supabaseAdmin
         .from('profiles')
         .update({ last_login_at: new Date().toISOString() })
         .eq('id', profile.id);
     } catch {
-      // ignore
+      // non-critical
     }
 
     const tokenPayload = {
@@ -249,7 +110,7 @@ export async function loginUser(
     try {
       await createSessionRecord(profile.id, refreshToken);
     } catch {
-      // ignore
+      // non-critical
     }
 
     const userSession: UserSession = {
@@ -265,12 +126,14 @@ export async function loginUser(
       createdAt: profile.created_at || new Date().toISOString(),
     };
 
-    return { success: true, user: userSession };
+    const msg = profile.role === 'ADMIN' ? 'تم تسجيل دخول المشرف العام بنجاح ' : undefined;
+    return { success: true, user: userSession, message: msg };
   } catch (error: any) {
     console.error('Login error:', error);
-    return { success: false, message: error.message || 'فشل تسجيل الدخول' };
+    return { success: false, message: 'فشل تسجيل الدخول.' };
   }
 }
+
 
 export async function registerUser(data: {
   fullName: string;
@@ -282,7 +145,14 @@ export async function registerUser(data: {
   gradeId?: string;
 }): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    const cleanPhone = sanitizeInput(data.phone.trim());
+    const cleanPhone = sanitizeInput(data.phone.trim())
+      .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
+      .replace(/\s+/g, '');
+    const cleanParentPhone = data.parentPhone
+      ? sanitizeInput(data.parentPhone.trim())
+          .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
+          .replace(/\s+/g, '')
+      : '';
     const cleanFullName = sanitizeInput(data.fullName.trim());
     const cleanPassword = data.password || '';
     const cleanParentEmail = data.parentEmail ? sanitizeInput(data.parentEmail.trim()) : '';
@@ -297,7 +167,20 @@ export async function registerUser(data: {
 
     const phoneRegex = /^01[0125]\d{8}$/;
     if (!isDedicatedAdmin && !phoneRegex.test(cleanPhone)) {
-      return { success: false, message: 'رقم هاتف الطالب غير صحيح! يجب إدخال رقم محمول مصري مكون من 11 رقماً ويبدأ بـ 01.' };
+      return { success: false, message: 'رقم هاتف الطالب غير صحيح! يجب إدخال رقم محمول مصري مكون من 11 رقماً ويبدأ بـ (010 أو 011 أو 012 أو 015).' };
+    }
+
+    // Parent phone is mandatory and must be a valid Egyptian mobile number different from student's phone
+    if (!isDedicatedAdmin) {
+      if (!cleanParentPhone) {
+        return { success: false, message: 'رقم هاتف ولي الأمر إلزامي! يرجى إدخال رقم هاتف ولي الأمر للمتابعة.' };
+      }
+      if (!phoneRegex.test(cleanParentPhone)) {
+        return { success: false, message: 'رقم هاتف ولي الأمر غير صحيح! يجب أن يتكون من 11 رقماً ويبدأ بـ (010 أو 011 أو 012 أو 015).' };
+      }
+      if (cleanParentPhone === cleanPhone) {
+        return { success: false, message: 'رقم ولي الأمر يجب أن يكون مختلفاً عن رقم هاتف الطالب.' };
+      }
     }
 
     if (!isDedicatedAdmin && cleanPassword.length < 6) {
@@ -324,6 +207,7 @@ export async function registerUser(data: {
       .insert({
         full_name: cleanFullName,
         phone: cleanPhone,
+        parent_phone: cleanParentPhone || null,
         password_hash: hashedPassword,
         role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
         grade_id: data.gradeId || null,
@@ -336,7 +220,7 @@ export async function registerUser(data: {
 
     if (dbError || !newProfile) {
       console.error('Registration DB Error:', dbError);
-      return { success: false, message: 'حدث خطأ في قاعدة البيانات: ' + (dbError?.message || 'تعذر إنشاء الحساب') };
+      return { success: false, message: 'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى لاحقاً.' };
     }
 
     // 5. Issue Tokens & Cookies
@@ -356,6 +240,7 @@ export async function registerUser(data: {
       id: newProfile.id,
       fullName: newProfile.full_name,
       phone: newProfile.phone,
+      parentPhone: newProfile.parent_phone,
       role: newProfile.role as 'ADMIN' | 'STUDENT',
       gradeId: newProfile.grade_id,
       parentEmail: newProfile.parent_email,

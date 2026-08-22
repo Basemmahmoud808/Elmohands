@@ -1,5 +1,6 @@
 'use server';
 
+import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/actions/auth';
 import { sanitizeInput } from '@/lib/security';
@@ -17,9 +18,6 @@ export interface VoucherCode {
 
 // In-Memory Failed Attempts Rate Limiter Tracker (Per phone)
 const FAILED_ATTEMPTS: Record<string, { count: number; lockUntil: number }> = {};
-
-// Fallback in-memory store for offline/sandbox mode
-const FALLBACK_VOUCHERS: AdminVoucherDTO[] = [];
 
 /**
  * Generates a batch of unique voucher activation codes and persists them to activation_codes table.
@@ -82,7 +80,8 @@ export async function generateVoucherCodes(
     }> = [];
 
     for (let i = 0; i < count; i++) {
-      const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+      // Cryptographically secure random suffix
+      const randomSuffix = crypto.randomBytes(4).toString('hex').toUpperCase();
       const code = `${prefix}${randomSuffix}`;
       const vId = `v-${Date.now()}-${i}`;
 
@@ -108,17 +107,6 @@ export async function generateVoucherCodes(
       if (isValidUuid(user.id)) payload.created_by = user.id;
 
       dbPayloads.push(payload);
-
-      FALLBACK_VOUCHERS.unshift({
-        id: vId,
-        code,
-        planId: planId || 'p-default',
-        planName,
-        durationDays,
-        price,
-        status: 'UNUSED',
-        createdAt: new Date().toISOString(),
-      });
     }
 
     try {
@@ -243,10 +231,7 @@ export async function redeemVoucherCode(
       // Supabase query fallback
     }
 
-    // Check fallback store if not found in DB
-    const fallbackItem = FALLBACK_VOUCHERS.find((v) => v.code === cleanCode);
-
-    if (!voucherRecord && !fallbackItem) {
+    if (!voucherRecord) {
       // Record Failed Attempt
       if (!FAILED_ATTEMPTS[userKey]) {
         FAILED_ATTEMPTS[userKey] = { count: 1, lockUntil: 0 };
@@ -269,11 +254,10 @@ export async function redeemVoucherCode(
       };
     }
 
-    const status = voucherRecord?.status || fallbackItem?.status;
-    if (status !== 'UNUSED') {
+    if (voucherRecord.status !== 'UNUSED') {
       return {
         success: false,
-        message: status === 'USED' ? 'هذا الكود تم استخدامه من قبل بالفعل!' : 'هذا الكود معطل حالياً من إدارة المنصة.',
+        message: voucherRecord.status === 'USED' ? 'هذا الكود تم استخدامه من قبل بالفعل!' : 'هذا الكود معطل حالياً من إدارة المنصة.',
       };
     }
 
@@ -307,10 +291,6 @@ export async function redeemVoucherCode(
       } catch {
         // use defaults
       }
-    } else if (fallbackItem) {
-      durationDays = fallbackItem.durationDays;
-      planName = fallbackItem.planName;
-      planId = fallbackItem.planId;
     } else if (cleanCode.includes('TRM') || cleanCode.includes('TR')) {
       durationDays = 120;
       planName = 'اشتراك ترم';
@@ -335,16 +315,23 @@ export async function redeemVoucherCode(
         newExpiresAt = new Date(new Date(existingSub.expires_at).getTime() + durationDays * 24 * 60 * 60 * 1000);
       }
 
-      // Update code status to USED
-      if (voucherRecord) {
-        await supabaseAdmin
-          .from('activation_codes')
-          .update({
-            status: 'USED',
-            used_by: user.id,
-            used_at: new Date().toISOString(),
-          })
-          .eq('id', voucherRecord.id);
+      // Atomic Update: Only update if status is still UNUSED
+      const { data: updatedRows, error: updateErr } = await supabaseAdmin
+        .from('activation_codes')
+        .update({
+          status: 'USED',
+          used_by: user.id,
+          used_at: new Date().toISOString(),
+        })
+        .eq('id', voucherRecord.id)
+        .eq('status', 'UNUSED')
+        .select('id');
+
+      if (updateErr || !updatedRows || updatedRows.length === 0) {
+        return {
+          success: false,
+          message: 'عفواً، هذا الكود تم استخدامه بالفعل في طلب آخر متزامن!',
+        };
       }
 
       // Insert subscription record
@@ -355,7 +342,7 @@ export async function redeemVoucherCode(
         starts_at: new Date().toISOString(),
         expires_at: newExpiresAt.toISOString(),
         source: 'CODE',
-        activation_code_id: voucherRecord?.id || null,
+        activation_code_id: voucherRecord.id,
       });
 
       // Audit Log
@@ -363,19 +350,11 @@ export async function redeemVoucherCode(
         user_id: user.id,
         action: 'VOUCHER_REDEEMED',
         entity_type: 'activation_codes',
-        entity_id: voucherRecord?.id || null,
+        entity_id: voucherRecord.id,
         metadata: { code: cleanCode, planName, durationDays, newExpiresAt: newExpiresAt.toISOString() },
       });
     } catch (e) {
       console.warn('Exception updating DB for voucher redemption:', e);
-    }
-
-    // Update in-memory fallback store
-    if (fallbackItem) {
-      fallbackItem.status = 'USED';
-      fallbackItem.usedByName = user.fullName;
-      fallbackItem.usedByPhone = user.phone;
-      fallbackItem.usedAt = new Date().toISOString();
     }
 
     return {
@@ -434,18 +413,10 @@ export async function getAllVouchers(): Promise<VoucherCode[]> {
         };
       });
     }
+    return [];
   } catch {
-    // fallback
+    return [];
   }
-
-  return FALLBACK_VOUCHERS.map((v) => ({
-    id: v.id,
-    code: v.code,
-    planName: v.planName,
-    durationDays: v.durationDays,
-    status: v.status,
-    createdAt: v.createdAt,
-  }));
 }
 
 /**
@@ -481,12 +452,7 @@ export async function getAdminVouchersListAction(
     const { data, error } = await query;
 
     if (error || !data || data.length === 0) {
-      // Fallback
-      let result = [...FALLBACK_VOUCHERS];
-      if (statusFilter && statusFilter !== 'ALL') {
-        result = result.filter((v) => v.status === statusFilter);
-      }
-      return { success: true, data: result };
+      return { success: true, data: [] };
     }
 
     const items: AdminVoucherDTO[] = (data as unknown as Array<{
@@ -550,11 +516,7 @@ export async function toggleVoucherStatusAction(
 
     if (error) {
       console.warn('DB update voucher error:', error.message);
-    }
-
-    const target = FALLBACK_VOUCHERS.find((v) => v.id === voucherId);
-    if (target) {
-      target.status = newStatus;
+      return { success: false, error: 'فشل تحديث حالة الكود في قاعدة البيانات' };
     }
 
     await supabaseAdmin.from('audit_logs').insert({

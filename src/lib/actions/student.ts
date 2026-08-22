@@ -158,6 +158,8 @@ export async function getStudentDashboardDataAction(): Promise<ActionResult<Stud
       isCompleted: boolean;
     }> = [];
 
+    const hasActiveSub = subscriptionData.hasActiveSubscription;
+
     curriculumTerms.forEach((t) => {
       t.branches.forEach((b) => {
         b.units.forEach((u) => {
@@ -167,6 +169,9 @@ export async function getStudentDashboardDataAction(): Promise<ActionResult<Stud
               l.watchPercentage = userProg.watch_percentage;
               l.isCompleted = userProg.is_completed;
               l.lastPosition = userProg.last_position;
+            }
+            if (!hasActiveSub) {
+              l.isLocked = l.isLocked !== false;
             }
             allLessonsFlat.push({
               id: l.id,
@@ -190,11 +195,13 @@ export async function getStudentDashboardDataAction(): Promise<ActionResult<Stud
     });
 
     // 5. Determine "Continue Learning"
-    // Find first unfinished lesson or most recently watched
-    const continueLearning = allLessonsFlat.find((l) => l.watchPercentage > 0 && !l.isCompleted) ||
-      allLessonsFlat.find((l) => !l.isCompleted) ||
-      allLessonsFlat[0] ||
-      null;
+    // Find first unfinished lesson or most recently watched (only if active subscription)
+    const continueLearning = hasActiveSub
+      ? (allLessonsFlat.find((l) => l.watchPercentage > 0 && !l.isCompleted) ||
+         allLessonsFlat.find((l) => !l.isCompleted) ||
+         allLessonsFlat[0] ||
+         null)
+      : null;
 
     // 6. Recent Exam Results & Available Quizzes
     let recentResults: StudentExamResultDTO[] = [];
@@ -541,6 +548,40 @@ import { getStudentDashboardData as fetchStudentDashboardData } from '@/lib/acti
 // Wrapper for Milestone 2 Server Actions interoperability in "use server" file
 export async function getStudentDashboardData() {
   return fetchStudentDashboardData();
+}
+
+/**
+ * Checks if the current user has an active subscription or is admin.
+ */
+export async function getStudentSubscriptionStatusAction(): Promise<ActionResult<{ hasActiveSubscription: boolean; daysRemaining: number }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: true, data: { hasActiveSubscription: false, daysRemaining: 0 } };
+    }
+    if (user.role === 'ADMIN') {
+      return { success: true, data: { hasActiveSubscription: true, daysRemaining: 999 } };
+    }
+
+    const { data: dbSub } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id, status, expires_at')
+      .eq('student_id', user.id)
+      .eq('status', 'ACTIVE')
+      .order('expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (dbSub) {
+      const expTime = new Date(dbSub.expires_at).getTime();
+      const daysRemaining = Math.max(0, Math.ceil((expTime - Date.now()) / (1000 * 60 * 60 * 24)));
+      return { success: true, data: { hasActiveSubscription: daysRemaining > 0, daysRemaining } };
+    }
+
+    return { success: true, data: { hasActiveSubscription: false, daysRemaining: 0 } };
+  } catch {
+    return { success: true, data: { hasActiveSubscription: false, daysRemaining: 0 } };
+  }
 }
 
 

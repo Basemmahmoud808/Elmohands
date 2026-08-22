@@ -3,8 +3,11 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { checkIpRateLimit } from '@/lib/security';
 
-const JWT_SECRET_VALUE = process.env.JWT_SECRET || 'almohands-platform-secure-jwt-secret-key-2026-math-reda-kheyrat';
+
+const JWT_SECRET_VALUE = process.env.JWT_SECRET;
+if (!JWT_SECRET_VALUE) throw new Error('FATAL: JWT_SECRET environment variable is not set.');
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE);
+
 
 interface TokenPayload {
   userId: string;
@@ -75,12 +78,36 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/student', request.url));
   }
 
-  // 4. Response Headers with Security Tokens
+  // 4. Security Response Headers
   const response = NextResponse.next();
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-eval needed by Next.js dev mode
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "media-src 'self' blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.io wss://*.supabase.co",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
+  );
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=63072000; includeSubDomains; preload'
+  );
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), payment=()'
+  );
 
   return response;
 }

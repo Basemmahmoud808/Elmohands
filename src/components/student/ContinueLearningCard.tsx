@@ -7,10 +7,30 @@ import { PlayCircle, Clock, BookOpen, ChevronLeft } from 'lucide-react';
 
 interface ContinueLearningCardProps {
   lesson: ContinueLearningLessonDTO | null;
+  hasActiveSubscription?: boolean;
   onOpenVideo?: (title: string, url: string) => void;
 }
 
-export function ContinueLearningCard({ lesson, onOpenVideo }: ContinueLearningCardProps) {
+export function ContinueLearningCard({ lesson, hasActiveSubscription = false, onOpenVideo }: ContinueLearningCardProps) {
+  if (!hasActiveSubscription) {
+    return (
+      <div className="chalk-card rounded-3xl p-6 lg:p-8 bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-transparent border border-amber-500/30 relative overflow-hidden shadow-lg shadow-amber-500/5">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold border border-amber-500/30">
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>تفعيل الاشتراك مطلوب</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">
+            اشترك لتفعيل الدروس والمحاضرات الكاملة 🔒
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted max-w-xl">
+            قم بشحن كود الاشتراك أو تفعيل الباقة لفتح جميع فيديوهات الشرح وحل الامتحانات التفاعلية ومذكرات المنهج.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!lesson) {
     return (
       <div className="chalk-card rounded-3xl p-6 lg:p-8 bg-gradient-to-r from-cyan-electric/15 via-blue-ink/20 to-transparent border border-cyan-electric/30 relative overflow-hidden">

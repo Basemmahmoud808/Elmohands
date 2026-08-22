@@ -17,6 +17,7 @@ import {
 interface EnrolledCoursesGridProps {
   curriculum: CurriculumTermDTO[];
   gradeName?: string;
+  hasActiveSubscription?: boolean;
   onOpenVideo?: (title: string, url: string) => void;
   onOpenPdf?: (title: string, url: string) => void;
 }
@@ -24,6 +25,7 @@ interface EnrolledCoursesGridProps {
 export function EnrolledCoursesGrid({
   curriculum,
   gradeName = 'الصف الأول الإعدادي',
+  hasActiveSubscription = false,
   onOpenVideo,
   onOpenPdf,
 }: EnrolledCoursesGridProps) {
@@ -177,13 +179,18 @@ export function EnrolledCoursesGrid({
                     {!isCollapsed && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pt-1">
                         {unit.lessons.map((les: CurriculumLessonDTO, index: number) => {
+                          const isLockedForStudent = !hasActiveSubscription && les.isLocked !== false;
                           const isDone = les.isCompleted || les.watchPercentage >= 90;
                           const inProgress = les.watchPercentage > 0 && !isDone;
 
                           return (
                             <div
                               key={les.id}
-                              className="rounded-2xl p-5 bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 flex flex-col justify-between hover:border-cyan-electric/40 transition-all space-y-4 shadow-sm"
+                              className={`rounded-2xl p-5 border flex flex-col justify-between transition-all space-y-4 shadow-sm ${
+                                isLockedForStudent
+                                  ? 'bg-slate-100/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800/60 opacity-90'
+                                  : 'bg-slate-50 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800/90 hover:border-cyan-electric/40'
+                              }`}
                             >
                               <div className="space-y-3">
                                 <div className="flex items-start justify-between">
@@ -192,7 +199,12 @@ export function EnrolledCoursesGrid({
                                   </div>
 
                                   {/* Status Pill */}
-                                  {isDone ? (
+                                  {isLockedForStudent ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                      <Lock className="w-3.5 h-3.5" />
+                                      <span>يتطلب اشتراكاً 🔒</span>
+                                    </span>
+                                  ) : isDone ? (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                                       <CheckCircle2 className="w-3.5 h-3.5" />
                                       <span>مكتمل </span>
@@ -219,28 +231,40 @@ export function EnrolledCoursesGrid({
 
                               {/* Action Buttons */}
                               <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2">
-                                <Link
-                                  href={`/lessons/${les.id}`}
-                                  onClick={(e) => {
-                                    if (onOpenVideo && les.videoPath) {
-                                      e.preventDefault();
-                                      onOpenVideo(les.title, les.videoPath);
-                                    }
-                                  }}
-                                  className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
-                                >
-                                  <PlayCircle className="w-4 h-4" />
-                                  <span>مشاهدة الفيديو</span>
-                                </Link>
-
-                                {les.pdfPath && (
-                                  <button
-                                    onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '')}
-                                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-chalk/90 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-cyan-electric transition-all flex items-center gap-1.5"
+                                {isLockedForStudent ? (
+                                  <Link
+                                    href={`/lessons/${les.id}`}
+                                    className="w-full py-2.5 rounded-xl text-xs font-black text-slate-800 dark:text-chalk bg-slate-200 dark:bg-slate-800 hover:bg-cyan-electric hover:text-black transition-all flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-700"
                                   >
-                                    <FileText className="w-4 h-4 text-cyan-electric" />
-                                    <span>مذكرة PDF</span>
-                                  </button>
+                                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                                    <span>تفعيل الاشتراك لفتح الدرس</span>
+                                  </Link>
+                                ) : (
+                                  <>
+                                    <Link
+                                      href={`/lessons/${les.id}`}
+                                      onClick={(e) => {
+                                        if (onOpenVideo && les.videoPath) {
+                                          e.preventDefault();
+                                          onOpenVideo(les.title, les.videoPath);
+                                        }
+                                      }}
+                                      className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
+                                    >
+                                      <PlayCircle className="w-4 h-4" />
+                                      <span>مشاهدة الفيديو</span>
+                                    </Link>
+
+                                    {les.pdfPath && (
+                                      <button
+                                        onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '')}
+                                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-chalk/90 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-cyan-electric transition-all flex items-center gap-1.5"
+                                      >
+                                        <FileText className="w-4 h-4 text-cyan-electric" />
+                                        <span>مذكرة PDF</span>
+                                      </button>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </div>

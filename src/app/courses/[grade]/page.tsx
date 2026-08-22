@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 import { getCurriculumByGradeAction } from '@/lib/actions/lessons';
+import { getStudentSubscriptionStatusAction } from '@/lib/actions/student';
 import { CurriculumGradeDTO, CurriculumLessonDTO } from '@/lib/types/dashboard';
 import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
 import {
@@ -40,6 +41,7 @@ export default function GradeCoursesPage() {
   const gradeName = gradeAliasMap[rawParam] || rawParam;
 
   const [user, setUser] = useState<UserSession | null>(null);
+  const [hasActiveSub, setHasActiveSub] = useState(false);
   const [curriculum, setCurriculum] = useState<CurriculumGradeDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTermIndex, setSelectedTermIndex] = useState(0);
@@ -59,9 +61,17 @@ export default function GradeCoursesPage() {
           return;
         }
 
-        const res = await getCurriculumByGradeAction(gradeName);
+        const [res, subRes] = await Promise.all([
+          getCurriculumByGradeAction(gradeName),
+          getStudentSubscriptionStatusAction(),
+        ]);
+
         if (res.success && res.data) {
           setCurriculum(res.data);
+        }
+
+        if (subRes.success && subRes.data) {
+          setHasActiveSub(subRes.data.hasActiveSubscription);
         }
       } catch {
         // ignore
@@ -148,41 +158,66 @@ export default function GradeCoursesPage() {
     );
   }
 
+  const defaultGradeCover = gradeName.includes('الأول الإعدادي')
+    ? '/courses/prep-1.jpg'
+    : gradeName.includes('الثاني الإعدادي')
+    ? '/courses/prep-2.jpg'
+    : gradeName.includes('الثالث الإعدادي')
+    ? '/courses/prep-3.jpg'
+    : gradeName.includes('الأول الثانوي')
+    ? '/courses/sec-1.jpg'
+    : '/courses/prep-1.jpg';
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-chalk font-arabic transition-colors duration-200 flex flex-col justify-between">
       <Navbar />
 
       <main className="flex-1 py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <span className="text-xs font-bold text-cyan-electric block mb-1">
-              مادة الرياضيات • م/ رضا خيرت
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
-              {gradeName}
-            </h1>
-          </div>
+        {/* Course Cover Hero Banner */}
+        <div className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-lg min-h-[220px] sm:min-h-[260px] flex flex-col justify-end p-6 sm:p-8">
+          <Image
+            src={curriculum?.coverImage || curriculum?.thumbnailPath || defaultGradeCover}
+            alt={gradeName}
+            fill
+            className="object-cover opacity-35"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
 
-          {/* Term Switcher */}
-          {curriculum?.terms && curriculum.terms.length > 0 && (
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm self-start md:self-auto">
-              {curriculum.terms.map((term, idx) => (
-                <button
-                  key={term.id}
-                  onClick={() => setSelectedTermIndex(idx)}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                    selectedTermIndex === idx
-                      ? 'bg-cyan-electric text-black shadow-cyan-glow'
-                      : 'text-slate-700 dark:text-chalk hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>{term.name}</span>
-                </button>
-              ))}
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-electric/20 border border-cyan-electric/40 text-cyan-electric text-xs font-black">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>كورس الرياضيات المتكامل • م/ رضا خيرت</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                {gradeName}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                {curriculum?.description || `محاضرات شرح فيديو عالية الجودة، مذكرات تدريبية، وامتحانات تفاعلية لمنهج ${gradeName}.`}
+              </p>
             </div>
-          )}
+
+            {/* Term Switcher */}
+            {curriculum?.terms && curriculum.terms.length > 0 && (
+              <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700 shadow-sm self-start md:self-auto shrink-0">
+                {curriculum.terms.map((term, idx) => (
+                  <button
+                    key={term.id}
+                    onClick={() => setSelectedTermIndex(idx)}
+                    className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                      selectedTermIndex === idx
+                        ? 'bg-cyan-electric text-black shadow-cyan-glow'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>{term.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Lessons List */}
@@ -215,12 +250,16 @@ export default function GradeCoursesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {termLessons.map((lesson, idx) => {
-              const canDirectPlay = isMatchingStudent || isAdmin || !lesson.isLocked;
+              const canDirectPlay = isAdmin || (hasActiveSub && isMatchingStudent);
 
               return (
                 <div
                   key={lesson.id}
-                  className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md hover:border-cyan-electric/40 transition-all flex flex-col justify-between"
+                  className={`rounded-3xl border overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
+                    canDirectPlay
+                      ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-cyan-electric/40'
+                      : 'bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800/80'
+                  }`}
                 >
                   {/* Thumbnail / Cover Image */}
                   <div className="relative w-full h-44 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-hidden">
@@ -245,15 +284,15 @@ export default function GradeCoursesPage() {
                           <CheckCircle2 className="w-3 h-3" />
                           <span>مكتمل</span>
                         </span>
-                      ) : !lesson.isLocked ? (
+                      ) : canDirectPlay ? (
                         <span className="px-2.5 py-1 rounded-xl bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm">
                           <Sparkles className="w-3 h-3" />
-                          <span>مجاني</span>
+                          <span>مفتوح للمشاهدة</span>
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-xl bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-xl bg-black/80 backdrop-blur-sm text-amber-400 text-[10px] font-bold flex items-center gap-1 border border-amber-500/30">
                           <Lock className="w-3 h-3 text-amber-400" />
-                          <span>للمشتركين</span>
+                          <span>يتطلب اشتراكاً 🔒</span>
                         </span>
                       )}
                     </div>
@@ -306,11 +345,11 @@ export default function GradeCoursesPage() {
                           className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all ${
                             canDirectPlay
                               ? 'bg-cyan-electric hover:bg-cyan-electric-hover text-black shadow-cyan-glow'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-chalk hover:bg-cyan-electric hover:text-black border border-slate-300 dark:border-slate-700'
                           }`}
                         >
-                          {canDirectPlay ? <Play className="w-3.5 h-3.5 fill-current" /> : <Lock className="w-3.5 h-3.5" />}
-                          <span>{canDirectPlay ? 'مشاهدة الدرس' : 'عرض الدرس'}</span>
+                          {canDirectPlay ? <Play className="w-3.5 h-3.5 fill-current" /> : <Lock className="w-3.5 h-3.5 text-amber-500" />}
+                          <span>{canDirectPlay ? 'مشاهدة الدرس' : 'اشترك لفتح الدرس'}</span>
                         </Link>
                       </div>
                     </div>

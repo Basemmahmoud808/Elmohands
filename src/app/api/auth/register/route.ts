@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { sanitizeInput } from '@/lib/security';
+import { sanitizeInput, checkIpRateLimit } from '@/lib/security';
 import {
   hashPassword,
   createAccessToken,
@@ -9,35 +9,42 @@ import {
   createSessionRecord,
 } from '@/lib/auth';
 
+import { RegisterSchema } from '@/lib/validations';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { fullName, phone, email, password, gradeId, parentEmail } = body;
-
-    // 1. Basic validation
-    if (!phone || !password || !fullName) {
+    // 0. IP Rate Limiting (Max 5 registration requests per minute per IP)
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.ip || '127.0.0.1';
+    const rateCheck = checkIpRateLimit(`register_${clientIp}`, 5, 60000);
+    if (!rateCheck.allowed) {
       return NextResponse.json(
-        { error: 'يرجى إدخال جميع البيانات المطلوبة (الاسم الكامل، رقم الهاتف، وكلمة المرور)' },
+        { error: `تم تجاوز الحد المسموح لمحاولات إنشاء الحسابات. يرجى الانتظار ${rateCheck.resetInSeconds} ثانية.` },
+        { status: 429 }
+      );
+    }
+
+    const rawBody = await req.json();
+
+    // Normalize Arabic numbers before schema parsing
+    if (typeof rawBody.phone === 'string') {
+      rawBody.phone = rawBody.phone.replace(/[٠-٩]/g, (d: string) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString()).replace(/\s+/g, '');
+    }
+    if (typeof rawBody.parentPhone === 'string') {
+      rawBody.parentPhone = rawBody.parentPhone.replace(/[٠-٩]/g, (d: string) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString()).replace(/\s+/g, '');
+    }
+
+    const parseResult = RegisterSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.issues[0]?.message || 'بيانات التسجيل غير صالحة';
+      return NextResponse.json(
+        { error: firstError },
         { status: 400 }
       );
     }
 
-    const cleanPhone = sanitizeInput(phone.trim());
-    if (cleanPhone.length < 10) {
-      return NextResponse.json(
-        { error: 'رقم الهاتف غير صحيح، يرجى كتابة رقم هاتف مصري صحيح (مثال: 01012345678)' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل' },
-        { status: 400 }
-      );
-    }
+    const { fullName, phone: cleanPhone, parentPhone: cleanParentPhone, email, password, gradeId, parentEmail } = parseResult.data;
 
     // 2. Check existing profile by phone
     const { data: existingUser } = await supabaseAdmin
@@ -62,6 +69,7 @@ export async function POST(req: NextRequest) {
       .insert({
         full_name: sanitizeInput(fullName.trim()),
         phone: cleanPhone,
+        parent_phone: cleanParentPhone,
         email: email ? email.trim().toLowerCase() : null,
         password_hash: hashedPassword,
         role: 'STUDENT',
@@ -74,9 +82,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (dbError || !newProfile) {
-      console.error('Error creating profile:', dbError);
+      console.error('Error creating profile in database:', dbError);
       return NextResponse.json(
-        { error: 'حدث خطأ أثناء حفظ الحساب في قاعدة البيانات: ' + (dbError?.message || 'خطأ غير معروف') },
+        { error: 'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى لاحقاً' },
         { status: 500 }
       );
     }

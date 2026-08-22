@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/actions/auth';
 import { ActionResult } from '@/lib/types/actions';
 import {
   StudentDashboardData,
+  StudentQuizItemDTO,
   AdminOverviewStatsDTO,
   AdminStudentDTO,
   CurriculumGradeDTO,
@@ -98,18 +99,9 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
           },
         };
       } else {
-        // Default 28-day active trial for verified enrolled accounts
         subscriptionData = {
-          hasActiveSubscription: true,
-          subscription: {
-            id: 'sub-active-default',
-            planId: 'p-1',
-            planName: 'اشتراك شهر (نشط)',
-            startsAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
-            daysRemaining: 28,
-            status: 'ACTIVE',
-          },
+          hasActiveSubscription: false,
+          subscription: null,
         };
       }
     } catch (e) {
@@ -170,6 +162,8 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
       isCompleted: boolean;
     }> = [];
 
+    const hasActiveSub = subscriptionData.hasActiveSubscription;
+
     curriculumTerms.forEach((t) => {
       t.branches.forEach((b) => {
         b.units.forEach((u) => {
@@ -179,6 +173,9 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
               l.watchPercentage = userProg.watch_percentage;
               l.isCompleted = userProg.is_completed;
               l.lastPosition = userProg.last_position;
+            }
+            if (!hasActiveSub) {
+              l.isLocked = l.isLocked !== false;
             }
             allLessonsFlat.push({
               id: l.id,
@@ -201,19 +198,13 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
       });
     });
 
-    // 6. Determine Continue Learning
-    let continueLearning = allLessonsFlat.find((l) => l.watchPercentage > 0 && !l.isCompleted) ||
-      allLessonsFlat.find((l) => !l.isCompleted) ||
-      allLessonsFlat[0] ||
-      null;
-
-    if (continueLearning && continueLearning.watchPercentage === 0) {
-      continueLearning = {
-        ...continueLearning,
-        watchPercentage: 68,
-        lastPosition: 1836,
-      };
-    }
+    // 6. Determine Continue Learning (only if active subscription)
+    const continueLearning = hasActiveSub
+      ? (allLessonsFlat.find((l) => l.watchPercentage > 0 && !l.isCompleted) ||
+         allLessonsFlat.find((l) => !l.isCompleted) ||
+         allLessonsFlat[0] ||
+         null)
+      : null;
 
     // 7. Fetch Recent Exam Results from Supabase
     let recentResults: StudentExamResultDTO[] = [];
@@ -257,136 +248,122 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
             submittedAt: att.submitted_at || new Date().toISOString(),
           };
         });
-      } else {
-        recentResults = [
-          {
-            attemptId: 'att-1',
-            quizId: 'quiz-1',
-            quizTitle: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية',
-            branchName: 'فرع الجبر والإحصاء',
-            attemptNumber: 1,
-            score: 28,
-            maxScore: 30,
-            percentage: 94,
-            passed: true,
-            submittedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-          },
-          {
-            attemptId: 'att-2',
-            quizId: 'quiz-2',
-            quizTitle: 'اختبار هندسة: المفاهيم الهندسية والتناظر',
-            branchName: 'فرع الهندسة والقياس',
-            attemptNumber: 1,
-            score: 38,
-            maxScore: 40,
-            percentage: 95,
-            passed: true,
-            submittedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-          },
-        ];
       }
     } catch (e) {
       console.warn('Error fetching exam attempts from Supabase:', e);
     }
 
     // 8. Available Quizzes List
-    const availableQuizzes = [
-      {
-        id: 'quiz-1',
-        lessonId: 'les-1',
-        lessonTitle: 'الدرس الأول: مجموعة الأعداد النسبية وخواصها',
-        branchName: 'فرع الجبر والإحصاء',
-        title: 'اختبار الوحدة الأولى: الجبر والأعداد النسبية',
-        description: 'اختبار شامل يحتوي على 15 سؤالاً تغطي مفاهيم الأعداد النسبية',
-        durationMinutes: 20,
-        passScore: 50,
-        maxAttempts: 3,
-        questionsCount: 15,
-        attemptsCount: 1,
-        bestScorePercentage: 94,
-        hasPassed: true,
-        isLocked: false,
-        type: 'mcq' as const,
-      },
-      {
-        id: 'quiz-2',
-        lessonId: 'les-4',
-        lessonTitle: 'الدرس الأول: المفاهيم والتعاريف الهندسية الأساسية',
-        branchName: 'فرع الهندسة والقياس',
-        title: 'اختبار هندسة: المفاهيم والإنشاءات الهندسية',
-        description: 'اختبار تطبيقي على مفاهيم العلاقات بين الزوايا والمستقيمات المتوازية',
-        durationMinutes: 25,
-        passScore: 50,
-        maxAttempts: 3,
-        questionsCount: 20,
-        attemptsCount: 1,
-        bestScorePercentage: 95,
-        hasPassed: true,
-        isLocked: false,
-        type: 'mcq' as const,
-      },
-      {
-        id: 'quiz-3',
-        lessonId: 'les-3',
-        lessonTitle: 'الدرس الأول: الحدود الجبرية والمقادير الجبرية',
-        branchName: 'ورقة امتحان من المدرس',
-        title: 'امتحان الجبر والهندسة المرفوع ورقيّاً (PDF / صورة)',
-        description: 'شيت امتحان شامل من إعداد م/ رضا خيرت بصيغة PDF للتدريب المنزلي',
-        durationMinutes: 45,
-        passScore: 50,
-        maxAttempts: 3,
-        questionsCount: 25,
-        attemptsCount: 0,
-        bestScorePercentage: null,
-        hasPassed: false,
-        isLocked: false,
-        pdfPath: '/sample-lesson-notes.pdf',
-        fileType: 'pdf',
-        type: 'file' as const,
-      },
-    ];
+    let availableQuizzes: StudentQuizItemDTO[] = [];
+    try {
+      const { data: dbQuizzes } = await supabaseAdmin
+        .from('quizzes')
+        .select(`
+          id, lesson_id, title, description, duration_minutes, pass_score, max_attempts, is_published, pdf_path, type,
+          lessons (title, units (branches (name))),
+          quiz_questions (id)
+        `)
+        .eq('is_published', true);
+
+      if (dbQuizzes && dbQuizzes.length > 0) {
+        availableQuizzes = (dbQuizzes as unknown as Array<{
+          id: string;
+          lesson_id: string;
+          title: string;
+          description?: string | null;
+          duration_minutes?: number | null;
+          pass_score?: number | null;
+          max_attempts?: number | null;
+          pdf_path?: string | null;
+          type?: 'mcq' | 'file' | null;
+          lessons?: {
+            title?: string | null;
+            units?: {
+              branches?: {
+                name?: string | null;
+              } | Array<{ name?: string | null }> | null;
+            } | Array<{ branches?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
+          } | null;
+          quiz_questions?: Array<{ id: string }> | null;
+        }>).map((q) => {
+          const lessonObj = q.lessons;
+          const unitObj = lessonObj?.units ? (Array.isArray(lessonObj.units) ? lessonObj.units[0] : lessonObj.units) : null;
+          const branchObj = unitObj?.branches ? (Array.isArray(unitObj.branches) ? unitObj.branches[0] : unitObj.branches) : null;
+          const qCount = Array.isArray(q.quiz_questions) ? q.quiz_questions.length : (q.pdf_path ? 1 : 0);
+
+          const studentAttempts = recentResults.filter((r) => r.quizId === q.id);
+          const hasPassed = studentAttempts.some((r) => r.passed);
+          const bestScore = studentAttempts.length > 0 ? Math.max(...studentAttempts.map((r) => r.percentage)) : null;
+
+          return {
+            id: q.id,
+            lessonId: q.lesson_id,
+            lessonTitle: lessonObj?.title || 'درس تعليمي',
+            branchName: branchObj?.name || 'مادة الرياضيات',
+            title: q.title,
+            description: q.description || '',
+            durationMinutes: q.duration_minutes || 30,
+            passScore: q.pass_score || 50,
+            maxAttempts: q.max_attempts || 3,
+            questionsCount: qCount,
+            attemptsCount: studentAttempts.length,
+            bestScorePercentage: bestScore,
+            hasPassed,
+            isLocked: false,
+            type: q.type || (q.pdf_path ? 'file' : 'mcq'),
+            pdfPath: q.pdf_path || undefined,
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching quizzes:', e);
+    }
 
     // 9. Stats Calculation
-    const totalLessonsInGrade = Math.max(allLessonsFlat.length, 24);
-    const completedLessonsCount = completedCount > 0 ? completedCount : 14;
+    const totalLessonsInGrade = allLessonsFlat.length;
+    const completedLessonsCount = completedCount;
+    const overallProgressPercentage = totalLessonsInGrade > 0
+      ? Math.round((completedLessonsCount / totalLessonsInGrade) * 100)
+      : 0;
+
+    const avgScore = recentResults.length > 0
+      ? Math.round(recentResults.reduce((acc, r) => acc + r.percentage, 0) / recentResults.length)
+      : 0;
+
+    const passedQuizzesCount = recentResults.filter((r) => r.passed).length;
+
     const progressSummary = {
       totalLessonsInGrade,
       completedLessonsCount,
-      overallProgressPercentage: Math.round((completedLessonsCount / totalLessonsInGrade) * 100),
-      averageQuizScorePercentage: 94,
-      totalWatchHours: Number((Math.max(totalWatchSec / 3600, 18.5)).toFixed(1)),
-      passedQuizzesCount: 8,
-      totalQuizzesCount: 8,
+      overallProgressPercentage,
+      averageQuizScorePercentage: avgScore,
+      totalWatchHours: Number((totalWatchSec / 3600).toFixed(1)),
+      passedQuizzesCount,
+      totalQuizzesCount: availableQuizzes.length,
     };
 
     // 10. Notifications Feed
-    const notifications = [
+    const notifications: StudentDashboardData['notifications'] = [
       {
         id: 'notif-1',
         type: 'ANNOUNCEMENT' as const,
-        title: 'مرحباً بك في منصة المهندس ',
+        title: 'مرحباً بك في منصة المهندس',
         description: `تم تجهيز خطة دراسية متكاملة لـ ${matchingGrade?.name || 'صفك الدراسي'} مع م/ رضا خيرت.`,
         createdAt: new Date().toISOString(),
         isRead: false,
       },
-      {
-        id: 'notif-2',
-        type: 'LESSON' as const,
-        title: 'تم نشر درس جديد: مقارنة وترتيب الأعداد النسبية',
-        description: 'فيديو الشرح عالي الجودة وملف التدريبات PDF أصبح متاحاً الآن.',
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        linkUrl: '/lessons/les-2',
-        isRead: false,
-      },
-      {
+    ];
+
+    if (subscriptionData.hasActiveSubscription && subscriptionData.subscription) {
+      notifications.push({
         id: 'notif-3',
         type: 'SUBSCRIPTION' as const,
-        title: `اشتراكك نشط — متبقي ${subscriptionData.subscription?.daysRemaining || 28} يوماً`,
+        title: `اشتراكك نشط — متبقي ${subscriptionData.subscription.daysRemaining} يوماً`,
         description: 'يمكنك شحن رصيدك وتمديد الاشتراك في أي وقت عبر قسم تفعيل كود الشحن.',
-        createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+        createdAt: new Date().toISOString(),
         isRead: true,
-      },
-    ];
+      });
+    }
 
     const dashboardData: StudentDashboardData = {
       profile,

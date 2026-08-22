@@ -75,6 +75,8 @@ export interface CurriculumUnitDTO {
   title: string;
   description?: string | null;
   sortOrder: number;
+  coverImage?: string | null;
+  thumbnailPath?: string | null;
   lessons: CurriculumLessonDTO[];
 }
 
@@ -100,6 +102,8 @@ export interface CurriculumGradeDTO {
   stage: string;
   description?: string | null;
   sortOrder: number;
+  coverImage?: string | null;
+  thumbnailPath?: string | null;
   terms: CurriculumTermDTO[];
 }
 
@@ -244,13 +248,19 @@ export interface QuestionItemDTO {
   questionLatex?: string | null;
   imageUrl?: string | null;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  questionType: 'MCQ' | 'TRUE_FALSE';
+  questionType: 'MCQ' | 'TRUE_FALSE' | 'FILE';
   options: QuestionOptionDTO[];
   correctAnswer: string;
   explanation?: string | null;
   createdBy?: string | null;
   createdAt?: string;
   branchName?: string;
+  gradeName?: string;
+  targetAudience?: 'ALL_STUDENTS' | 'SUBSCRIBERS_ONLY' | 'PUBLIC';
+  entryType?: 'QUESTION' | 'FILE';
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileType?: string | null;
 }
 
 export interface QuizDetailsDTO {
@@ -286,7 +296,7 @@ export interface LessonDetailsDTO {
   title: string;
   description: string;
   videoPath?: string | null;
-  parsedMedia: { type: 'video' | 'iframe'; src: string };
+  parsedMedia?: { type: 'video' | 'iframe'; src: string } | null;
   pdfPath?: string | null;
   thumbnailPath?: string | null;
   durationMinutes: number;

@@ -110,6 +110,7 @@ export default function StudentDashboard() {
             <div className="space-y-8 animate-in fade-in duration-200">
               <ContinueLearningCard
                 lesson={data.continueLearning}
+                hasActiveSubscription={data.subscription.hasActiveSubscription}
                 onOpenVideo={(title, url) => setActiveVideoModal({ title, url })}
               />
 
@@ -130,6 +131,7 @@ export default function StudentDashboard() {
               <EnrolledCoursesGrid
                 curriculum={data.curriculum}
                 gradeName={data.profile.gradeName || undefined}
+                hasActiveSubscription={data.subscription.hasActiveSubscription}
                 onOpenVideo={(title, url) => setActiveVideoModal({ title, url })}
                 onOpenPdf={(title, url) =>
                   setActiveExamFileModal({

@@ -5,6 +5,8 @@ import {
   createAccessToken,
   createRefreshToken,
   setAuthCookies,
+  createSessionRecord,
+  revokeSessionById,
 } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -57,9 +59,20 @@ export async function POST() {
     const newAccessToken = await createAccessToken(tokenPayload);
     const newRefreshToken = await createRefreshToken(tokenPayload);
 
+    // Rotate refresh token session in database
+    await revokeSessionById(activeSession.id);
+    await createSessionRecord(profile.id, newRefreshToken);
+
     await setAuthCookies(newAccessToken, newRefreshToken);
 
-    return NextResponse.json({ success: true, accessToken: newAccessToken });
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: profile.id,
+        fullName: profile.full_name,
+        role: profile.role,
+      },
+    });
   } catch (error) {
     console.error('Refresh API error:', error);
     return NextResponse.json({ error: 'فشل تجديد الجلسة' }, { status: 500 });

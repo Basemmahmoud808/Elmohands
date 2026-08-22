@@ -3,8 +3,13 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from './supabase/admin';
 
-const JWT_SECRET_RAW = process.env.JWT_SECRET || 'almohands-platform-secure-jwt-secret-key-2026-math-reda-kheyrat';
-const REFRESH_SECRET_RAW = process.env.REFRESH_TOKEN_SECRET || 'almohands-platform-secure-refresh-token-secret-2026';
+
+const JWT_SECRET_RAW = process.env.JWT_SECRET;
+const REFRESH_SECRET_RAW = process.env.REFRESH_TOKEN_SECRET;
+
+if (!JWT_SECRET_RAW) throw new Error('FATAL: JWT_SECRET environment variable is not set. Cannot start without it.');
+if (!REFRESH_SECRET_RAW) throw new Error('FATAL: REFRESH_TOKEN_SECRET environment variable is not set. Cannot start without it.');
+
 
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW);
 const REFRESH_SECRET = new TextEncoder().encode(REFRESH_SECRET_RAW);
@@ -86,7 +91,7 @@ export async function setAuthCookies(accessToken: string, refreshToken: string) 
   cookieStore.set('auth_token', accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
     maxAge: 30 * 60, // 30 minutes
   });
@@ -94,7 +99,7 @@ export async function setAuthCookies(accessToken: string, refreshToken: string) 
   cookieStore.set('refresh_token', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   });
@@ -166,6 +171,20 @@ export async function createSessionRecord(
   } catch (e) {
     console.error('Session record exception:', e);
     return null;
+  }
+}
+
+/**
+ * Revoke specific session by ID
+ */
+export async function revokeSessionById(sessionId: string) {
+  try {
+    await supabaseAdmin
+      .from('sessions')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('id', sessionId);
+  } catch (e) {
+    console.error('Revoke session error:', e);
   }
 }
 

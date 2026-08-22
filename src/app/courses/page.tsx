@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
+import { getFullCurriculumTreeAction } from '@/lib/actions/courses';
+import { CurriculumGradeDTO } from '@/lib/types/dashboard';
 import {
   BookOpen,
   GraduationCap,
@@ -15,94 +18,158 @@ import {
   Layers,
   Award,
   Search,
+  Video,
+  FileText,
+  HelpCircle,
 } from 'lucide-react';
 
-interface GradeCardData {
+interface GradeCardView {
   id: string;
   name: string;
-  stage: 'إعدادي' | 'ثانوي';
+  stage: string;
   badge: string;
   description: string;
   branches: string[];
   terms: string[];
   lessonsCount: number;
-  totalHours: number;
-  quizzesCount: number;
-  highlight: string;
+  totalMinutes: number;
+  coverImage?: string | null;
 }
 
-const GRADES_DATA: GradeCardData[] = [
+const DEFAULT_GRADE_CATALOG: GradeCardView[] = [
   {
     id: 'g-prep-1',
     name: 'الصف الأول الإعدادي',
     stage: 'إعدادي',
     badge: '1 إعدادي',
-    description: 'تأسيس متين في الأعداد النسبية، الحدود والمقادير الجبرية، والمفاهيم الهندسية الأساسية والتطابق.',
+    description: 'كورس الرياضيات المتكامل: الأعداد النسبية، الجبر، الإحصاء، والمفاهيم الهندسية الأساسية والتطابق.',
     branches: ['فرع الجبر والإحصاء', 'فرع الهندسة والقياس'],
     terms: ['الترم الأول', 'الترم الثاني'],
-    lessonsCount: 16,
-    totalHours: 12,
-    quizzesCount: 8,
-    highlight: 'شامل التمارين التطبيقية والامتحانات الشهرية',
+    lessonsCount: 0,
+    totalMinutes: 0,
+    coverImage: '/courses/prep-1.jpg',
   },
   {
     id: 'g-prep-2',
     name: 'الصف الثاني الإعدادي',
     stage: 'إعدادي',
     badge: '2 إعدادي',
-    description: 'التحليل الجبري الكامل، العمليات على الجذور، نظريات المثلث متساوي الساقين والتشابه.',
+    description: 'كورس الرياضيات المتكامل: التحليل الجبري الكامل، العمليات على الجذور، نظريات المثلث والتشابه.',
     branches: ['فرع الجبر والإحصاء', 'فرع الهندسة والقياس'],
     terms: ['الترم الأول', 'الترم الثاني'],
-    lessonsCount: 18,
-    totalHours: 15,
-    quizzesCount: 10,
-    highlight: 'تمارين مستويات عليا وأفكار امتحانات المحافظات',
+    lessonsCount: 0,
+    totalMinutes: 0,
+    coverImage: '/courses/prep-2.jpg',
   },
   {
     id: 'g-prep-3',
     name: 'الصف الثالث الإعدادي',
     stage: 'إعدادي',
     badge: '3 إعدادي • الشهادة',
-    description: 'سنة الشهادة الإعدادية: حاصل الضرب الديكارتي، النسب والتناسب، الدائرة والزوايا، وحساب المثلثات.',
+    description: 'كورس الشهادة الإعدادية: حاصل الضرب الديكارتي، النسب والتناسب، الدائرة والزوايا، وحساب المثلثات.',
     branches: ['فرع الجبر والإحصاء', 'فرع الهندسة وحساب المثلثات'],
     terms: ['الترم الأول', 'الترم الثاني'],
-    lessonsCount: 22,
-    totalHours: 18,
-    quizzesCount: 14,
-    highlight: 'مراجعات نهائية مكثفة وتوقعات ليلة الامتحان',
+    lessonsCount: 0,
+    totalMinutes: 0,
+    coverImage: '/courses/prep-3.jpg',
   },
   {
     id: 'g-sec-1',
     name: 'الصف الأول الثانوي',
     stage: 'ثانوي',
     badge: '1 ثانوي',
-    description: 'الانتقال للمرحلة الثانوية: الأعداد المركبة، المصفوفات، المتجهات، وحساب المثلثات المتقدم.',
-    branches: ['فرع الجبر والأعداد المركبة', 'فرع الهندسة المستوية والتحليلية', 'فرع حساب المثلثات'],
+    description: 'كورس المرحلة الثانوية: الأعداد المركبة، المصفوفات، المتجهات، وحساب المثلثات المتقدم بنظام التابلت الحديث.',
+    branches: ['فرع الجبر والأعداد المركبة', 'فرع الهندسة التحليلية', 'فرع حساب المثلثات'],
     terms: ['الترم الأول', 'الترم الثاني'],
-    lessonsCount: 24,
-    totalHours: 20,
-    quizzesCount: 16,
-    highlight: 'نظام التابلت الحديث وأسئلة الفهم والتطبيق',
+    lessonsCount: 0,
+    totalMinutes: 0,
+    coverImage: '/courses/sec-1.jpg',
   },
 ];
 
 export default function CoursesCatalogPage() {
   const [user, setUser] = useState<UserSession | null>(null);
+  const [gradesList, setGradesList] = useState<GradeCardView[]>(DEFAULT_GRADE_CATALOG);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStage, setSelectedStage] = useState<'ALL' | 'إعدادي' | 'ثانوي'>('ALL');
 
   useEffect(() => {
-    async function loadUser() {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      setLoading(false);
+    async function loadData() {
+      try {
+        const [currentUser, treeRes] = await Promise.all([
+          getCurrentUser(),
+          getFullCurriculumTreeAction(),
+        ]);
+        setUser(currentUser);
+
+        if (treeRes.success && treeRes.data && treeRes.data.length > 0) {
+          const mapped: GradeCardView[] = treeRes.data.map((g: CurriculumGradeDTO) => {
+            const allTerms = g.terms || [];
+            const termNames = allTerms.map((t) => t.name);
+            const branchNames = Array.from(
+              new Set(allTerms.flatMap((t) => (t.branches || []).map((b) => b.name)))
+            );
+
+            let lessonsCnt = 0;
+            let totMin = 0;
+            allTerms.forEach((t) => {
+              (t.branches || []).forEach((b) => {
+                (b.units || []).forEach((u) => {
+                  (u.lessons || []).forEach((l) => {
+                    lessonsCnt++;
+                    totMin += l.durationMinutes || 45;
+                  });
+                });
+              });
+            });
+
+            const badge = g.name.includes('الأول الإعدادي')
+              ? '1 إعدادي'
+              : g.name.includes('الثاني الإعدادي')
+              ? '2 إعدادي'
+              : g.name.includes('الثالث الإعدادي')
+              ? '3 إعدادي • الشهادة'
+              : g.name.includes('الأول الثانوي')
+              ? '1 ثانوي'
+              : g.stage || 'عام';
+
+            const defaultCover = g.name.includes('الأول الإعدادي')
+              ? '/courses/prep-1.jpg'
+              : g.name.includes('الثاني الإعدادي')
+              ? '/courses/prep-2.jpg'
+              : g.name.includes('الثالث الإعدادي')
+              ? '/courses/prep-3.jpg'
+              : g.name.includes('الأول الثانوي')
+              ? '/courses/sec-1.jpg'
+              : '/courses/prep-1.jpg';
+
+            return {
+              id: g.id,
+              name: g.name,
+              stage: g.stage || (g.name.includes('ثانوي') ? 'ثانوي' : 'إعدادي'),
+              badge,
+              description: g.description || `شرح مبسط وتدريبات شاملة لمنهج ${g.name} مع م/ رضا خيرت`,
+              branches: branchNames.length > 0 ? branchNames : ['فرع الجبر والإحصاء', 'فرع الهندسة'],
+              terms: termNames.length > 0 ? termNames : ['الترم الأول', 'الترم الثاني'],
+              lessonsCount: lessonsCnt,
+              totalMinutes: totMin,
+              coverImage: g.coverImage || g.thumbnailPath || defaultCover,
+            };
+          });
+          setGradesList(mapped);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
     }
-    loadUser();
+    loadData();
   }, []);
 
-  const filteredGrades = GRADES_DATA.filter((g) => {
-    const matchesStage = selectedStage === 'ALL' || g.stage === selectedStage;
+  const filteredGrades = gradesList.filter((g) => {
+    const matchesStage = selectedStage === 'ALL' || g.stage.includes(selectedStage);
     const matchesQuery =
       !searchQuery.trim() ||
       g.name.includes(searchQuery.trim()) ||
@@ -235,44 +302,52 @@ export default function CoursesCatalogPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredGrades.map((grade) => {
             const isUserGrade = user && user.gradeName === grade.name;
+            const hoursCount = Math.round((grade.totalMinutes / 60) * 10) / 10;
 
             return (
               <div
                 key={grade.id}
-                className={`rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border transition-all duration-300 flex flex-col justify-between space-y-6 group hover:border-cyan-electric/50 hover:shadow-md shadow-sm ${
+                className={`rounded-3xl p-5 sm:p-6 bg-white dark:bg-slate-900 border transition-all duration-300 flex flex-col justify-between space-y-5 group hover:border-cyan-electric/50 hover:shadow-lg shadow-sm ${
                   isUserGrade ? 'border-cyan-electric ring-1 ring-cyan-electric/40 shadow-cyan-glow' : 'border-slate-200 dark:border-slate-800'
                 }`}
               >
-                {/* Top Badge & Stage */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-xl bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30 text-xs font-black">
-                      {grade.badge}
-                    </span>
-                    <span className="text-xs text-slate-500 dark:text-chalk-muted font-bold">المرحلة الـ{grade.stage}ة</span>
+                {/* Course Cover Image Banner */}
+                <div className="relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800/80">
+                  <Image
+                    src={grade.coverImage || '/teacher_reda_kheyrat.jpg'}
+                    alt={grade.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-between p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="px-3 py-1 rounded-xl bg-cyan-electric text-black font-black text-xs shadow-cyan-glow">
+                        {grade.badge}
+                      </span>
+                      {isUserGrade && (
+                        <span className="px-3 py-1 rounded-xl bg-emerald-500 text-black text-xs font-black flex items-center gap-1 shadow-md">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          صفك المسجل
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] font-bold text-cyan-electric">منهج الرياضيات • م/ رضا خيرت</span>
+                      <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
+                        {grade.name}
+                      </h3>
+                    </div>
                   </div>
-
-                  {isUserGrade && (
-                    <span className="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      صفك المسجل
-                    </span>
-                  )}
                 </div>
 
-                {/* Grade Title & Description */}
-                <div className="space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk group-hover:text-cyan-electric transition-colors">
-                    {grade.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed">
-                    {grade.description}
-                  </p>
-                </div>
+                {/* Grade Description */}
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted leading-relaxed">
+                  {grade.description}
+                </p>
 
                 {/* Branches List */}
                 <div className="space-y-2">
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الفروع المقررة:</span>
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الفروع والمقررات:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {grade.branches.map((b, idx) => (
                       <span
@@ -285,19 +360,19 @@ export default function CoursesCatalogPage() {
                   </div>
                 </div>
 
-                {/* Stats Row */}
-                <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 dark:border-slate-800 text-center">
+                {/* Real Stats Row */}
+                <div className="grid grid-cols-2 gap-2 py-3 border-y border-slate-100 dark:border-slate-800 text-center">
                   <div>
-                    <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-chalk">{grade.lessonsCount} درس</p>
-                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">شرح وتدريبات</p>
+                    <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-chalk">
+                      {grade.lessonsCount > 0 ? `${grade.lessonsCount} درس` : 'دروس المنهج'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">شرح ومذكرات PDF</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm font-black text-cyan-electric">{grade.totalHours} ساعة</p>
-                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">محتوى تفاعلي</p>
-                  </div>
-                  <div>
-                    <p className="text-xs sm:text-sm font-black text-emerald-500">{grade.quizzesCount} امتحان</p>
-                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">تقييم مستمر</p>
+                    <p className="text-xs sm:text-sm font-black text-cyan-electric">
+                      {grade.terms.length} أترام دراسية
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-chalk-muted font-semibold">محتوى تفاعلي متكامل</p>
                   </div>
                 </div>
 

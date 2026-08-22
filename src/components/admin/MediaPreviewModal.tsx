@@ -3,6 +3,8 @@
 import React from 'react';
 import { X, PlayCircle, FileText, Download } from 'lucide-react';
 
+import { parseMediaUrlHelper } from '@/lib/utils';
+
 interface MediaPreviewModalProps {
   media: {
     type: 'video' | 'pdf' | 'exam';
@@ -16,12 +18,7 @@ interface MediaPreviewModalProps {
 export function MediaPreviewModal({ media, onClose }: MediaPreviewModalProps) {
   if (!media) return null;
 
-  const isEmbed =
-    media.url.includes('youtube.com') ||
-    media.url.includes('youtu.be') ||
-    media.url.includes('vimeo.com') ||
-    media.url.includes('drive.google.com') ||
-    media.url.includes('b-cdn.net');
+  const parsed = media.type === 'video' ? parseMediaUrlHelper(media.url) : null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
@@ -57,19 +54,19 @@ export function MediaPreviewModal({ media, onClose }: MediaPreviewModalProps) {
 
         {/* Content Area */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex items-center justify-center bg-black/40">
-          {media.type === 'video' ? (
+          {media.type === 'video' && parsed ? (
             <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-lg">
-              {isEmbed ? (
+              {parsed.type === 'iframe' ? (
                 <iframe
-                  src={media.url}
+                  src={parsed.src}
                   title={media.title}
                   className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   allowFullScreen
                 />
               ) : (
                 <video
-                  src={media.url}
+                  src={parsed.src}
                   controls
                   autoPlay
                   className="w-full h-full object-contain"

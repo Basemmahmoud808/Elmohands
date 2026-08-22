@@ -124,12 +124,6 @@ interface DbQuestionRaw {
   created_at?: string | null;
 }
 
-// Fallback in-memory default questions
-const FALLBACK_QUESTIONS: QuestionItemDTO[] = [];
-
-// Fallback in-memory quizzes
-const FALLBACK_QUIZZES: QuizDetailsDTO[] = [];
-
 /**
  * Fetches all quizzes for Admin overview and builder.
  */
@@ -143,7 +137,7 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
     const { data, error } = await supabaseAdmin
       .from('quizzes')
       .select(`
-        id, title, description, duration_minutes, pass_score, max_attempts, is_published, created_at, lesson_id,
+        id, title, description, duration_minutes, pass_score, max_attempts, is_published, created_at, lesson_id, pdf_path, type,
         lessons (
           title, unit_id,
           units (
@@ -155,7 +149,8 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
               )
             )
           )
-        )
+        ),
+        quiz_questions (id)
       `)
       .order('created_at', { ascending: false });
 
@@ -169,6 +164,9 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
       is_published?: boolean | null;
       created_at?: string | null;
       lesson_id: string;
+      pdf_path?: string | null;
+      type?: 'mcq' | 'file' | null;
+      quiz_questions?: Array<{ id: string }> | null;
       lessons?: {
         title?: string | null;
         unit_id?: string | null;
@@ -233,7 +231,7 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
     }
 
     if (error || !data || data.length === 0) {
-      return { success: true, data: FALLBACK_QUIZZES };
+      return { success: true, data: [] };
     }
 
     const typedQuizzes = data as unknown as DbAdminQuizRow[];
@@ -243,6 +241,7 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
       const branchObj = unitObj?.branches ? (Array.isArray(unitObj.branches) ? unitObj.branches[0] : unitObj.branches) : null;
       const termObj = branchObj?.terms ? (Array.isArray(branchObj.terms) ? branchObj.terms[0] : branchObj.terms) : null;
       const gradeObj = termObj?.grades ? (Array.isArray(termObj.grades) ? termObj.grades[0] : termObj.grades) : null;
+      const qCount = Array.isArray(q.quiz_questions) ? q.quiz_questions.length : (q.pdf_path ? 1 : 0);
 
       return {
         id: q.id,
@@ -256,7 +255,9 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
         passScore: q.pass_score || 50,
         maxAttempts: q.max_attempts || 3,
         isPublished: q.is_published !== false,
-        questionsCount: 5,
+        questionsCount: qCount,
+        pdfPath: q.pdf_path || null,
+        type: q.type || (q.pdf_path ? 'file' : 'mcq'),
         createdAt: q.created_at || new Date().toISOString(),
       };
     });
@@ -264,7 +265,7 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
     return { success: true, data: quizzes };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل جلب الاختبارات';
-    return { success: true, data: FALLBACK_QUIZZES, message: msg };
+    return { success: true, data: [], message: msg };
   }
 }
 
@@ -299,7 +300,7 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
         .select(`
           id, title, description, duration_minutes, pass_score, max_attempts, lesson_id,
           lessons (
-            title, unit_id,
+            title, unit_id, is_locked,
             units (
               title,
               branches (
@@ -341,19 +342,7 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
     }
 
     if (!quizMeta) {
-      const fb = FALLBACK_QUIZZES.find((q) => q.id === quizId) || FALLBACK_QUIZZES[0];
-      quizMeta = {
-        id: fb.id,
-        lessonId: fb.lessonId,
-        lessonTitle: fb.lessonTitle || 'الدرس الأول',
-        branchName: fb.branchName || 'فرع الجبر والإحصاء',
-        gradeName: fb.gradeName || 'الصف الأول الإعدادي',
-        title: fb.title,
-        description: fb.description,
-        durationMinutes: fb.durationMinutes,
-        passScore: fb.passScore,
-        maxAttempts: fb.maxAttempts,
-      };
+      return { success: false, error: 'لم يتم العثور على هذا الاختبار في قاعدة البيانات.' };
     }
 
     // 2. Server-side subscription & grade verification (for non-admin students)
@@ -370,13 +359,6 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
         .maybeSingle();
 
       const hasActiveSub = Boolean(subData);
-
-      if (!hasActiveSub) {
-        return {
-          success: false,
-          error: 'عفواً، هذا الاختبار متاح فقط للمشتركين النشطين في المنصة. يرجى تفعيل اشتراكك أولاً.',
-        };
-      }
 
       // Check grade match if both user grade and quiz grade are defined
       if (user.gradeId && quizMeta.gradeId && user.gradeId !== quizMeta.gradeId) {
@@ -474,16 +456,7 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
     }
 
     if (questionsForStudent.length === 0) {
-      questionsForStudent = FALLBACK_QUESTIONS.map((q) => ({
-        id: q.id,
-        questionText: q.questionText,
-        questionLatex: q.questionLatex,
-        imageUrl: q.imageUrl,
-        difficulty: q.difficulty,
-        questionType: q.questionType,
-        options: q.options,
-        branchName: q.branchName,
-      }));
+      return { success: false, error: 'لا توجد أسئلة مضافة لهذا الاختبار بعد.' };
     }
 
     const attemptsRemaining = Math.max(0, quizMeta.maxAttempts - attemptNumber + 1);
@@ -564,6 +537,8 @@ export async function createQuizAction(input: CreateQuizInput): Promise<ActionRe
           pass_score: newQuiz.passScore,
           max_attempts: newQuiz.maxAttempts,
           is_published: newQuiz.isPublished,
+          pdf_path: newQuiz.pdfPath,
+          type: newQuiz.type,
         })
         .select('id')
         .single();
@@ -593,7 +568,6 @@ export async function createQuizAction(input: CreateQuizInput): Promise<ActionRe
       console.warn('DB quiz insert exception:', e);
     }
 
-    FALLBACK_QUIZZES.unshift(newQuiz);
     return { success: true, data: newQuiz, message: 'تم إنشاء الاختبار وربطه بالدرس بنجاح ' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل إنشاء الاختبار';
@@ -622,6 +596,8 @@ export async function updateQuizAction(
     if (input.passScore !== undefined) updates.pass_score = input.passScore;
     if (input.maxAttempts !== undefined) updates.max_attempts = input.maxAttempts;
     if (input.isPublished !== undefined) updates.is_published = input.isPublished;
+    if (input.pdfPath !== undefined) updates.pdf_path = input.pdfPath;
+    if (input.type !== undefined) updates.type = input.type;
 
     try {
       await supabaseAdmin.from('quizzes').update(updates).eq('id', quizId);
@@ -650,35 +626,17 @@ export async function updateQuizAction(
       console.warn('DB quiz update exception:', e);
     }
 
-    const idx = FALLBACK_QUIZZES.findIndex((q) => q.id === quizId);
-    let updatedQuiz: QuizDetailsDTO;
-    if (idx !== -1) {
-      FALLBACK_QUIZZES[idx] = {
-        ...FALLBACK_QUIZZES[idx],
-        title: input.title !== undefined ? input.title : FALLBACK_QUIZZES[idx].title,
-        description: input.description !== undefined ? input.description : FALLBACK_QUIZZES[idx].description,
-        lessonId: input.lessonId !== undefined ? input.lessonId : FALLBACK_QUIZZES[idx].lessonId,
-        durationMinutes: input.durationMinutes !== undefined ? input.durationMinutes : FALLBACK_QUIZZES[idx].durationMinutes,
-        passScore: input.passScore !== undefined ? input.passScore : FALLBACK_QUIZZES[idx].passScore,
-        maxAttempts: input.maxAttempts !== undefined ? input.maxAttempts : FALLBACK_QUIZZES[idx].maxAttempts,
-        isPublished: input.isPublished !== undefined ? input.isPublished : FALLBACK_QUIZZES[idx].isPublished,
-        questionsCount: input.questionIds !== undefined ? input.questionIds.length : FALLBACK_QUIZZES[idx].questionsCount,
-      };
-      updatedQuiz = FALLBACK_QUIZZES[idx];
-    } else {
-      updatedQuiz = {
-        id: quizId,
-        lessonId: input.lessonId || 'les-1',
-        title: input.title || 'اختبار محدث',
-        durationMinutes: input.durationMinutes || 20,
-        passScore: input.passScore || 50,
-        maxAttempts: input.maxAttempts || 3,
-        isPublished: input.isPublished !== false,
-        questionsCount: input.questionIds?.length || 4,
-        createdAt: new Date().toISOString(),
-      };
-      FALLBACK_QUIZZES.unshift(updatedQuiz);
-    }
+    const updatedQuiz: QuizDetailsDTO = {
+      id: quizId,
+      lessonId: input.lessonId || '',
+      title: input.title || 'اختبار محدث',
+      durationMinutes: input.durationMinutes || 20,
+      passScore: input.passScore || 50,
+      maxAttempts: input.maxAttempts || 3,
+      isPublished: input.isPublished !== false,
+      questionsCount: input.questionIds?.length || 0,
+      createdAt: new Date().toISOString(),
+    };
 
     return { success: true, data: updatedQuiz, message: 'تم تحديث بيانات الاختبار بنجاح ' };
   } catch (err: unknown) {
@@ -698,9 +656,6 @@ export async function deleteQuizAction(quizId: string): Promise<ActionResult<{ d
     }
 
     await supabaseAdmin.from('quizzes').delete().eq('id', quizId);
-
-    const idx = FALLBACK_QUIZZES.findIndex((q) => q.id === quizId);
-    if (idx !== -1) FALLBACK_QUIZZES.splice(idx, 1);
 
     await supabaseAdmin.from('audit_logs').insert({
       user_id: user.id,
@@ -804,8 +759,13 @@ export async function submitQuizAttemptAction(
     }
 
     if (questionsForGrading.length === 0) {
-      questionsForGrading = FALLBACK_QUESTIONS;
+      return {
+        success: false,
+        error: 'لا توجد أسئلة مسجلة لهذا الاختبار لتصحيحها.',
+      };
     }
+
+    const isLastAttempt = attemptNumber >= maxAttempts;
 
     for (const q of questionsForGrading) {
       const studentAns = input.answers.find((a) => a.questionId === q.id);
@@ -819,9 +779,10 @@ export async function submitQuizAttemptAction(
         questionLatex: q.questionLatex,
         imageUrl: q.imageUrl,
         selectedAnswer: selected,
-        correctAnswer: q.correctAnswer,
+        // Only reveal the correct answer on the student's final attempt to prevent answer harvesting
+        correctAnswer: isLastAttempt ? q.correctAnswer : (isCorrect ? q.correctAnswer : ''),
         isCorrect,
-        explanation: q.explanation,
+        explanation: isLastAttempt ? q.explanation : null,
       });
     }
 

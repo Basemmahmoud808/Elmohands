@@ -58,7 +58,6 @@ export interface LessonItem {
   createdAt: string;
 }
 
-const FALLBACK_LESSONS: LessonItem[] = [];
 
 type DbLessonRelation = {
   id: string;
@@ -177,12 +176,10 @@ export async function checkLessonAccessAction(
       isLocked = Boolean(dbLesson.is_locked);
       lessonTitle = dbLesson.title;
     } else {
-      const fb = FALLBACK_LESSONS.find((l) => l.id === lessonId);
-      if (fb) {
-        lessonGradeName = fb.gradeName;
-        isLocked = Boolean(fb.isLocked);
-        lessonTitle = fb.title;
-      }
+      return {
+        success: false,
+        error: 'الدرس غير موجود في قاعدة البيانات',
+      };
     }
 
     // 2. If user is ADMIN -> Full Access
@@ -389,41 +386,7 @@ export async function getLessonDetailsAction(
         quizzes,
       };
     } else {
-      // Fallback
-      const fb = FALLBACK_LESSONS.find((l) => l.id === lessonId) || FALLBACK_LESSONS[0];
-      rawVideoPath = fb.videoPath || '';
-      lessonDto = {
-        id: fb.id,
-        unitId: fb.unitId,
-        unitTitle: fb.unitTitle,
-        branchId: 'b-1',
-        branchName: fb.branchName,
-        termId: 't-1',
-        termName: 'الترم الأول',
-        gradeId: 'g-prep-1',
-        gradeName: fb.gradeName,
-        stage: 'إعدادي',
-        title: fb.title,
-        description: fb.description,
-        videoPath: fb.videoPath,
-        pdfPath: fb.pdfPath,
-        thumbnailPath: fb.thumbnailPath,
-        durationMinutes: fb.durationMinutes,
-        sortOrder: fb.sequenceOrder || 1,
-        isPublished: true,
-        isLocked: fb.isLocked || false,
-        minPassScore: 50,
-        quizzes: [
-          {
-            id: `quiz-${fb.id}`,
-            title: `اختبار سريع على: ${fb.title}`,
-            description: 'اختبر فهمك للدرس مع أسئلة اختيار من متعدد وتقييم فوري',
-            durationMinutes: 15,
-            passScore: 50,
-            maxAttempts: 3,
-          },
-        ],
-      };
+      return { success: false, error: 'لم يتم العثور على الدرس في قاعدة البيانات.' };
     }
 
     // Parse media
@@ -452,6 +415,8 @@ export async function getLessonDetailsAction(
       }
     }
 
+    const hasAccess = accessData?.allowed ?? true;
+
     const fullDetails: LessonDetailsDTO = {
       id: lessonDto.id || lessonId,
       unitId: lessonDto.unitId || '',
@@ -465,9 +430,10 @@ export async function getLessonDetailsAction(
       stage: lessonDto.stage || 'إعدادي',
       title: lessonDto.title || 'درس الرياضيات',
       description: lessonDto.description || '',
-      videoPath: lessonDto.videoPath || null,
-      parsedMedia,
-      pdfPath: lessonDto.pdfPath || null,
+      // Strip sensitive media URLs if student does not have authorized access
+      videoPath: hasAccess ? (lessonDto.videoPath || null) : null,
+      parsedMedia: hasAccess ? parsedMedia : null,
+      pdfPath: hasAccess ? (lessonDto.pdfPath || null) : null,
       thumbnailPath: lessonDto.thumbnailPath || '/teacher_reda_kheyrat.jpg',
       durationMinutes: lessonDto.durationMinutes || 45,
       sortOrder: lessonDto.sortOrder || 1,
@@ -476,7 +442,7 @@ export async function getLessonDetailsAction(
       minPassScore: lessonDto.minPassScore || 50,
       quizzes: lessonDto.quizzes || [],
       studentProgress,
-      hasAccess: accessData?.allowed ?? true,
+      hasAccess,
       accessReason: accessData?.reason,
       requiresSubscription: accessData?.requiresSubscription,
       gradeMismatch: accessData?.gradeMismatch,
@@ -678,10 +644,7 @@ export async function getLessonsList(gradeName?: string): Promise<LessonItem[]> 
       .order('sort_order', { ascending: true });
 
     if (error || !dbLessons || dbLessons.length === 0) {
-      if (gradeName) {
-        return FALLBACK_LESSONS.filter((l) => l.gradeName === gradeName);
-      }
-      return FALLBACK_LESSONS;
+      return [];
     }
 
     const lessons: LessonItem[] = (dbLessons as unknown as DbLessonRelation[]).map((l) => {
@@ -711,7 +674,7 @@ export async function getLessonsList(gradeName?: string): Promise<LessonItem[]> 
     }
     return lessons;
   } catch {
-    return FALLBACK_LESSONS;
+    return [];
   }
 }
 
@@ -739,7 +702,7 @@ export async function getLessonById(id: string): Promise<LessonItem | null> {
       .maybeSingle();
 
     if (error || !dbLesson) {
-      return FALLBACK_LESSONS.find((l) => l.id === id) || FALLBACK_LESSONS[0];
+      return null;
     }
 
     const hierarchy = extractLessonHierarchy(dbLesson as unknown as DbLessonRelation);
@@ -763,7 +726,7 @@ export async function getLessonById(id: string): Promise<LessonItem | null> {
       createdAt: dbLesson.created_at || new Date().toISOString(),
     };
   } catch {
-    return FALLBACK_LESSONS.find((l) => l.id === id) || FALLBACK_LESSONS[0];
+    return null;
   }
 }
 
