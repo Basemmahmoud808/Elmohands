@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CurriculumGradeDTO, CurriculumLessonDTO } from '@/lib/types/dashboard';
-import { createLessonAction, deleteLessonAction, toggleLessonPublishAction } from '@/lib/actions/courses';
+import { createLessonAction, createUnitAction, deleteLessonAction, toggleLessonPublishAction } from '@/lib/actions/courses';
 import { updateLessonAction, LessonItem } from '@/lib/actions/lessons';
 import { uploadRealFileWithProgress } from '@/lib/supabase/storage';
 import { UploadProgressBar } from './UploadProgressBar';
@@ -24,6 +24,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 
 interface LessonsManagementTabProps {
@@ -44,6 +45,8 @@ export function LessonsManagementTab({
   const [selectedTermId, setSelectedTermId] = useState(curriculum[0]?.terms[0]?.id || '');
   const [selectedBranchId, setSelectedBranchId] = useState(curriculum[0]?.terms[0]?.branches[0]?.id || '');
   const [selectedUnitId, setSelectedUnitId] = useState(curriculum[0]?.terms[0]?.branches[0]?.units[0]?.id || '');
+  const [quickUnitTitle, setQuickUnitTitle] = useState('');
+  const [quickUnitLoading, setQuickUnitLoading] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(45);
   const [sortOrder, setSortOrder] = useState(1);
   const [isLocked, setIsLocked] = useState(false);
@@ -108,9 +111,66 @@ export function LessonsManagementTab({
     });
   });
 
+  const handleQuickCreateUnit = async () => {
+    if (!quickUnitTitle.trim()) {
+      setFeedbackMsg({ success: false, text: 'يرجى كتابة عنوان للوحدة أولاً' });
+      return;
+    }
+    setQuickUnitLoading(true);
+    try {
+      const res = await createUnitAction({
+        branchId: selectedBranchId || currentBranch?.id || '',
+        title: quickUnitTitle.trim(),
+      });
+      if (res.success && res.data) {
+        setSelectedUnitId(res.data);
+        setQuickUnitTitle('');
+        setFeedbackMsg({ success: true, text: 'تم إنشاء الوحدة بنجاح! يمكنك الآن نشر الدرس.' });
+        if (onRefresh) onRefresh();
+      } else {
+        const errText = !res.success ? res.error : 'فشل إنشاء الوحدة';
+        setFeedbackMsg({ success: false, text: errText || 'فشل إنشاء الوحدة' });
+      }
+    } catch {
+      setFeedbackMsg({ success: false, text: 'حدث خطأ أثناء إنشاء الوحدة' });
+    } finally {
+      setQuickUnitLoading(false);
+    }
+  };
+
   const handleLessonSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !selectedUnitId) return;
+    if (!title.trim()) {
+      setFeedbackMsg({ success: false, text: 'يرجى كتابة عنوان الدرس أولاً' });
+      return;
+    }
+
+    let targetUnitId = selectedUnitId;
+    if (!targetUnitId && units.length > 0) {
+      targetUnitId = units[0].id;
+    }
+
+    if (!targetUnitId) {
+      if (quickUnitTitle.trim()) {
+        const uRes = await createUnitAction({
+          branchId: selectedBranchId || currentBranch?.id || '',
+          title: quickUnitTitle.trim(),
+        });
+        if (uRes.success && uRes.data) {
+          targetUnitId = uRes.data;
+        } else {
+          const uErr = !uRes.success ? uRes.error : 'يرجى إنشاء وحدة دراسية أولاً للدرس';
+          setFeedbackMsg({ success: false, text: uErr || 'يرجى إنشاء وحدة دراسية أولاً للدرس' });
+          return;
+        }
+      } else {
+        setFeedbackMsg({
+          success: false,
+          text: 'لا توجد وحدات دراسية مسجلة في هذا الفرع. يرجى كتابة اسم وحدة جديدة لإنشائها أولاً.',
+        });
+        return;
+      }
+    }
 
     setFeedbackMsg(null);
     setUploadProgress(10);
@@ -343,18 +403,45 @@ export function LessonsManagementTab({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-slate-800 dark:text-chalk block">الوحدة الدراسية:</label>
-              <select
-                value={selectedUnitId}
-                onChange={(e) => setSelectedUnitId(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
-              >
-                {units.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.title}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between">
+                <label className="text-slate-800 dark:text-chalk block">الوحدة الدراسية:</label>
+                {units.length === 0 && (
+                  <span className="text-[10px] text-amber-500 font-bold">
+                    (لا توجد وحدات - أنشئ واحدة)
+                  </span>
+                )}
+              </div>
+              {units.length === 0 ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    placeholder="اكتب اسم الوحدة الجديدة..."
+                    value={quickUnitTitle}
+                    onChange={(e) => setQuickUnitTitle(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-amber-500/50 text-slate-900 dark:text-chalk text-xs focus:outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuickCreateUnit}
+                    disabled={quickUnitLoading}
+                    className="px-3 h-11 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-black text-xs shrink-0 flex items-center gap-1"
+                  >
+                    {quickUnitLoading ? '...' : 'إنشاء'}
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={selectedUnitId}
+                  onChange={(e) => setSelectedUnitId(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
+                >
+                  {units.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.title}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

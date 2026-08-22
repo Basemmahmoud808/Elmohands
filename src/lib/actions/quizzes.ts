@@ -526,11 +526,14 @@ export async function createQuizAction(input: CreateQuizInput): Promise<ActionRe
       createdAt: new Date().toISOString(),
     };
 
+    const isValidUuid = (id?: string | null) =>
+      Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+
     try {
       const { data, error } = await supabaseAdmin
         .from('quizzes')
         .insert({
-          lesson_id: input.lessonId,
+          lesson_id: isValidUuid(input.lessonId) ? input.lessonId : null,
           title: newQuiz.title,
           description: newQuiz.description,
           duration_minutes: newQuiz.durationMinutes,

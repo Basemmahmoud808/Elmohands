@@ -215,10 +215,21 @@ export async function createUnitAction(input: CreateUnitInput): Promise<ActionRe
       return { success: false, error: 'غير مصرح بإضافة وحدات دراسية' };
     }
 
+    const isValidUuid = (id?: string | null) =>
+      Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+
+    let finalBranchId = input.branchId;
+    if (!isValidUuid(finalBranchId)) {
+      const { data: bData } = await supabaseAdmin.from('branches').select('id').limit(1).maybeSingle();
+      if (bData && isValidUuid(bData.id)) {
+        finalBranchId = bData.id;
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('units')
       .insert({
-        branch_id: input.branchId,
+        branch_id: isValidUuid(finalBranchId) ? finalBranchId : null,
         title: input.title.trim(),
         description: input.description?.trim() || null,
         sort_order: input.sortOrder || 0,
@@ -227,10 +238,9 @@ export async function createUnitAction(input: CreateUnitInput): Promise<ActionRe
       .select('id')
       .single();
 
-    if (error) {
-      console.warn('DB createUnit error:', error.message);
-      const fallbackId = `u-${Date.now()}`;
-      return { success: true, data: fallbackId, message: 'تم إنشاء الوحدة بنجاح' };
+    if (error || !data) {
+      console.warn('DB createUnit error:', error?.message);
+      return { success: false, error: error?.message || 'فشل حفظ الوحدة في قاعدة البيانات' };
     }
 
     await supabaseAdmin.from('audit_logs').insert({
@@ -258,11 +268,22 @@ export async function createLessonAction(input: CreateLessonInput): Promise<Acti
       return { success: false, error: 'غير مصرح بإضافة دروس' };
     }
 
+    const isValidUuid = (id?: string | null) =>
+      Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+
+    let finalUnitId = input.unitId;
+    if (!isValidUuid(finalUnitId)) {
+      const { data: uData } = await supabaseAdmin.from('units').select('id').limit(1).maybeSingle();
+      if (uData && isValidUuid(uData.id)) {
+        finalUnitId = uData.id;
+      }
+    }
+
     const parsedMedia = await parseMediaUrl(input.videoPath || '');
 
     const newLessonObj: CurriculumLessonDTO = {
       id: `les-${Date.now()}`,
-      unitId: input.unitId,
+      unitId: finalUnitId,
       title: input.title.trim(),
       description: input.description?.trim() || '',
       videoPath: parsedMedia.src,
@@ -278,39 +299,38 @@ export async function createLessonAction(input: CreateLessonInput): Promise<Acti
       lastPosition: 0,
     };
 
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('lessons')
-        .insert({
-          unit_id: input.unitId,
-          title: newLessonObj.title,
-          description: newLessonObj.description,
-          video_path: newLessonObj.videoPath,
-          pdf_path: newLessonObj.pdfPath,
-          thumbnail_path: newLessonObj.thumbnailPath,
-          duration: newLessonObj.durationMinutes,
-          sort_order: newLessonObj.sortOrder,
-          is_published: newLessonObj.isPublished,
-          is_locked: newLessonObj.isLocked,
-          min_pass_score: newLessonObj.minPassScore,
-        })
-        .select('id')
-        .single();
+    const { data, error } = await supabaseAdmin
+      .from('lessons')
+      .insert({
+        unit_id: isValidUuid(finalUnitId) ? finalUnitId : null,
+        title: newLessonObj.title,
+        description: newLessonObj.description,
+        video_path: newLessonObj.videoPath,
+        pdf_path: newLessonObj.pdfPath,
+        thumbnail_path: newLessonObj.thumbnailPath,
+        duration: newLessonObj.durationMinutes,
+        sort_order: newLessonObj.sortOrder,
+        is_published: newLessonObj.isPublished,
+        is_locked: newLessonObj.isLocked,
+        min_pass_score: newLessonObj.minPassScore,
+      })
+      .select('id')
+      .single();
 
-      if (data) {
-        newLessonObj.id = data.id;
-
-        await supabaseAdmin.from('audit_logs').insert({
-          user_id: user.id,
-          action: 'LESSON_CREATED',
-          entity_type: 'lessons',
-          entity_id: data.id,
-          metadata: { title: newLessonObj.title, unitId: input.unitId },
-        });
-      }
-    } catch (e) {
-      console.warn('DB lesson insert exception:', e);
+    if (error || !data) {
+      console.warn('DB lesson insert error:', error?.message);
+      return { success: false, error: error?.message || 'فشل حفظ الدرس في قاعدة البيانات' };
     }
+
+    newLessonObj.id = data.id;
+
+    await supabaseAdmin.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'LESSON_CREATED',
+      entity_type: 'lessons',
+      entity_id: data.id,
+      metadata: { title: newLessonObj.title, unitId: finalUnitId },
+    });
 
     return { success: true, data: newLessonObj, message: 'تم رفع ونشر الدرس بنجاح ' };
   } catch (err: unknown) {

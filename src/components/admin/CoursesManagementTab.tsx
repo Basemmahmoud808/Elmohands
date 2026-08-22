@@ -26,6 +26,8 @@ import {
   Lock,
   Unlock,
   ChevronLeft,
+  X,
+  AlertCircle,
 } from 'lucide-react';
 
 interface CoursesManagementTabProps {
@@ -86,10 +88,26 @@ export function CoursesManagementTab({
 
   // Unit creation modal
   const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
-  const [selectedBranchId, setSelectedBranchId] = useState('');
+  const [unitModalGradeId, setUnitModalGradeId] = useState('');
+  const [unitModalTermId, setUnitModalTermId] = useState('');
+  const [unitModalBranchId, setUnitModalBranchId] = useState('');
   const [newUnitTitle, setNewUnitTitle] = useState('');
   const [newUnitDesc, setNewUnitDesc] = useState('');
   const [unitLoading, setUnitLoading] = useState(false);
+  const [unitFeedbackMsg, setUnitFeedbackMsg] = useState<{ success: boolean; text: string } | null>(null);
+
+  const openAddUnitModal = () => {
+    setUnitFeedbackMsg(null);
+    setNewUnitTitle('');
+    setNewUnitDesc('');
+    const targetGrade = selectedGrade;
+    setUnitModalGradeId(targetGrade.id);
+    const targetTerm = targetGrade.terms[0];
+    setUnitModalTermId(targetTerm?.id || '');
+    const targetBranch = targetTerm?.branches[0];
+    setUnitModalBranchId(targetBranch?.id || '');
+    setIsAddUnitOpen(true);
+  };
 
   // KaTeX
   const renderMath = (latex: string) => {
@@ -309,22 +327,32 @@ export function CoursesManagementTab({
 
   const handleCreateUnit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUnitTitle.trim() || !selectedBranchId) return;
+    if (!newUnitTitle.trim()) {
+      setUnitFeedbackMsg({ success: false, text: 'يرجى إدخال عنوان الوحدة' });
+      return;
+    }
 
     setUnitLoading(true);
+    setUnitFeedbackMsg(null);
     try {
       const res = await createUnitAction({
-        branchId: selectedBranchId,
+        branchId: unitModalBranchId,
         title: newUnitTitle.trim(),
         description: newUnitDesc.trim() || undefined,
       });
 
       if (res.success) {
-        setIsAddUnitOpen(false);
-        if (onRefresh) onRefresh();
+        setUnitFeedbackMsg({ success: true, text: 'تم إنشاء الوحدة بنجاح!' });
+        setTimeout(() => {
+          setIsAddUnitOpen(false);
+          if (onRefresh) onRefresh();
+        }, 800);
+      } else {
+        const errText = !res.success ? res.error : 'فشل إنشاء الوحدة';
+        setUnitFeedbackMsg({ success: false, text: errText || 'فشل إنشاء الوحدة' });
       }
     } catch {
-      // ignore
+      setUnitFeedbackMsg({ success: false, text: 'حدث خطأ أثناء حفظ الوحدة' });
     } finally {
       setUnitLoading(false);
     }
@@ -430,7 +458,14 @@ export function CoursesManagementTab({
             </span>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              onClick={openAddUnitModal}
+              className="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs shadow-lg transition-all flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              <span>إضافة وحدة جديدة</span>
+            </button>
             <button
               onClick={() => onNavigateTab && onNavigateTab('lessons')}
               className="px-4 py-2.5 rounded-2xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs shadow-cyan-glow transition-all flex items-center gap-1.5"
@@ -844,10 +879,102 @@ export function CoursesManagementTab({
       {isAddUnitOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="chalk-card rounded-3xl p-6 sm:p-8 bg-slate-900 border border-cyan-electric/30 w-full max-w-md space-y-5 animate-in zoom-in-95 duration-200 shadow-2xl">
-            <h3 className="text-base font-black text-chalk">
-              إضافة وحدة دراسية جديدة
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black text-chalk">
+                إضافة وحدة دراسية جديدة
+              </h3>
+              <button
+                onClick={() => setIsAddUnitOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {unitFeedbackMsg && (
+              <div
+                className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                  unitFeedbackMsg.success
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                }`}
+              >
+                {unitFeedbackMsg.success ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                )}
+                <span>{unitFeedbackMsg.text}</span>
+              </div>
+            )}
+
             <form onSubmit={handleCreateUnit} className="space-y-4 text-xs font-bold">
+              <div className="space-y-1.5">
+                <label className="text-chalk block">الصف الدراسي:</label>
+                <select
+                  value={unitModalGradeId}
+                  onChange={(e) => {
+                    const gid = e.target.value;
+                    setUnitModalGradeId(gid);
+                    const g = curriculum.find((x) => x.id === gid) || selectedGrade;
+                    const t = g?.terms[0];
+                    setUnitModalTermId(t?.id || '');
+                    const b = t?.branches[0];
+                    setUnitModalBranchId(b?.id || '');
+                  }}
+                  className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk focus:outline-none focus:border-cyan-electric"
+                >
+                  {DEFAULT_GRADES.map((dg) => (
+                    <option key={dg.id} value={dg.id}>
+                      {dg.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <label className="text-chalk block">الترم:</label>
+                  <select
+                    value={unitModalTermId}
+                    onChange={(e) => {
+                      const tid = e.target.value;
+                      setUnitModalTermId(tid);
+                      const g = curriculum.find((x) => x.id === unitModalGradeId) || selectedGrade;
+                      const t = g?.terms.find((x) => x.id === tid);
+                      const b = t?.branches[0];
+                      setUnitModalBranchId(b?.id || '');
+                    }}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk focus:outline-none focus:border-cyan-electric"
+                  >
+                    {terms.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-chalk block">الفرع:</label>
+                  <select
+                    value={unitModalBranchId}
+                    onChange={(e) => setUnitModalBranchId(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-950 border border-slate-800 text-chalk focus:outline-none focus:border-cyan-electric"
+                  >
+                    {(
+                      terms.find((t) => t.id === unitModalTermId)?.branches ||
+                      terms[0]?.branches ||
+                      []
+                    ).map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-chalk block">عنوان الوحدة:</label>
                 <input

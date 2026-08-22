@@ -187,10 +187,6 @@ export function QuizBuilderTab({
       setErrorMsg('يرجى كتابة عنوان الشيت / الاختبار');
       return;
     }
-    if (!selectedLessonId) {
-      setErrorMsg('يرجى اختيار الدرس المرتبط بالشيت');
-      return;
-    }
 
     if (examMode === 'mcq' && selectedQuestionIds.length === 0) {
       setErrorMsg('يرجى اختيار سؤال واحد على الأقل من بنك الأسئلة في النمط الإلكتروني');
@@ -450,14 +446,15 @@ export function QuizBuilderTab({
 
               {/* Linked Lesson */}
               <div className="sm:col-span-6 space-y-1.5">
-                <label className="text-slate-800 dark:text-chalk block">الدرس والمرحلة المرتبطة به:</label>
+                <label className="text-slate-800 dark:text-chalk block">
+                  الدرس المرتبط <span className="text-slate-400 font-normal">(اختياري):</span>
+                </label>
                 <select
-                  required
                   value={selectedLessonId}
                   onChange={(e) => setSelectedLessonId(e.target.value)}
                   className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
                 >
-                  <option value="">-- اختر الدرس المرتبط --</option>
+                  <option value="">-- اختبار عام (بدون ربط بدرس محدد) --</option>
                   {allLessons.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.gradeName} • {l.branchName} • {l.title}
