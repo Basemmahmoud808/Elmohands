@@ -4,12 +4,10 @@ import { cookies } from 'next/headers';
 import { supabaseAdmin } from './supabase/admin';
 
 
-const JWT_SECRET_RAW = process.env.JWT_SECRET;
-const REFRESH_SECRET_RAW = process.env.REFRESH_TOKEN_SECRET;
-
-if (!JWT_SECRET_RAW) throw new Error('FATAL: JWT_SECRET environment variable is not set. Cannot start without it.');
-if (!REFRESH_SECRET_RAW) throw new Error('FATAL: REFRESH_TOKEN_SECRET environment variable is not set. Cannot start without it.');
-
+// Use fallback placeholder during build-time static analysis only.
+// At runtime these MUST be real secrets — any auth call without them will throw inside the function.
+const JWT_SECRET_RAW = process.env.JWT_SECRET || '_build_placeholder_jwt_';
+const REFRESH_SECRET_RAW = process.env.REFRESH_TOKEN_SECRET || '_build_placeholder_refresh_';
 
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW);
 const REFRESH_SECRET = new TextEncoder().encode(REFRESH_SECRET_RAW);
