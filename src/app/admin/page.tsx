@@ -41,6 +41,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [adminName, setAdminName] = useState('المهندس');
 
   // Consolidated Data State
   const initialAdminStats: AdminOverviewStatsDTO = {
@@ -79,6 +80,7 @@ export default function AdminDashboard() {
         router.push('/student');
         return;
       }
+      setAdminName(user.fullName || 'المهندس');
 
       const [
         statsRes,
@@ -159,7 +161,7 @@ export default function AdminDashboard() {
       <div className="flex min-h-screen w-full font-arabic">
         <DashboardSidebar
           role="ADMIN"
-          userFullName="م/ رضا خيرت"
+          userFullName={adminName}
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
         />

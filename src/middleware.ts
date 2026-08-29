@@ -94,7 +94,7 @@ export async function middleware(request: NextRequest) {
       "media-src 'self' blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co https://*.supabase.io wss://*.supabase.co",
-      "frame-src 'none'",
+      "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com https://iframe.mediadelivery.net https://docs.google.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
