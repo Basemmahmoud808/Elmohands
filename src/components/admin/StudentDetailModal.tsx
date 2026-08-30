@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   User,
@@ -15,8 +15,10 @@ import {
   GraduationCap,
   MessageCircle,
   Clock,
+  Loader2,
 } from 'lucide-react';
 import { AdminStudentDTO } from '@/lib/types/dashboard';
+import { grantStudentSubscriptionAction, cancelStudentSubscriptionAction } from '@/lib/actions/admin';
 
 interface StudentDetailModalProps {
   student: AdminStudentDTO | null;
@@ -25,10 +27,56 @@ interface StudentDetailModalProps {
 }
 
 export function StudentDetailModal({ student, onClose, onToggleStatus }: StudentDetailModalProps) {
+  const [subLoading, setSubLoading] = useState(false);
+  const [subSuccessMsg, setSubSuccessMsg] = useState('');
+
   if (!student) return null;
 
   const studentCleanPhone = student.phone.replace(/^0/, '');
   const parentCleanPhone = student.parentPhone ? student.parentPhone.replace(/^0/, '') : '';
+
+  const handleGrantSubscription = async (days: number, name: string) => {
+    setSubLoading(true);
+    setSubSuccessMsg('');
+    try {
+      const res = await grantStudentSubscriptionAction(student.id, days, name);
+      if (res.success) {
+        student.hasActiveSubscription = true;
+        student.subscriptionPlanName = name;
+        student.daysRemaining = days;
+        student.isActive = true;
+        setSubSuccessMsg(res.message || `تم تفعيل ${name} بنجاح!`);
+        setTimeout(() => setSubSuccessMsg(''), 4000);
+      } else {
+        alert(res.error || 'فشل تفعيل الاشتراك');
+      }
+    } catch {
+      alert('حدث خطأ أثناء تفعيل الاشتراك');
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('هل أنت متأكد من رغبتك في إلغاء اشتراك هذا الطالب؟')) return;
+    setSubLoading(true);
+    try {
+      const res = await cancelStudentSubscriptionAction(student.id);
+      if (res.success) {
+        student.hasActiveSubscription = false;
+        student.subscriptionPlanName = 'غير مشترك';
+        student.daysRemaining = 0;
+        setSubSuccessMsg('تم إلغاء الاشتراك بنجاح');
+        setTimeout(() => setSubSuccessMsg(''), 4000);
+      } else {
+        alert(res.error || 'فشل إلغاء الاشتراك');
+      }
+    } catch {
+      alert('حدث خطأ أثناء إلغاء الاشتراك');
+    } finally {
+      setSubLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-4 font-arabic" dir="rtl">
@@ -106,9 +154,21 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
               </div>
             </div>
 
-            {/* Subscription Card */}
+            {/* Subscription Card & Quick Grant Controls */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-3">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">الاشتراك والوصول</span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">الاشتراك والوصول</span>
+                {student.hasActiveSubscription && (
+                  <button
+                    disabled={subLoading}
+                    onClick={handleCancelSubscription}
+                    className="text-[11px] font-bold text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:underline transition-colors disabled:opacity-50"
+                  >
+                    إلغاء الاشتراك
+                  </button>
+                )}
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-cyan-600 dark:text-cyan-electric shrink-0" />
@@ -124,6 +184,41 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
                     حساب مجاني
                   </span>
+                )}
+              </div>
+
+              {/* Direct Grant Buttons */}
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-electric block">
+                  ⚡ تفعيل اشتراك فوري (بعد تأكيد تحويل واتساب):
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    disabled={subLoading}
+                    onClick={() => handleGrantSubscription(30, 'اشتراك شهر')}
+                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-electric border border-cyan-500/30 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                  >
+                    <span>شهر (30يوم)</span>
+                  </button>
+                  <button
+                    disabled={subLoading}
+                    onClick={() => handleGrantSubscription(120, 'اشتراك ترم كامل')}
+                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                  >
+                    <span>ترم (120يوم)</span>
+                  </button>
+                  <button
+                    disabled={subLoading}
+                    onClick={() => handleGrantSubscription(365, 'اشتراك عام دراسي')}
+                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-500/30 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                  >
+                    <span>سنة (365يوم)</span>
+                  </button>
+                </div>
+                {subSuccessMsg && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in">
+                    {subSuccessMsg}
+                  </p>
                 )}
               </div>
             </div>

@@ -10,9 +10,9 @@ import { ContinueLearningCard } from '@/components/student/ContinueLearningCard'
 import { StudentStatsGrid } from '@/components/student/StudentStatsGrid';
 import { EnrolledCoursesGrid } from '@/components/student/EnrolledCoursesGrid';
 import { QuickAccessCards } from '@/components/student/QuickAccessCards';
-import { VoucherActivationCard } from '@/components/student/VoucherActivationCard';
-import { NotificationCenter } from '@/components/student/NotificationCenter';
+import { StudentSubscriptionPaymentCard } from '@/components/student/StudentSubscriptionPaymentCard';
 import { StudentResultsTable } from '@/components/student/StudentResultsTable';
+import { NotificationCenter } from '@/components/student/NotificationCenter';
 import { ExamViewerModal } from '@/components/student/modals/ExamViewerModal';
 import { QuizSolveModal } from '@/components/student/modals/QuizSolveModal';
 import { VideoPreviewModal } from '@/components/student/modals/VideoPreviewModal';
@@ -235,10 +235,13 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* TAB 5: ACTIVATE VOUCHER (تفعيل كود شحن) */}
-          {selectedTab === 'activate-code' && (
+          {/* TAB 5: SUBSCRIBE & PAYMENT INSTRUCTIONS */}
+          {(selectedTab === 'subscribe' || selectedTab === 'activate-code') && (
             <div className="animate-in fade-in duration-200">
-              <VoucherActivationCard onVoucherRedeemed={handleVoucherRedeemed} />
+              <StudentSubscriptionPaymentCard
+                profile={data.profile}
+                subscription={data.subscription}
+              />
             </div>
           )}
 

@@ -57,11 +57,11 @@ export function AdminOverviewTab({ stats, onSelectTab }: AdminOverviewTabProps) 
       tab: 'quizzes',
     },
     {
-      title: 'أكواد الشحن المتاحة',
-      value: stats.unusedVouchers,
-      subtitle: 'كود جاهز للتوزيع',
-      icon: KeyRound,
-      tab: 'vouchers',
+      title: 'إدارة وتفعيل الاشتراكات',
+      value: stats.activeSubscriptions,
+      subtitle: 'مراجعة وتفعيل اشتراكات الطلاب',
+      icon: CreditCard,
+      tab: 'subscriptions',
     },
   ];
 
@@ -87,11 +87,11 @@ export function AdminOverviewTab({ stats, onSelectTab }: AdminOverviewTabProps) 
             <span>إضافة درس</span>
           </button>
           <button
-            onClick={() => onSelectTab('vouchers')}
+            onClick={() => onSelectTab('students')}
             className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all flex items-center gap-1.5"
           >
-            <KeyRound className="w-4 h-4 text-cyan-500" />
-            <span>توليد أكواد</span>
+            <Users className="w-4 h-4 text-cyan-500" />
+            <span>إدارة وتفعيل الطلاب</span>
           </button>
         </div>
       </div>

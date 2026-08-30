@@ -1,21 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Lock,
   ShieldAlert,
-  Sparkles,
-  KeyRound,
   ArrowRight,
   MessageCircle,
   LogIn,
   UserPlus,
-  CheckCircle2,
-  AlertCircle,
 } from 'lucide-react';
-import { redeemVoucherCode } from '@/lib/actions/vouchers';
 
 interface LessonLockedCardProps {
   lessonTitle: string;
@@ -39,46 +34,6 @@ export function LessonLockedCard({
   onActivated,
 }: LessonLockedCardProps) {
   const router = useRouter();
-  const [voucherCode, setVoucherCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState<{ success: boolean; text: string } | null>(null);
-
-  const handleActivate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!voucherCode.trim()) return;
-
-    setLoading(true);
-    setMsg(null);
-
-    try {
-      const res = await redeemVoucherCode(voucherCode.trim());
-      if (res.success) {
-        setMsg({
-          success: true,
-          text: res.message || 'تم تفعيل الاشتراك بنجاح! جاري فتح الدرس...',
-        });
-        setTimeout(() => {
-          if (onActivated) {
-            onActivated();
-          } else {
-            router.refresh();
-          }
-        }, 1200);
-      } else {
-        setMsg({
-          success: false,
-          text: res.message || 'كود الشحن غير صالح أو تم استخدامه مسبقاً',
-        });
-      }
-    } catch {
-      setMsg({
-        success: false,
-        text: 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة لاحقاً',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="max-w-2xl mx-auto w-full p-6 sm:p-8 rounded-3xl bg-slate-900/90 border-2 border-amber-500/30 backdrop-blur-2xl shadow-2xl space-y-6 text-center">
@@ -127,61 +82,35 @@ export function LessonLockedCard({
       )}
 
       {/* Case 2: Unsubscribed Student -> Quick Voucher Activation */}
+      {/* Case 2: Logged-in student needs subscription */}
       {!gradeMismatch && !isGuest && (
-        <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-4 text-right">
-          <div className="flex items-center gap-2 text-xs font-bold text-cyan-electric">
-            <KeyRound className="w-4 h-4" />
-            <span>تفعيل فوري بكود الشحن:</span>
+        <div className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-4 text-center">
+          <div className="space-y-1">
+            <h4 className="text-sm font-black text-chalk">
+              هذه المحاضرة مخصصة للطلاب المشتركين فقط
+            </h4>
+            <p className="text-xs text-slate-400">
+              يمكنك الاشتراك بسهولة عبر فودافون كاش أو إنستاباي والتفعيل الفوري عبر واتساب
+            </p>
           </div>
 
-          <form onSubmit={handleActivate} className="flex flex-col sm:flex-row gap-2.5">
-            <input
-              type="text"
-              value={voucherCode}
-              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-              placeholder="اكتب كود الشحن هنا (مثال: ALM-MONTH-XXXX)"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-chalk text-xs font-mono focus:border-cyan-electric focus:outline-none placeholder:text-slate-500 text-center uppercase"
-            />
-            <button
-              type="submit"
-              disabled={loading || !voucherCode.trim()}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-cyan-glow transition-all disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>تفعيل الكود</span>
-                </>
-              )}
-            </button>
-          </form>
-
-          {msg && (
-            <div
-              className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
-                msg.success
-                  ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
-                  : 'bg-red-pen/15 border border-red-pen/30 text-red-pen'
-              }`}
-            >
-              {msg.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
-              <span>{msg.text}</span>
-            </div>
-          )}
-
-          <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs text-chalk-muted">
-            <span>ليس لديك كود شحن؟</span>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <a
-              href="https://wa.me/201008901896"
+              href={`https://wa.me/201008901896?text=${encodeURIComponent(`السلام عليكم يا مستر رضا، أود الاشتراك في المنصة لمشاهدة درس: (${lessonTitle}). ما هي باقات الاشتراك المتاحة؟`)}`}
               target="_blank"
               rel="noreferrer"
-              className="text-emerald-400 font-bold hover:underline flex items-center gap-1"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span>شراء كود تفعيل عبر واتساب</span>
+              <MessageCircle className="w-4 h-4" />
+              <span>تواصل للاشتراك عبر واتساب 💬</span>
             </a>
+
+            <Link
+              href="/student"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-chalk font-bold text-xs flex items-center justify-center gap-2 transition-all"
+            >
+              <span>معرفة تفاصيل وباقات الاشتراك</span>
+            </Link>
           </div>
         </div>
       )}

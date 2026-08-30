@@ -56,13 +56,12 @@ export function DashboardSidebar({
   // Admin options
   const adminOptions: SidebarOption[] = [
     { id: 'dashboard', title: 'لوحة التحكم', icon: LayoutDashboard },
-    { id: 'students', title: 'إدارة الطلاب', icon: Users },
+    { id: 'students', title: 'إدارة الطلاب والاشتراكات', icon: Users },
+    { id: 'subscriptions', title: 'الاشتراكات الفعالة', icon: CreditCard },
     { id: 'courses', title: 'المناهج والصفوف', icon: BookOpen },
     { id: 'lessons', title: 'إدارة الدروس', icon: Video },
     { id: 'questions', title: 'بنك الأسئلة', icon: FileQuestion },
     { id: 'quizzes', title: 'الاختبارات والامتحانات', icon: HelpCircle },
-    { id: 'vouchers', title: 'أكواد الشحن', icon: KeyRound },
-    { id: 'subscriptions', title: 'الاشتراكات الفعالة', icon: CreditCard },
     { id: 'account', title: 'حسابي والشخصية', icon: User },
     { id: 'audit', title: 'سجل الأحداث', icon: History },
   ];
@@ -73,7 +72,7 @@ export function DashboardSidebar({
     { id: 'my-courses', title: 'مناهجي والدروس', icon: BookOpen },
     { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle },
     { id: 'my-results', title: 'نتائجي وتقييماتي', icon: AwardIcon },
-    { id: 'activate-code', title: 'تفعيل كود شحن', icon: KeyRound },
+    { id: 'subscribe', title: 'الاشتراك وتفعيل الحساب', icon: CreditCard },
     { id: 'account', title: 'حسابي الشخصي', icon: User },
   ];
 

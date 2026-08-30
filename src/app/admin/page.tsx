@@ -8,7 +8,6 @@ import { getCurrentUser } from '@/lib/actions/auth';
 import {
   AdminOverviewStatsDTO,
   AdminStudentDTO,
-  AdminVoucherDTO,
   AdminSubscriptionDTO,
   AdminAuditLogDTO,
   CurriculumGradeDTO,
@@ -22,14 +21,12 @@ import {
   getAdminSubscriptionsListAction,
 } from '@/lib/actions/admin';
 import { getFullCurriculumTreeAction } from '@/lib/actions/courses';
-import { getAdminVouchersListAction } from '@/lib/actions/vouchers';
 import { getAdminQuizzesListAction } from '@/lib/actions/quizzes';
 import { getQuestionsListAction } from '@/lib/actions/questions';
 import { AdminOverviewTab } from '@/components/admin/AdminOverviewTab';
 import { StudentsManagementTab } from '@/components/admin/StudentsManagementTab';
 import { CoursesManagementTab } from '@/components/admin/CoursesManagementTab';
 import { LessonsManagementTab } from '@/components/admin/LessonsManagementTab';
-import { VouchersManagementTab } from '@/components/admin/VouchersManagementTab';
 import { QuestionBankTab } from '@/components/admin/QuestionBankTab';
 import { QuizBuilderTab } from '@/components/admin/QuizBuilderTab';
 import { SubscriptionsTab } from '@/components/admin/SubscriptionsTab';
@@ -56,7 +53,6 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminOverviewStatsDTO>(initialAdminStats);
   const [students, setStudents] = useState<AdminStudentDTO[]>([]);
   const [curriculum, setCurriculum] = useState<CurriculumGradeDTO[]>([]);
-  const [vouchers, setVouchers] = useState<AdminVoucherDTO[]>([]);
   const [questions, setQuestions] = useState<QuestionItemDTO[]>([]);
   const [quizzes, setQuizzes] = useState<QuizDetailsDTO[]>([]);
   const [subscriptions, setSubscriptions] = useState<AdminSubscriptionDTO[]>([]);
@@ -72,11 +68,7 @@ export default function AdminDashboard() {
   const loadAllAdminData = async () => {
     try {
       const user = await getCurrentUser();
-      if (!user) {
-        router.push('/sign-in');
-        return;
-      }
-      if (user.role !== 'ADMIN') {
+      if (!user || user.role !== 'ADMIN') {
         router.push('/student');
         return;
       }
@@ -86,7 +78,6 @@ export default function AdminDashboard() {
         statsRes,
         studentsRes,
         curriculumRes,
-        vouchersRes,
         questionsRes,
         quizzesRes,
         subsRes,
@@ -95,7 +86,6 @@ export default function AdminDashboard() {
         getAdminOverviewStatsAction(),
         getAdminStudentsListAction(),
         getFullCurriculumTreeAction(),
-        getAdminVouchersListAction(),
         getQuestionsListAction(),
         getAdminQuizzesListAction(),
         getAdminSubscriptionsListAction(),
@@ -111,14 +101,13 @@ export default function AdminDashboard() {
           totalLessons: 0,
           totalQuestions: questionsRes.data?.length || 0,
           totalQuizzes: quizzesRes.data?.length || 0,
-          unusedVouchers: vouchersRes.data?.filter((v) => v.status === 'UNUSED').length || 0,
+          unusedVouchers: 0,
           recentAuditLogs: logsRes.data || [],
         });
       }
 
       if (studentsRes.success && studentsRes.data) setStudents(studentsRes.data);
       if (curriculumRes.success && curriculumRes.data) setCurriculum(curriculumRes.data);
-      if (vouchersRes.success && vouchersRes.data) setVouchers(vouchersRes.data);
       if (questionsRes.success && questionsRes.data) setQuestions(questionsRes.data);
       if (quizzesRes.success && quizzesRes.data) setQuizzes(quizzesRes.data);
       if (subsRes.success && subsRes.data) setSubscriptions(subsRes.data);
@@ -222,15 +211,7 @@ export default function AdminDashboard() {
             />
           )}
 
-          {/* TAB 7: VOUCHERS MANAGEMENT */}
-          {selectedTab === 'vouchers' && (
-            <VouchersManagementTab
-              initialVouchers={vouchers}
-              onRefresh={loadAllAdminData}
-            />
-          )}
-
-          {/* TAB 8: SUBSCRIPTIONS */}
+          {/* TAB 7: SUBSCRIPTIONS */}
           {selectedTab === 'subscriptions' && (
             <SubscriptionsTab initialSubscriptions={subscriptions} />
           )}

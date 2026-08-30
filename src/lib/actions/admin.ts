@@ -428,41 +428,7 @@ export async function getAdminSubscriptionsListAction(): Promise<ActionResult<Ad
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return {
-        success: true,
-        data: [
-          {
-            id: 'sub-1',
-            studentId: 'std-1',
-            studentName: 'باسم محمود خليل',
-            studentPhone: '01012345678',
-            planId: 'p-2',
-            planName: 'اشتراك ترم كامل',
-            durationDays: 120,
-            status: 'ACTIVE',
-            source: 'CODE',
-            startsAt: new Date(Date.now() - 35 * 86400000).toISOString(),
-            expiresAt: new Date(Date.now() + 85 * 86400000).toISOString(),
-            daysRemaining: 85,
-            createdAt: new Date(Date.now() - 35 * 86400000).toISOString(),
-          },
-          {
-            id: 'sub-2',
-            studentId: 'std-2',
-            studentName: 'عمر خالد الدسوقي',
-            studentPhone: '01123456789',
-            planId: 'p-1',
-            planName: 'اشتراك شهر',
-            durationDays: 30,
-            status: 'ACTIVE',
-            source: 'CODE',
-            startsAt: new Date(Date.now() - 18 * 86400000).toISOString(),
-            expiresAt: new Date(Date.now() + 12 * 86400000).toISOString(),
-            daysRemaining: 12,
-            createdAt: new Date(Date.now() - 18 * 86400000).toISOString(),
-          },
-        ],
-      };
+      return { success: true, data: [] };
     }
 
     interface DbSubscriptionRow {
@@ -492,7 +458,7 @@ export async function getAdminSubscriptionsListAction(): Promise<ActionResult<Ad
         planName: planObj?.name || 'اشتراك شهر',
         durationDays: planObj?.duration_days || 30,
         status: (s.status as 'ACTIVE' | 'EXPIRED' | 'CANCELLED') || 'ACTIVE',
-        source: (s.source as 'CODE' | 'MANUAL') || 'CODE',
+        source: (s.source as 'CODE' | 'MANUAL') || 'MANUAL',
         startsAt: s.starts_at,
         expiresAt: s.expires_at,
         daysRemaining,
@@ -503,6 +469,148 @@ export async function getAdminSubscriptionsListAction(): Promise<ActionResult<Ad
     return { success: true, data: subs };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل جلب قائمة الاشتراكات';
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Grants an active subscription directly to a student (e.g. after verifying WhatsApp transfer proof).
+ */
+export async function grantStudentSubscriptionAction(
+  studentId: string,
+  durationDays: number = 30,
+  customPlanName?: string
+): Promise<ActionResult<{ subscriptionId: string; expiresAt: string }>> {
+  try {
+    const admin = await getCurrentUser();
+    if (!admin || admin.role !== 'ADMIN') {
+      return { success: false, error: 'غير مصرح بتفعيل الاشتراكات. يجب تسجيل الدخول كأدمن.' };
+    }
+
+    // 1. Fetch or match corresponding plan
+    let planId: string | null = null;
+    const defaultName =
+      customPlanName ||
+      (durationDays === 30
+        ? 'اشتراك شهر'
+        : durationDays === 120
+        ? 'اشتراك ترم كامل'
+        : durationDays === 365
+        ? 'اشتراك عام دراسي'
+        : `اشتراك مخصص (${durationDays} يوماً)`);
+
+    const { data: matchedPlan } = await supabaseAdmin
+      .from('plans')
+      .select('id')
+      .eq('duration_days', durationDays)
+      .limit(1)
+      .maybeSingle();
+
+    if (matchedPlan?.id) {
+      planId = matchedPlan.id;
+    } else {
+      // Create new plan record if missing
+      const { data: createdPlan } = await supabaseAdmin
+        .from('plans')
+        .insert({
+          name: defaultName,
+          duration_days: durationDays,
+          price: durationDays === 30 ? 150 : durationDays === 120 ? 450 : 850,
+          is_active: true,
+        })
+        .select('id')
+        .single();
+      if (createdPlan?.id) planId = createdPlan.id;
+    }
+
+    if (!planId) {
+      return { success: false, error: 'تعذر تحديد خطة الاشتراك المناسبة في قاعدة البيانات.' };
+    }
+
+    // 2. Cancel previous active subscriptions to keep only one primary active
+    await supabaseAdmin
+      .from('subscriptions')
+      .update({ status: 'EXPIRED' })
+      .eq('student_id', studentId)
+      .eq('status', 'ACTIVE');
+
+    // 3. Create new ACTIVE subscription
+    const startsAt = new Date();
+    const expiresAt = new Date(startsAt.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    const { data: newSub, error: subError } = await supabaseAdmin
+      .from('subscriptions')
+      .insert({
+        student_id: studentId,
+        plan_id: planId,
+        status: 'ACTIVE',
+        source: 'MANUAL',
+        starts_at: startsAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+      })
+      .select('id, expires_at')
+      .single();
+
+    if (subError || !newSub) {
+      console.error('Error creating subscription:', subError);
+      return { success: false, error: 'فشل تفعيل الاشتراك في قاعدة البيانات.' };
+    }
+
+    // 4. Ensure student profile is active
+    await supabaseAdmin
+      .from('profiles')
+      .update({ is_active: true })
+      .eq('id', studentId);
+
+    // 5. Log audit action
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        user_id: admin.id,
+        action: 'SUBSCRIPTION_GRANTED_MANUAL',
+        entity_type: 'subscriptions',
+        entity_id: newSub.id,
+        metadata: { studentId, durationDays, planName: defaultName },
+      });
+    } catch {
+      // non-critical
+    }
+
+    return {
+      success: true,
+      data: { subscriptionId: newSub.id, expiresAt: newSub.expires_at },
+      message: `تم تفعيل ${defaultName} للطالب بنجاح حتى تاريخ ${expiresAt.toLocaleDateString('ar-EG')}! 🚀`,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'حدث خطأ أثناء تفعيل الاشتراك';
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Cancels or terminates a student's active subscription.
+ */
+export async function cancelStudentSubscriptionAction(
+  studentId: string
+): Promise<ActionResult<{ studentId: string }>> {
+  try {
+    const admin = await getCurrentUser();
+    if (!admin || admin.role !== 'ADMIN') {
+      return { success: false, error: 'غير مصرح بإلغاء الاشتراكات' };
+    }
+
+    await supabaseAdmin
+      .from('subscriptions')
+      .update({ status: 'CANCELLED' })
+      .eq('student_id', studentId)
+      .eq('status', 'ACTIVE');
+
+    return {
+      success: true,
+      data: { studentId },
+      message: 'تم إلغاء اشتراك الطالب بنجاح',
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'فشل إلغاء الاشتراك';
     return { success: false, error: msg };
   }
 }
