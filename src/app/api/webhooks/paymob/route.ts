@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
           status: 'ACTIVE',
           starts_at: new Date().toISOString(),
           expires_at: newExpiresAt.toISOString(),
-          source: 'PAYMOB',
+          source: 'MANUAL', // Paymob online payment — schema accepts 'CODE' | 'MANUAL'
         });
 
         // Audit Log
