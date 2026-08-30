@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         role: 'STUDENT',
         grade_id: gradeId || null,
         parent_email: parentEmail ? parentEmail.trim() : null,
-        is_active: true,
+        is_active: false, // Requires admin approval before login
         phone_verified_at: new Date().toISOString(),
       })
       .select()
@@ -89,32 +89,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Generate Auth Tokens
-    const tokenPayload = {
-      userId: newProfile.id,
-      phone: newProfile.phone,
-      role: newProfile.role,
-      fullName: newProfile.full_name,
-    };
-
-    const accessToken = await createAccessToken(tokenPayload);
-    const refreshToken = await createRefreshToken(tokenPayload);
-
-    // 6. Set Cookies & DB Session
-    await setAuthCookies(accessToken, refreshToken);
-    
-    const userAgent = req.headers.get('user-agent') || undefined;
-    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0] || undefined;
-    await createSessionRecord(newProfile.id, refreshToken, userAgent, ipAddress);
-
+    // 5. Account created successfully — pending admin approval
+    // Do NOT issue tokens or set cookies — student must wait for admin activation
     return NextResponse.json({
       success: true,
+      pending_approval: true,
+      message: 'تم إنشاء حسابك بنجاح! سيتم مراجعة بياناتك من قِبل الإدارة وتفعيل حسابك خلال فترة قصيرة. يمكنك تسجيل الدخول بعد تلقي إشعار التفعيل.',
       user: {
         id: newProfile.id,
         fullName: newProfile.full_name,
         phone: newProfile.phone,
-        role: newProfile.role,
-        gradeId: newProfile.grade_id,
       },
     });
   } catch (error: any) {

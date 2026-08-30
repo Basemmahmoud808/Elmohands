@@ -74,7 +74,10 @@ export async function loginUser(
     }
 
     if (!profile.is_active) {
-      return { success: false, message: 'هذا الحساب معطل حالياً. يرجى التواصل مع إدارة المنصة.' };
+      return {
+        success: false,
+        message: 'حسابك بانتظار موافقة وتفعيل إدارة المنصة. سيتم مراجعة بياناتك وتفعيل الحساب قريباً.',
+      };
     }
 
     // 4. Verify password via bcrypt only — no hardcoded master passwords
@@ -143,7 +146,7 @@ export async function registerUser(data: {
   governorate?: string;
   password?: string;
   gradeId?: string;
-}): Promise<{ success: boolean; user?: UserSession; message?: string }> {
+}): Promise<{ success: boolean; user?: UserSession; message?: string; pendingApproval?: boolean }> {
   try {
     const cleanPhone = sanitizeInput(data.phone.trim())
       .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
@@ -201,7 +204,7 @@ export async function registerUser(data: {
     // 3. Hash password
     const hashedPassword = await hashPassword(cleanPassword || 'DefaultStudent#2026');
 
-    // 4. Insert into Supabase Profiles
+    // 4. Insert into Supabase Profiles — inactive until admin approves
     const { data: newProfile, error: dbError } = await supabaseAdmin
       .from('profiles')
       .insert({
@@ -212,7 +215,7 @@ export async function registerUser(data: {
         role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
         grade_id: data.gradeId || null,
         parent_email: cleanParentEmail || null,
-        is_active: true,
+        is_active: isDedicatedAdmin ? true : false, // Students need admin approval
         phone_verified_at: new Date().toISOString(),
       })
       .select()
@@ -223,31 +226,40 @@ export async function registerUser(data: {
       return { success: false, message: 'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى لاحقاً.' };
     }
 
-    // 5. Issue Tokens & Cookies
-    const tokenPayload = {
-      userId: newProfile.id,
-      phone: newProfile.phone,
-      role: newProfile.role as 'ADMIN' | 'STUDENT',
-      fullName: newProfile.full_name,
+    // If admin account — issue tokens immediately
+    if (isDedicatedAdmin) {
+      const tokenPayload = {
+        userId: newProfile.id,
+        phone: newProfile.phone,
+        role: newProfile.role as 'ADMIN' | 'STUDENT',
+        fullName: newProfile.full_name,
+      };
+
+      const accessToken = await createAccessToken(tokenPayload);
+      const refreshToken = await createRefreshToken(tokenPayload);
+      await setAuthCookies(accessToken, refreshToken);
+      await createSessionRecord(newProfile.id, refreshToken);
+
+      const newUser: UserSession = {
+        id: newProfile.id,
+        fullName: newProfile.full_name,
+        phone: newProfile.phone,
+        parentPhone: newProfile.parent_phone,
+        role: newProfile.role as 'ADMIN' | 'STUDENT',
+        gradeId: newProfile.grade_id,
+        parentEmail: newProfile.parent_email,
+        createdAt: newProfile.created_at || new Date().toISOString(),
+      };
+
+      return { success: true, user: newUser };
+    }
+
+    // For students: do NOT issue session/cookies. Require admin approval.
+    return {
+      success: true,
+      pendingApproval: true,
+      message: 'تم تسجيل بياناتك بنجاح! حسابك الآن بانتظار موافقة إدارة المنصة، وسيتم تفعيله بعد مراجعة البيانات.',
     };
-
-    const accessToken = await createAccessToken(tokenPayload);
-    const refreshToken = await createRefreshToken(tokenPayload);
-    await setAuthCookies(accessToken, refreshToken);
-    await createSessionRecord(newProfile.id, refreshToken);
-
-    const newUser: UserSession = {
-      id: newProfile.id,
-      fullName: newProfile.full_name,
-      phone: newProfile.phone,
-      parentPhone: newProfile.parent_phone,
-      role: newProfile.role as 'ADMIN' | 'STUDENT',
-      gradeId: newProfile.grade_id,
-      parentEmail: newProfile.parent_email,
-      createdAt: newProfile.created_at || new Date().toISOString(),
-    };
-
-    return { success: true, user: newUser };
   } catch (error: any) {
     console.error('Registration Exception:', error);
     return { success: false, message: error.message || 'فشل إنشاء الحساب' };

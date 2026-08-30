@@ -77,9 +77,20 @@ export function StudentsManagementTab({ initialStudents }: StudentsManagementTab
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-electric/10 text-cyan-electric border border-cyan-electric/30 self-start sm:self-auto">
-          <Users className="w-4 h-4" />
-          <span>إجمالي الطلاب: {students.length}</span>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {students.filter((s) => !s.isActive).length > 0 && (
+            <button
+              onClick={() => setStatusFilter('inactive')}
+              className="flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse hover:bg-amber-500/25 transition-all"
+            >
+              <span>⏳ بانتظار موافقتك: {students.filter((s) => !s.isActive).length}</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-cyan-electric/10 text-cyan-electric border border-cyan-electric/30">
+            <Users className="w-4 h-4" />
+            <span>إجمالي الطلاب: {students.length}</span>
+          </div>
         </div>
       </div>
 
@@ -117,8 +128,8 @@ export function StudentsManagementTab({ initialStudents }: StudentsManagementTab
             className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
           >
             <option value="all">جميع الحالات</option>
-            <option value="active">الحسابات النشطة فقط</option>
-            <option value="inactive">الحسابات المعطلة فقط</option>
+            <option value="active">الحسابات المفعلة فقط</option>
+            <option value="inactive">بانتظار موافقة الأدمن ({students.filter((s) => !s.isActive).length})</option>
           </select>
         </div>
       </div>
@@ -200,8 +211,8 @@ export function StudentsManagementTab({ initialStudents }: StudentsManagementTab
                         </>
                       ) : (
                         <>
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>معطل</span>
+                          <UserCheck className="w-3.5 h-3.5" />
+                          <span>⏳ موافقة وتفعيل</span>
                         </>
                       )}
                     </button>

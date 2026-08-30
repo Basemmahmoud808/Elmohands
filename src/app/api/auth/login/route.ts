@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     if (!profile.is_active) {
       return NextResponse.json(
-        { error: 'هذا الحساب معطل حالياً، يرجى التواصل مع إدارة المنصة' },
+        { error: 'حسابك بانتظار موافقة وتفعيل إدارة المنصة. سيتم مراجعة بياناتك وتفعيل الحساب قريباً.' },
         { status: 403 }
       );
     }
