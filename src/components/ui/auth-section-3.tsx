@@ -22,10 +22,10 @@ interface AuthSectionProps {
 }
 
 const GRADES = [
-  'الصف الأول الإعدادي',
-  'الصف الثاني الإعدادي',
-  'الصف الثالث الإعدادي',
-  'الصف الأول الثانوي',
+  { name: 'الصف الأول الإعدادي', id: '7af16072-b5c2-4874-bc2d-a78a257f64bf' },
+  { name: 'الصف الثاني الإعدادي', id: '5d2a3c21-86dc-4416-84bd-43933665eea2' },
+  { name: 'الصف الثالث الإعدادي', id: 'c8681ec4-28a2-4750-85ad-c46b79b0e660' },
+  { name: 'الصف الأول الثانوي', id: 'ecdf728c-a79a-422c-ba94-3c73279c57da' },
 ];
 
 const GOVERNORATES = [
@@ -61,7 +61,7 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [governorate, setGovernorate] = useState(GOVERNORATES[0]);
-  const [gradeId, setGradeId] = useState(GRADES[0]);
+  const [gradeId, setGradeId] = useState(GRADES[0].id);
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,8 +250,8 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
                       className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric transition-colors"
                     >
                       {GRADES.map((g, i) => (
-                        <option key={i} value={g}>
-                          {g}
+                        <option key={i} value={g.id}>
+                          {g.name}
                         </option>
                       ))}
                     </select>

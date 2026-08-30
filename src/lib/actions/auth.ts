@@ -204,6 +204,25 @@ export async function registerUser(data: {
     // 3. Hash password
     const hashedPassword = await hashPassword(cleanPassword || 'DefaultStudent#2026');
 
+    // Resolve Grade ID (handle both UUID and Grade Name safely)
+    let resolvedGradeId: string | null = null;
+    if (data.gradeId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.gradeId);
+      if (isUuid) {
+        resolvedGradeId = data.gradeId;
+      } else {
+        const { data: matchedGrade } = await supabaseAdmin
+          .from('grades')
+          .select('id')
+          .ilike('name', `%${data.gradeId}%`)
+          .limit(1)
+          .maybeSingle();
+        if (matchedGrade) {
+          resolvedGradeId = matchedGrade.id;
+        }
+      }
+    }
+
     // 4. Insert into Supabase Profiles — inactive until admin approves
     const { data: newProfile, error: dbError } = await supabaseAdmin
       .from('profiles')
@@ -213,7 +232,7 @@ export async function registerUser(data: {
         parent_phone: cleanParentPhone || null,
         password_hash: hashedPassword,
         role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
-        grade_id: data.gradeId || null,
+        grade_id: resolvedGradeId,
         parent_email: cleanParentEmail || null,
         is_active: isDedicatedAdmin ? true : false, // Students need admin approval
         phone_verified_at: new Date().toISOString(),

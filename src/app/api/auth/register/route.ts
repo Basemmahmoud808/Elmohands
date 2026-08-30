@@ -63,6 +63,25 @@ export async function POST(req: NextRequest) {
     // 3. Hash password
     const hashedPassword = await hashPassword(password);
 
+    // Resolve Grade ID (handle both UUID and Grade Name safely)
+    let resolvedGradeId: string | null = null;
+    if (gradeId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gradeId);
+      if (isUuid) {
+        resolvedGradeId = gradeId;
+      } else {
+        const { data: matchedGrade } = await supabaseAdmin
+          .from('grades')
+          .select('id')
+          .ilike('name', `%${gradeId}%`)
+          .limit(1)
+          .maybeSingle();
+        if (matchedGrade) {
+          resolvedGradeId = matchedGrade.id;
+        }
+      }
+    }
+
     // 4. Create profile record in Supabase
     const { data: newProfile, error: dbError } = await supabaseAdmin
       .from('profiles')
@@ -73,7 +92,7 @@ export async function POST(req: NextRequest) {
         email: email ? email.trim().toLowerCase() : null,
         password_hash: hashedPassword,
         role: 'STUDENT',
-        grade_id: gradeId || null,
+        grade_id: resolvedGradeId,
         parent_email: parentEmail ? parentEmail.trim() : null,
         is_active: false, // Requires admin approval before login
         phone_verified_at: new Date().toISOString(),
