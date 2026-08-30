@@ -139,7 +139,7 @@ export async function getAdminStudentsListAction(params?: {
     let query = supabaseAdmin
       .from('profiles')
       .select(`
-        id, full_name, phone, email, parent_email, is_active, created_at, last_login_at, grade_id,
+        id, full_name, phone, email, parent_email, parent_phone, governorate, is_active, created_at, last_login_at, grade_id,
         grades (name),
         subscriptions (id, status, expires_at, plans (name))
       `)
@@ -173,6 +173,8 @@ export async function getAdminStudentsListAction(params?: {
       phone: string;
       email?: string | null;
       parent_email?: string | null;
+      parent_phone?: string | null;
+      governorate?: string | null;
       is_active?: boolean | null;
       created_at?: string | null;
       last_login_at?: string | null;
@@ -182,6 +184,43 @@ export async function getAdminStudentsListAction(params?: {
     }
 
     const typedData = data as unknown as DbStudentQueryRow[];
+
+    // Fetch real academic activity counts (zero dummy data)
+    const studentIds = typedData.map((s) => s.id);
+    const progressCountMap: Record<string, number> = {};
+    const examAttemptsCountMap: Record<string, number> = {};
+
+    try {
+      const { data: progressRows } = await supabaseAdmin
+        .from('student_progress')
+        .select('student_id')
+        .in('student_id', studentIds)
+        .eq('is_completed', true);
+
+      if (progressRows) {
+        for (const row of progressRows) {
+          if (row.student_id) {
+            progressCountMap[row.student_id] = (progressCountMap[row.student_id] || 0) + 1;
+          }
+        }
+      }
+
+      const { data: attemptRows } = await supabaseAdmin
+        .from('exam_attempts')
+        .select('student_id')
+        .in('student_id', studentIds);
+
+      if (attemptRows) {
+        for (const row of attemptRows) {
+          if (row.student_id) {
+            examAttemptsCountMap[row.student_id] = (examAttemptsCountMap[row.student_id] || 0) + 1;
+          }
+        }
+      }
+    } catch {
+      // non-critical, defaults to 0
+    }
+
     const students: AdminStudentDTO[] = typedData.map((p) => {
       const gradeObj = Array.isArray(p.grades) ? p.grades[0] : p.grades;
       const subList: DbSubJoin[] = Array.isArray(p.subscriptions) ? p.subscriptions : p.subscriptions ? [p.subscriptions] : [];
@@ -198,6 +237,8 @@ export async function getAdminStudentsListAction(params?: {
         phone: p.phone,
         email: p.email,
         parentEmail: p.parent_email,
+        parentPhone: p.parent_phone,
+        governorate: p.governorate,
         gradeId: p.grade_id,
         gradeName: gradeObj?.name || 'الصف الأول الإعدادي',
         isActive: p.is_active !== false,
@@ -207,6 +248,8 @@ export async function getAdminStudentsListAction(params?: {
         daysRemaining,
         createdAt: p.created_at || new Date().toISOString(),
         lastLoginAt: p.last_login_at,
+        completedLessonsCount: progressCountMap[p.id] || 0,
+        examAttemptsCount: examAttemptsCountMap[p.id] || 0,
       };
     });
 

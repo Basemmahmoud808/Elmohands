@@ -177,7 +177,7 @@ export function StudentsManagementTab({ initialStudents }: StudentsManagementTab
 
                   {/* Grade */}
                   <td className="py-4 px-3 text-xs font-semibold text-slate-700 dark:text-chalk/90">
-                    {student.gradeName || 'الصف الأول الإعدادي'}
+                    {student.gradeName || 'غير محدد'}
                   </td>
 
                   {/* Subscription Badge */}

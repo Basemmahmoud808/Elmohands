@@ -230,6 +230,7 @@ export async function registerUser(data: {
         full_name: cleanFullName,
         phone: cleanPhone,
         parent_phone: cleanParentPhone || null,
+        governorate: data.governorate || null,
         password_hash: hashedPassword,
         role: isDedicatedAdmin ? 'ADMIN' : 'STUDENT',
         grade_id: resolvedGradeId,
