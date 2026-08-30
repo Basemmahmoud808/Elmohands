@@ -244,127 +244,6 @@ async function seed() {
           console.warn(`⚠️ Exception in Branch seeding (${b.name}): ${err.message}`);
           continue;
         }
-
-        if (!branchId) continue;
-
-        // 4. Seed Sample Units & Lessons for Prep 1
-        if (gradeName === 'الصف الأول الإعدادي' && t.name === 'الترم الأول' && b.name === 'فرع الجبر والإحصاء') {
-          const prepUnits = [
-            {
-              title: 'الوحدة الأولى: الأعداد النسبية',
-              description: 'مفهوم الأعداد النسبية والعمليات عليها',
-              sort_order: 1,
-              lessons: [
-                {
-                  title: 'مجموعة الأعداد النسبية',
-                  description: 'تعريف العدد النسبي والصور المختلفة له',
-                  video_path: 'https://www.youtube.com/embed/placeholder_lesson_1',
-                  thumbnail_path: 'https://placehold.co/600x400/0f172a/38bdf8?text=Lesson+1',
-                  pdf_path: '/worksheets/prep1_algebra_unit1_lesson1.pdf',
-                  duration: 25,
-                  sort_order: 1,
-                },
-                {
-                  title: 'مقارنة وترتيب الأعداد النسبية',
-                  description: 'كيفية تمثيل ومقارنة الأعداد النسبية على خط الأعداد',
-                  video_path: 'https://www.youtube.com/embed/placeholder_lesson_2',
-                  thumbnail_path: 'https://placehold.co/600x400/0f172a/38bdf8?text=Lesson+2',
-                  pdf_path: '/worksheets/prep1_algebra_unit1_lesson2.pdf',
-                  duration: 30,
-                  sort_order: 2,
-                },
-              ],
-            },
-            {
-              title: 'الوحدة الثانية: الحدود والمقادير الجبرية',
-              description: 'الحدود الجبرية والعمليات عليها',
-              sort_order: 2,
-              lessons: [
-                {
-                  title: 'الحد الجبري والمقدار الجبري',
-                  description: 'درجة الحد الجبري والمقدار الجبري والحدود المتشابهة',
-                  video_path: 'https://www.youtube.com/embed/placeholder_lesson_3',
-                  thumbnail_path: 'https://placehold.co/600x400/0f172a/38bdf8?text=Lesson+3',
-                  pdf_path: '/worksheets/prep1_algebra_unit2_lesson1.pdf',
-                  duration: 20,
-                  sort_order: 1,
-                },
-              ],
-            },
-          ];
-
-          for (const uDef of prepUnits) {
-            let unitId: string | null = null;
-            try {
-              const { data: existingUnit } = await supabase
-                .from('units')
-                .select('id')
-                .eq('branch_id', branchId)
-                .eq('title', uDef.title)
-                .maybeSingle();
-
-              if (existingUnit) {
-                unitId = existingUnit.id;
-              } else {
-                const { data: newUnit, error: uErr } = await supabase
-                  .from('units')
-                  .insert({
-                    branch_id: branchId,
-                    title: uDef.title,
-                    description: uDef.description,
-                    sort_order: uDef.sort_order,
-                    is_active: true,
-                  })
-                  .select('id')
-                  .single();
-
-                if (uErr) {
-                  console.warn(`⚠️ Warning seeding unit ${uDef.title}: ${uErr.message}`);
-                } else if (newUnit) {
-                  unitId = newUnit.id;
-                }
-              }
-            } catch (err: any) {
-              console.warn(`⚠️ Exception in Unit seeding: ${err.message}`);
-              continue;
-            }
-
-            if (!unitId) continue;
-
-            for (const lDef of uDef.lessons) {
-              try {
-                const { data: existingLesson } = await supabase
-                  .from('lessons')
-                  .select('id')
-                  .eq('unit_id', unitId)
-                  .eq('title', lDef.title)
-                  .maybeSingle();
-
-                if (!existingLesson) {
-                  const { error: lErr } = await supabase.from('lessons').insert({
-                    unit_id: unitId,
-                    title: lDef.title,
-                    description: lDef.description,
-                    video_path: lDef.video_path,
-                    thumbnail_path: lDef.thumbnail_path,
-                    pdf_path: lDef.pdf_path,
-                    duration: lDef.duration,
-                    sort_order: lDef.sort_order,
-                    is_published: true,
-                    is_locked: false,
-                  });
-
-                  if (lErr) {
-                    console.warn(`⚠️ Warning seeding lesson ${lDef.title}: ${lErr.message}`);
-                  }
-                }
-              } catch (err: any) {
-                console.warn(`⚠️ Exception in Lesson seeding: ${err.message}`);
-              }
-            }
-          }
-          console.log(`✅ Sample units & lessons processed for Grade Prep 1`);
-        }
       }
     }
   }
@@ -376,18 +255,15 @@ async function seed() {
     console.log(`✅ ${branchesSeeded} Branches seeded/verified`);
   }
 
-  // 5. Seed 3 Subscription Plans
+  // 5. Seed 3 Subscription Plans (Real Plans)
   const planDefs = [
     { name: 'اشتراك شهر', description: 'وصول كامل للمنصة لمدة 30 يوماً', price: 150.00, duration_days: 30 },
     { name: 'اشتراك ترم', description: 'وصول كامل للمنصة لمفردات الترم الدراسي (120 يوماً)', price: 450.00, duration_days: 120 },
     { name: 'اشتراك سنة', description: 'وصول كامل للمنصة للعام الدراسي الكامل (365 يوماً)', price: 850.00, duration_days: 365 },
   ];
 
-  const planMap: Record<number, string> = {}; // duration_days -> id
-
   try {
     for (const p of planDefs) {
-      let planId: string | null = null;
       const { data: existingPlan } = await supabase
         .from('plans')
         .select('id')
@@ -395,10 +271,8 @@ async function seed() {
         .eq('duration_days', p.duration_days)
         .maybeSingle();
 
-      if (existingPlan) {
-        planId = existingPlan.id;
-      } else {
-        const { data: newPlan, error: pErr } = await supabase
+      if (!existingPlan) {
+        await supabase
           .from('plans')
           .insert({
             name: p.name,
@@ -406,95 +280,15 @@ async function seed() {
             price: p.price,
             duration_days: p.duration_days,
             is_active: true,
-          })
-          .select('id')
-          .single();
-
-        if (pErr) {
-          console.warn(`⚠️ Warning seeding plan ${p.name}: ${pErr.message}`);
-        } else if (newPlan) {
-          planId = newPlan.id;
-        }
-      }
-
-      if (planId) {
-        planMap[p.duration_days] = planId;
+          });
       }
     }
-    console.log(`✅ ${Object.keys(planMap).length} / 3 Subscription Plans seeded/verified`);
+    console.log(`✅ Real Subscription Plans seeded/verified`);
   } catch (err: any) {
     console.warn(`⚠️ Exception in Subscription Plans seeding: ${err.message}`);
   }
 
-  // 6. Seed 15 Activation Codes (5 per plan)
-  const codeList = [
-    // 30 days
-    { code: 'MTH30-2026-0001', duration: 30 },
-    { code: 'MTH30-2026-0002', duration: 30 },
-    { code: 'MTH30-2026-0003', duration: 30 },
-    { code: 'MTH30-2026-0004', duration: 30 },
-    { code: 'MTH30-2026-0005', duration: 30 },
-    // 120 days
-    { code: 'TRM120-2026-0001', duration: 120 },
-    { code: 'TRM120-2026-0002', duration: 120 },
-    { code: 'TRM120-2026-0003', duration: 120 },
-    { code: 'TRM120-2026-0004', duration: 120 },
-    { code: 'TRM120-2026-0005', duration: 120 },
-    // 365 days
-    { code: 'YR365-2026-0001', duration: 365 },
-    { code: 'YR365-2026-0002', duration: 365 },
-    { code: 'YR365-2026-0003', duration: 365 },
-    { code: 'YR365-2026-0004', duration: 365 },
-    { code: 'YR365-2026-0005', duration: 365 },
-  ];
-
-  let codesSeeded = 0;
-  try {
-    for (const c of codeList) {
-      const planId = planMap[c.duration];
-      const payload: ActivationCodePayload = {
-        code: c.code,
-        status: 'UNUSED',
-      };
-      if (planId) {
-        payload.plan_id = planId;
-      }
-      if (adminId) {
-        payload.created_by = adminId;
-      }
-
-      let { error: codeErr } = await supabase
-        .from('activation_codes')
-        .upsert(payload, { onConflict: 'code' });
-
-      if (codeErr && codeErr.message.includes('created_by')) {
-        delete payload.created_by;
-        const res2 = await supabase
-          .from('activation_codes')
-          .upsert(payload, { onConflict: 'code' });
-        codeErr = res2.error;
-      }
-
-      if (codeErr && codeErr.message.includes('plan_id')) {
-        delete payload.plan_id;
-        const res3 = await supabase
-          .from('activation_codes')
-          .upsert(payload, { onConflict: 'code' });
-        codeErr = res3.error;
-      }
-
-      if (codeErr) {
-        console.warn(`⚠️ Warning seeding activation code ${c.code}: ${codeErr.message}`);
-      } else {
-        codesSeeded++;
-      }
-    }
-    console.log(`✅ ${codesSeeded} / 15 Activation Codes seeded/verified`);
-  } catch (err: any) {
-    console.warn(`⚠️ Exception in Activation Codes seeding: ${err.message}`);
-  }
-
-  console.log('🎉 Seeding completed successfully!');
+  console.log('🎉 Academic structure seeded successfully with zero dummy data!');
 }
 
 seed().catch((err) => {
