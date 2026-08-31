@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   User,
+  Award,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -74,22 +75,13 @@ export function DashboardSidebar({
     { id: 'my-courses', title: 'المقرارات الدراسية', icon: BookOpen },
     { id: 'question-bank', title: 'بنك الأسئلة والتمارين', icon: FileQuestion },
     { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle },
-    { id: 'my-results', title: 'نتائجي وتقييماتي', icon: AwardIcon },
+    { id: 'my-results', title: 'نتائجي وتقييماتي', icon: Award },
     // Conditionally show subscription tab only when not subscribed or expired
     ...(!hasActiveSubscription
       ? [{ id: 'subscribe', title: 'الاشتراك وتفعيل الحساب', icon: CreditCard }]
       : []),
     { id: 'account', title: 'حسابي الشخصي', icon: User },
   ];
-
-  function AwardIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="6"/>
-        <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
-      </svg>
-    );
-  }
 
   const options = role === 'ADMIN' ? adminOptions : studentOptions;
   const currentTabObj = options.find((o) => o.id === selectedTab);

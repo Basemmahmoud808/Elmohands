@@ -35,6 +35,8 @@ interface StudentDetailModalProps {
 export function StudentDetailModal({ student, onClose, onToggleStatus }: StudentDetailModalProps) {
   const [subLoading, setSubLoading] = useState(false);
   const [subSuccessMsg, setSubSuccessMsg] = useState('');
+  const [passLoading, setPassLoading] = useState(false);
+  const [passSuccessMsg, setPassSuccessMsg] = useState('');
 
   if (!student) return null;
 
@@ -83,9 +85,6 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
       setSubLoading(false);
     }
   };
-
-  const [passLoading, setPassLoading] = useState(false);
-  const [passSuccessMsg, setPassSuccessMsg] = useState('');
 
   const handleResetPassword = async () => {
     const newPass = prompt('أدخل كلمة المرور الجديدة للطالب، أو اضغط موافق لتعيينها إلى (123456):', '123456');
