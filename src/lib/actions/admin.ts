@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/actions/auth';
+import { hashPassword } from '@/lib/auth';
 import { ActionResult } from '@/lib/types/actions';
 import {
   AdminOverviewStatsDTO,
@@ -598,6 +599,7 @@ export async function cancelStudentSubscriptionAction(
       return { success: false, error: 'غير مصرح بإلغاء الاشتراكات' };
     }
 
+
     await supabaseAdmin
       .from('subscriptions')
       .update({ status: 'CANCELLED' })
@@ -611,6 +613,54 @@ export async function cancelStudentSubscriptionAction(
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل إلغاء الاشتراك';
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Resets a student's password directly from the admin panel.
+ */
+export async function adminResetStudentPasswordAction(
+  studentId: string,
+  newPassword?: string
+): Promise<ActionResult<{ studentId: string; temporaryPassword: string }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== 'ADMIN') {
+      return { success: false, error: 'غير مصرح لك بتغيير كلمة مرور الطالب' };
+    }
+
+    const tempPass = (newPassword || '123456').trim();
+    if (tempPass.length < 6) {
+      return { success: false, error: 'كلمة المرور يجب أن تكون 6 خانات على الأقل' };
+    }
+
+    const newHash = await hashPassword(tempPass);
+
+    const { error: dbError } = await supabaseAdmin
+      .from('profiles')
+      .update({ password_hash: newHash, updated_at: new Date().toISOString() })
+      .eq('id', studentId);
+
+    if (dbError) {
+      return { success: false, error: 'حدث خطأ في قاعدة البيانات أثناء تحديث كلمة المرور' };
+    }
+
+    await supabaseAdmin.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'STUDENT_PASSWORD_RESET_BY_ADMIN',
+      entity_type: 'profiles',
+      entity_id: studentId,
+      metadata: { resetBy: user.phone },
+    });
+
+    return {
+      success: true,
+      data: { studentId, temporaryPassword: tempPass },
+      message: `تم إعادة تعيين كلمة مرور الطالب بنجاح إلى: (${tempPass})`,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'فشل إعادة تعيين كلمة المرور';
     return { success: false, error: msg };
   }
 }

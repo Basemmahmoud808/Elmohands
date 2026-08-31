@@ -145,7 +145,7 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Phone className="w-3.5 h-3.5 text-cyan-electric" />
-                      {mode === 'signup' ? 'رقم هاتف الطالب' : 'رقم الهاتف أو اسم المستخدم'}
+                      {mode === 'signup' ? 'رقم هاتف الطالب' : 'رقم هاتف الطالب (أو الاسم المسجل به)'}
                     </span>
                     {mode === 'signup' && (
                       <span className="text-[10px] text-cyan-electric font-black">(إلزامي)</span>
@@ -154,15 +154,18 @@ export default function AuthSectionThree({ mode = 'signup', onSubmit, loading, e
                   <input
                     type="text"
                     required
-                    placeholder={mode === 'signup' ? '01012345678' : '01008901896 أو اسم المستخدم'}
+                    placeholder={mode === 'signup' ? '01012345678' : '01012345678 أو اسم الطالب'}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-left text-xs outline-none focus:border-cyan-electric transition-colors"
-                    dir="ltr"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk text-xs outline-none focus:border-cyan-electric transition-colors"
                   />
-                  {mode === 'signup' && (
+                  {mode === 'signup' ? (
                     <span className="text-[10px] text-slate-400 font-normal block">
                       11 رقماً يبدأ بـ (010, 011, 012, 015)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal block">
+                      سجّل برقم الهاتف (010xxxxxxxx) أو اسم الطالب كما تم تسجيله
                     </span>
                   )}
                 </div>

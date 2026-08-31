@@ -17,9 +17,14 @@ import {
   Clock,
   Loader2,
   Zap,
+  KeyRound,
 } from 'lucide-react';
 import { AdminStudentDTO } from '@/lib/types/dashboard';
-import { grantStudentSubscriptionAction, cancelStudentSubscriptionAction } from '@/lib/actions/admin';
+import {
+  grantStudentSubscriptionAction,
+  cancelStudentSubscriptionAction,
+  adminResetStudentPasswordAction,
+} from '@/lib/actions/admin';
 
 interface StudentDetailModalProps {
   student: AdminStudentDTO | null;
@@ -76,6 +81,33 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
       alert('حدث خطأ أثناء إلغاء الاشتراك');
     } finally {
       setSubLoading(false);
+    }
+  };
+
+  const [passLoading, setPassLoading] = useState(false);
+  const [passSuccessMsg, setPassSuccessMsg] = useState('');
+
+  const handleResetPassword = async () => {
+    const newPass = prompt('أدخل كلمة المرور الجديدة للطالب، أو اضغط موافق لتعيينها إلى (123456):', '123456');
+    if (newPass === null) return;
+    if (newPass.trim().length < 6) {
+      alert('كلمة المرور يجب أن تتكون من 6 خانات على الأقل');
+      return;
+    }
+    setPassLoading(true);
+    setPassSuccessMsg('');
+    try {
+      const res = await adminResetStudentPasswordAction(student.id, newPass.trim());
+      if (res.success) {
+        setPassSuccessMsg(res.message || 'تم تحديث كلمة المرور بنجاح');
+        setTimeout(() => setPassSuccessMsg(''), 5000);
+      } else {
+        alert(res.error || 'فشل تغيير كلمة المرور');
+      }
+    } catch {
+      alert('حدث خطأ أثناء تغيير كلمة المرور');
+    } finally {
+      setPassLoading(false);
     }
   };
 
@@ -352,10 +384,26 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end bg-slate-50/90 dark:bg-slate-950/90">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/90 dark:bg-slate-950/90">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              disabled={passLoading}
+              onClick={handleResetPassword}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 hover:bg-cyan-electric hover:text-black text-slate-800 dark:text-chalk transition-all flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-700 disabled:opacity-50"
+            >
+              {passLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <KeyRound className="w-3.5 h-3.5 text-cyan-electric" />}
+              <span>إعادة تعيين كلمة المرور</span>
+            </button>
+            {passSuccessMsg && (
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in">
+                {passSuccessMsg}
+              </span>
+            )}
+          </div>
+
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-chalk bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+            className="px-6 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-chalk bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors w-full sm:w-auto"
           >
             إغلاق
           </button>

@@ -35,42 +35,63 @@ export async function loginUser(
   passwordInput?: string
 ): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    // 1. Normalize identifier (convert Arabic numerals, trim whitespace)
-    let cleanIdentifier = sanitizeInput(phoneOrUsername.trim())
-      .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
-      .replace(/\s+/g, '');
-
-    if (!cleanIdentifier) {
-      return { success: false, message: 'يرجى كتابة رقم الهاتف بشكل صحيح.' };
+    const rawIdentifier = (phoneOrUsername || '').trim();
+    if (!rawIdentifier) {
+      return { success: false, message: 'يرجى إدخال رقم الهاتف أو الاسم المسجل به.' };
     }
 
-    const cleanPassword = passwordInput ? passwordInput.trim() : '';
-    if (!cleanPassword) {
+    const rawPassword = passwordInput || '';
+    if (!rawPassword.trim()) {
       return { success: false, message: 'يرجى إدخال كلمة المرور.' };
     }
 
-    // 2. Normalize Egyptian phone format (+201... or 201... → 01...)
-    if (cleanIdentifier.startsWith('+20')) {
-      cleanIdentifier = '0' + cleanIdentifier.slice(3);
-    } else if (cleanIdentifier.startsWith('20') && cleanIdentifier.length === 12) {
-      cleanIdentifier = '0' + cleanIdentifier.slice(2);
+    // Normalize phone digits (convert Arabic numerals to English, strip spaces)
+    let cleanDigits = rawIdentifier
+      .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
+      .replace(/\s+/g, '');
+
+    // Normalize Egyptian mobile format (+201... or 201... → 01...)
+    if (cleanDigits.startsWith('+20')) {
+      cleanDigits = '0' + cleanDigits.slice(3);
+    } else if (cleanDigits.startsWith('20') && cleanDigits.length === 12) {
+      cleanDigits = '0' + cleanDigits.slice(2);
     }
 
-    // 3. Query profile by phone or email — no aliases, no fallbacks
     let profile: any = null;
-    try {
-      const { data: dbUser } = await supabaseAdmin
+
+    // 1. Try finding by phone if digits look like a valid phone
+    if (cleanDigits && (/^01\d{9}$/.test(cleanDigits) || cleanDigits === '01008901896')) {
+      const { data: phoneUser } = await supabaseAdmin
         .from('profiles')
         .select('*')
-        .or(`phone.eq.${cleanIdentifier},email.eq.${cleanIdentifier}`)
+        .eq('phone', cleanDigits)
         .maybeSingle();
-      profile = dbUser;
-    } catch {
-      // DB unreachable — fail closed, no fallback
+      profile = phoneUser;
+    }
+
+    // 2. Try by email or direct identifier
+    if (!profile && cleanDigits) {
+      const { data: directUser } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .or(`phone.eq.${cleanDigits},email.eq.${cleanDigits}`)
+        .maybeSingle();
+      profile = directUser;
+    }
+
+    // 3. Try finding by student full name (case/diacritics insensitive substring)
+    if (!profile && rawIdentifier.length >= 2) {
+      const { data: nameUser } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .ilike('full_name', `%${rawIdentifier}%`)
+        .limit(1)
+        .maybeSingle();
+      profile = nameUser;
     }
 
     if (!profile) {
-      return { success: false, message: 'رقم الهاتف أو كلمة المرور غير صحيحة.' };
+      return { success: false, message: 'بيانات الدخول غير صحيحة. يرجى التأكد من رقم الهاتف المسجل به أو اسم الطالب.' };
     }
 
     if (!profile.is_active) {
@@ -80,13 +101,28 @@ export async function loginUser(
       };
     }
 
-    // 4. Verify password via bcrypt only — no hardcoded master passwords
+    // 4. Verify password with multiple normalization fallback attempts
     if (!profile.password_hash) {
       return { success: false, message: 'رقم الهاتف أو كلمة المرور غير صحيحة.' };
     }
-    const isPasswordValid = await verifyPassword(cleanPassword, profile.password_hash);
+
+    const passwordCandidates = [
+      rawPassword.trim(),
+      rawPassword.trim().replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString()),
+      rawPassword,
+      rawPassword.replace(/\s+/g, ''),
+    ];
+
+    let isPasswordValid = false;
+    for (const candidate of passwordCandidates) {
+      if (candidate && await verifyPassword(candidate, profile.password_hash)) {
+        isPasswordValid = true;
+        break;
+      }
+    }
+
     if (!isPasswordValid) {
-      return { success: false, message: 'رقم الهاتف أو كلمة المرور غير صحيحة.' };
+      return { success: false, message: 'كلمة المرور غير صحيحة. يرجى إعادة المحاولة أو التواصل مع مستر رضا خيرت لتعديلها.' };
     }
 
     // 5. Update last login timestamp
@@ -156,8 +192,10 @@ export async function registerUser(data: {
           .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
           .replace(/\s+/g, '')
       : '';
-    const cleanFullName = sanitizeInput(data.fullName.trim());
-    const cleanPassword = data.password || '';
+    const cleanFullName = sanitizeInput((data.fullName || '').trim());
+    const cleanPassword = (data.password || '')
+      .trim()
+      .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
     const cleanParentEmail = data.parentEmail ? sanitizeInput(data.parentEmail.trim()) : '';
 
     const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
