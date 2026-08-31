@@ -6,15 +6,13 @@ import {
   FileText,
   HelpCircle,
   Download,
-  ExternalLink,
   Search,
-  Filter,
   CheckCircle2,
   XCircle,
-  BookOpen,
   Sparkles,
   Loader2,
   Eye,
+  GraduationCap,
 } from 'lucide-react';
 import { QuestionItemDTO } from '@/lib/types/dashboard';
 import { getStudentQuestionsListAction } from '@/lib/actions/questions';
@@ -24,18 +22,10 @@ interface StudentQuestionBankTabProps {
   onOpenPdf: (title: string, url: string) => void;
 }
 
-const GRADES_LIST = [
-  'الصف الأول الإعدادي',
-  'الصف الثاني الإعدادي',
-  'الصف الثالث الإعدادي',
-  'الصف الأول الثانوي',
-];
-
 export function StudentQuestionBankTab({
-  studentGradeName,
+  studentGradeName = 'الصف الأول الإعدادي',
   onOpenPdf,
 }: StudentQuestionBankTabProps) {
-  const [selectedGrade, setSelectedGrade] = useState<string>(studentGradeName || GRADES_LIST[0]);
   const [selectedBranch, setSelectedBranch] = useState<string>('ALL');
   const [selectedType, setSelectedType] = useState<'ALL' | 'FILE' | 'QUESTION'>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -52,7 +42,7 @@ export function StudentQuestionBankTab({
       setLoading(true);
       try {
         const res = await getStudentQuestionsListAction({
-          gradeName: selectedGrade === 'ALL' ? undefined : selectedGrade,
+          gradeName: studentGradeName,
           branchName: selectedBranch === 'ALL' ? undefined : selectedBranch,
           entryType: selectedType === 'ALL' ? undefined : selectedType,
         });
@@ -70,7 +60,7 @@ export function StudentQuestionBankTab({
     }
 
     loadQuestions();
-  }, [selectedGrade, selectedBranch, selectedType]);
+  }, [studentGradeName, selectedBranch, selectedType]);
 
   const filteredQuestions = questions.filter((q) => {
     if (!searchQuery.trim()) return true;
@@ -84,7 +74,7 @@ export function StudentQuestionBankTab({
   });
 
   const handleSelectOption = (questionId: string, optionLabel: string) => {
-    if (revealedAnswers[questionId]) return; // locked once checked
+    if (revealedAnswers[questionId]) return;
     setUserAnswers((prev) => ({ ...prev, [questionId]: optionLabel }));
   };
 
@@ -100,31 +90,25 @@ export function StudentQuestionBankTab({
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-electric/10 border border-cyan-electric/30 text-cyan-electric text-xs font-bold mb-1">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>بنك التمارين والأسئلة الشامل</span>
+              <span>بنك التمارين والأسئلة لصفك الدراسي</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black">
-              بنك أسئلة وشيتات م/ رضا خيرت
+              بنك الأسئلة والتمارين ({studentGradeName})
             </h2>
             <p className="text-xs sm:text-sm text-chalk-muted font-medium max-w-2xl">
-              تصفح التمارين المرفوعة، وحل الأسئلة التفاعلية وتدرّب على حل أوراق وشيتات الرياضيات بصيغة PDF لضمان الدرجة النهائية.
+              تمارين وشيتات م/ رضا خيرت المخصصة لـ <strong className="text-cyan-electric">{studentGradeName}</strong> لمساعدتك على التطبيق العملي وتثبيت المفاهيم الرياضية.
             </p>
           </div>
 
-          {/* Grade Selector */}
-          <div className="flex flex-col gap-1.5 shrink-0">
-            <label className="text-xs font-bold text-slate-300">تصفح صف دراسي:</label>
-            <select
-              value={selectedGrade}
-              onChange={(e) => setSelectedGrade(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-chalk outline-none focus:border-cyan-electric"
-            >
-              <option value="ALL">جميع الصفوف الدراسية</option>
-              {GRADES_LIST.map((g, idx) => (
-                <option key={idx} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
+          {/* Grade Badge */}
+          <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-electric/30 text-right space-y-1 shrink-0 self-start sm:self-auto">
+            <div className="flex items-center gap-2 text-xs font-black text-cyan-electric">
+              <GraduationCap className="w-4 h-4" />
+              <span>محتوى مخصص لصفك:</span>
+            </div>
+            <p className="text-xs font-bold text-chalk">
+              {studentGradeName}
+            </p>
           </div>
         </div>
       </div>
@@ -143,8 +127,42 @@ export function StudentQuestionBankTab({
           />
         </div>
 
-        {/* Type and Branch Filters */}
+        {/* Branch and Type Filters */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
+          {/* Branch Filter Pills */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+            <button
+              onClick={() => setSelectedBranch('ALL')}
+              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                selectedBranch === 'ALL'
+                  ? 'bg-cyan-electric text-slate-950 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-chalk'
+              }`}
+            >
+              جميع الفروع
+            </button>
+            <button
+              onClick={() => setSelectedBranch('الجبر')}
+              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                selectedBranch === 'الجبر'
+                  ? 'bg-cyan-electric text-slate-950 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-chalk'
+              }`}
+            >
+              الجبر والإحصاء
+            </button>
+            <button
+              onClick={() => setSelectedBranch('الهندسة')}
+              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                selectedBranch === 'الهندسة'
+                  ? 'bg-cyan-electric text-slate-950 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-chalk'
+              }`}
+            >
+              الهندسة والقياس
+            </button>
+          </div>
+
           {/* Type Toggle */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
             <button
@@ -177,18 +195,18 @@ export function StudentQuestionBankTab({
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>أسئلة MCQ</span>
+              <span>أسئلة تفاعلية</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Questions Grid / List */}
+      {/* Questions List */}
       {loading ? (
         <div className="p-12 text-center space-y-3 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
           <Loader2 className="w-8 h-8 text-cyan-electric animate-spin mx-auto" />
           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
-            جاري تحميل محتويات بنك الأسئلة والشيتات...
+            جاري تحميل بنك الأسئلة الخاص بـ ({studentGradeName})...
           </p>
         </div>
       ) : filteredQuestions.length === 0 ? (
@@ -197,15 +215,15 @@ export function StudentQuestionBankTab({
             <FileQuestion className="w-7 h-7" />
           </div>
           <h3 className="text-base font-black text-slate-900 dark:text-chalk">
-            لا توجد أسئلة أو شيتات مطابقة حالياً
+            لا توجد شيتات أو أسئلة مرفوعة حالياً لـ ({studentGradeName})
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-            سيقوم م/ رضا خيرت برفع المزيد من التمارين والشيتات والأسئلة لهذا الصف قريباً.
+            سيقوم م/ رضا خيرت برفع شيتات وتمارين جديدة لهذا الصف الدراسي قريباً وستظهر لك هنا تلقائياً!
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredQuestions.map((item, idx) => {
+          {filteredQuestions.map((item) => {
             const isFile = item.entryType === 'FILE' || item.questionType === 'FILE' || Boolean(item.fileUrl);
 
             return (
@@ -218,7 +236,7 @@ export function StudentQuestionBankTab({
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                        {item.branchName || 'رياضيات'}
+                        {item.branchName || 'مادة الرياضيات'}
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                         {item.gradeName}

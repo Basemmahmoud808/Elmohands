@@ -411,17 +411,35 @@ export async function getStudentQuestionsListAction(params?: {
       return { success: false, error: 'يرجى تسجيل الدخول أولاً' };
     }
 
+    // Determine target grade: from params or from user's profile
+    let targetGrade = params?.gradeName;
+    if (!targetGrade || targetGrade === 'ALL') {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('grade_id, grades (name)')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const gradeObj = Array.isArray(profile?.grades) ? profile.grades[0] : profile?.grades;
+      if (gradeObj?.name) {
+        targetGrade = gradeObj.name;
+      }
+    }
+
     let query = supabaseAdmin
       .from('questions')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (params?.gradeName && params.gradeName !== 'ALL') {
-      query = query.ilike('grade_name', `%${params.gradeName}%`);
+    // Filter strictly by the student's grade
+    if (targetGrade && targetGrade !== 'ALL') {
+      const cleanGrade = targetGrade.replace(/^الصف\s+/, '').trim();
+      query = query.ilike('grade_name', `%${cleanGrade}%`);
     }
 
     if (params?.branchName && params.branchName !== 'ALL') {
-      query = query.ilike('branch_name', `%${params.branchName}%`);
+      const cleanBranch = params.branchName.replace(/^فرع\s+/, '').trim();
+      query = query.ilike('branch_name', `%${cleanBranch}%`);
     }
 
     if (params?.entryType) {
@@ -445,7 +463,7 @@ export async function getStudentQuestionsListAction(params?: {
       correctAnswer: q.correct_answer,
       explanation: q.explanation,
       branchName: q.branch_name || 'فرع الرياضيات',
-      gradeName: q.grade_name || 'الصف الأول الإعدادي',
+      gradeName: q.grade_name || targetGrade || 'الصف الأول الإعدادي',
       targetAudience: q.target_audience || 'ALL_STUDENTS',
       fileUrl: q.file_url,
       fileName: q.file_name,
