@@ -290,7 +290,7 @@ export default function GradeCoursesPage() {
                       ) : (
                         <span className="px-2.5 py-1 rounded-xl bg-black/80 backdrop-blur-sm text-amber-400 text-[10px] font-bold flex items-center gap-1 border border-amber-500/30">
                           <Lock className="w-3 h-3 text-amber-400" />
-                          <span>يتطلب اشتراكاً 🔒</span>
+                          <span>يتطلب اشتراكاً</span>
                         </span>
                       )}
                     </div>

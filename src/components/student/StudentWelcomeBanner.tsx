@@ -75,7 +75,7 @@ export function StudentWelcomeBanner({ profile, subscription }: StudentWelcomeBa
                 اشتراك غير نشط
               </span>
               <span className="text-[11px] font-semibold text-slate-600 dark:text-chalk-muted">
-                يرجى تفعيل كود شحن للاستمرار
+                يرجى الاشتراك لتفعيل الدروس والمحاضرات
               </span>
             </div>
           </div>

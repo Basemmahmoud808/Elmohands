@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { registerUser } from '@/lib/actions/auth';
 import AuthSectionThree, { AuthFormData } from '@/components/ui/auth-section-3';
+import { Clock, CheckCircle2, ShieldAlert, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -24,54 +25,53 @@ export default function SignUpPage() {
     }
 
     if (!cleanPhone || !phoneRegex.test(cleanPhone)) {
-      setErrorMsg('رقم هاتف الطالب غير صحيح! يجب إدخال رقم محمول مصري مكون من 11 رقماً ويبدأ بـ (010 أو 011 أو 012 أو 015).');
+      setErrorMsg('يرجى إدخال رقم هاتف محمول صحيح (مثال: 01012345678)');
       return;
     }
 
-    if (!cleanParentPhone) {
-      setErrorMsg('رقم هاتف ولي الأمر إلزامي! يرجى إدخال رقم هاتف ولي الأمر للمتابعة.');
+    if (!cleanParentPhone || !phoneRegex.test(cleanParentPhone)) {
+      setErrorMsg('يرجى إدخال رقم ولي الأمر بشكل صحيح للتواصل والمتابعة.');
       return;
     }
 
-    if (!phoneRegex.test(cleanParentPhone)) {
-      setErrorMsg('رقم هاتف ولي الأمر غير صحيح! يجب أن يتكون من 11 رقماً ويبدأ بـ (010 أو 011 أو 012 أو 015).');
+    if (cleanPhone === cleanParentPhone) {
+      setErrorMsg('لا يمكن أن يكون رقم الطالب هو نفسه رقم ولي الأمر.');
       return;
     }
 
-    if (cleanParentPhone === cleanPhone) {
-      setErrorMsg('رقم ولي الأمر يجب أن يكون مختلفاً تماماً عن رقم هاتف الطالب.');
-      return;
-    }
-
-    if (!formData.password?.trim() || formData.password.length < 6) {
-      setErrorMsg('كلمة المرور يجب أن تكون 6 أحرف أو أرقام على الأقل.');
+    if (!formData.password || formData.password.length < 6) {
+      setErrorMsg('يجب أن تتكون كلمة المرور من 6 أحرف أو أرقام على الأقل.');
       return;
     }
 
     setLoading(true);
     setErrorMsg('');
 
-    const res = await registerUser({
-      fullName: formData.fullName,
-      phone: cleanPhone,
-      parentPhone: cleanParentPhone,
-      governorate: formData.governorate,
-      password: formData.password,
-      gradeId: formData.gradeId,
-    });
+    try {
+      const res = await registerUser({
+        fullName: formData.fullName.trim(),
+        phone: cleanPhone,
+        parentPhone: cleanParentPhone,
+        governorate: formData.governorate,
+        password: formData.password,
+        gradeId: formData.gradeId,
+      });
 
-    setLoading(false);
-
-    if (res.success) {
-      if ((res as any).pendingApproval) {
-        setStudentInfo({ name: formData.fullName, phone: cleanPhone });
-        setPendingApproval(true);
+      if (res.success) {
+        if ((res as any).pendingApproval) {
+          setStudentInfo({ name: formData.fullName.trim(), phone: cleanPhone });
+          setPendingApproval(true);
+        } else {
+          router.refresh();
+          router.push('/student');
+        }
       } else {
-        router.refresh();
-        router.push('/student');
+        setErrorMsg(res.message || 'فشل إنشاء الحساب. تأكد من أن رقم الهاتف غير مسجل مسبقاً.');
       }
-    } else {
-      setErrorMsg(res.message || 'فشل إنشاء الحساب.');
+    } catch {
+      setErrorMsg('حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,22 +80,27 @@ export default function SignUpPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-arabic" dir="rtl">
         <div className="max-w-md w-full rounded-3xl bg-slate-900 border border-cyan-electric/30 p-6 sm:p-8 text-center space-y-6 shadow-2xl animate-in zoom-in-95">
           <div className="w-16 h-16 rounded-3xl bg-cyan-electric/10 border border-cyan-electric/30 flex items-center justify-center mx-auto text-cyan-electric shadow-lg shadow-cyan-electric/20">
-            <span className="text-3xl">⏳</span>
+            <Clock className="w-8 h-8" />
           </div>
 
           <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>تم تسجيل بياناتك بنجاح</span>
+            </div>
             <h2 className="text-xl sm:text-2xl font-black text-chalk">
-              تم تسجيل بياناتك بنجاح! 🎉
+              بانتظار موافقة الإدارة
             </h2>
             <p className="text-xs sm:text-sm text-cyan-electric font-bold">
               أهلاً بك يا {studentInfo.name}
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-right space-y-2">
-            <p className="text-xs text-chalk-muted leading-relaxed">
-              📌 <strong className="text-chalk">حالة الحساب:</strong> بانتظار مراجعة وتفعيل إدارة المنصة.
-            </p>
+          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-right space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+              <ShieldAlert className="w-4 h-4 shrink-0" />
+              <span>حالة الحساب: قيد المراجعة</span>
+            </div>
             <p className="text-xs text-chalk-muted leading-relaxed">
               يقوم م/ رضا خيرت وفريق العمل بمراجعة الحسابات الجديدة لضمان صحة البيانات والتواصل مع ولي الأمر لتفعيل الحساب.
             </p>
@@ -108,14 +113,16 @@ export default function SignUpPage() {
               rel="noreferrer"
               className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
             >
-              <span>تواصل عبر واتساب لتسريع التفعيل 💬</span>
+              <MessageCircle className="w-4 h-4" />
+              <span>تواصل عبر واتساب لتسريع التفعيل</span>
             </a>
 
             <button
               onClick={() => router.push('/sign-in')}
-              className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-chalk font-bold text-xs transition-all"
+              className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-chalk font-bold text-xs transition-all flex items-center justify-center gap-1.5"
             >
-              الذهاب لصفحة تسجيل الدخول
+              <span>الذهاب لصفحة تسجيل الدخول</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

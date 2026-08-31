@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ContinueLearningLessonDTO } from '@/lib/types/dashboard';
-import { PlayCircle, Clock, BookOpen, ChevronLeft } from 'lucide-react';
+import { PlayCircle, Clock, BookOpen, ChevronLeft, Lock } from 'lucide-react';
 
 interface ContinueLearningCardProps {
   lesson: ContinueLearningLessonDTO | null;
@@ -17,14 +17,14 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
       <div className="chalk-card rounded-3xl p-6 lg:p-8 bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-transparent border border-amber-500/30 relative overflow-hidden shadow-lg shadow-amber-500/5">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold border border-amber-500/30">
-            <BookOpen className="w-3.5 h-3.5" />
+            <Lock className="w-3.5 h-3.5" />
             <span>تفعيل الاشتراك مطلوب</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">
-            اشترك لتفعيل الدروس والمحاضرات الكاملة 🔒
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk flex items-center gap-2">
+            <span>اشترك لتفعيل الدروس والمحاضرات الكاملة</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted max-w-xl">
-            قم بشحن كود الاشتراك أو تفعيل الباقة لفتح جميع فيديوهات الشرح وحل الامتحانات التفاعلية ومذكرات المنهج.
+            قم بالاشتراك لتفعيل الباقة وفتح جميع فيديوهات الشرح وحل الامتحانات التفاعلية ومذكرات المنهج.
           </p>
         </div>
       </div>
@@ -110,8 +110,9 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
             <span>متابعة مشاهدة الدرس</span>
             <ChevronLeft className="w-4 h-4 mr-auto sm:mr-0 lg:mr-auto" />
           </Link>
-          <span className="text-[11px] text-center text-slate-500 dark:text-chalk-muted font-medium">
-            يتم حفظ نقطة التوقف تلقائياً ⏱
+          <span className="text-[11px] text-center text-slate-500 dark:text-chalk-muted font-medium flex items-center justify-center gap-1">
+            <Clock className="w-3 h-3 text-cyan-electric" />
+            <span>يتم حفظ نقطة التوقف تلقائياً</span>
           </span>
         </div>
       </div>

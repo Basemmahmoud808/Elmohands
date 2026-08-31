@@ -102,7 +102,7 @@ export function LessonLockedCard({
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>تواصل للاشتراك عبر واتساب 💬</span>
+              <span>تواصل للاشتراك عبر واتساب</span>
             </a>
 
             <Link

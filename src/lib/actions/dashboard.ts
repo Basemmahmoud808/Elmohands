@@ -454,8 +454,8 @@ export async function getAdminDashboardData(): Promise<ActionResult<AdminOvervie
         },
         {
           id: 'log-2',
-          action: 'تفعيل كود شحن (اشتراك ترم)',
-          entityType: 'activation_codes',
+          action: 'تفعيل اشتراك طالب (اشتراك ترم)',
+          entityType: 'subscriptions',
           userName: 'باسم محمود',
           userRole: 'STUDENT',
           createdAt: new Date(Date.now() - 3600000).toISOString(),

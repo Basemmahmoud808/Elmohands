@@ -578,7 +578,7 @@ export async function grantStudentSubscriptionAction(
     return {
       success: true,
       data: { subscriptionId: newSub.id, expiresAt: newSub.expires_at },
-      message: `تم تفعيل ${defaultName} للطالب بنجاح حتى تاريخ ${expiresAt.toLocaleDateString('ar-EG')}! 🚀`,
+      message: `تم تفعيل ${defaultName} للطالب بنجاح حتى تاريخ ${expiresAt.toLocaleDateString('ar-EG')}`,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'حدث خطأ أثناء تفعيل الاشتراك';

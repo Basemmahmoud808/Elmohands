@@ -414,7 +414,7 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
           <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.filesCount}</div>
         </div>
         <div className="chalk-card rounded-2xl p-4 bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-cyan-electric/15 space-y-1">
-          <span className="text-[11px] font-bold text-amber-500 block">خاص بالمشتركين فقط 👑</span>
+          <span className="text-[11px] font-bold text-amber-500 block">خاص بالمشتركين فقط</span>
           <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">{stats.subscribersOnlyCount}</div>
         </div>
       </div>
@@ -550,9 +550,9 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
                     }
                     className="w-full h-11 px-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
                   >
-                    <option value="ALL_STUDENTS">👥 جميع طلاب الصف (المسجلين)</option>
-                    <option value="SUBSCRIBERS_ONLY">👑 المشتركين فقط (أصحاب الاشتراكات النشطة)</option>
-                    <option value="PUBLIC">🌐 متاح للجميع (محتوى مجاني وعام)</option>
+                    <option value="ALL_STUDENTS">جميع طلاب الصف (المسجلين)</option>
+                    <option value="SUBSCRIBERS_ONLY">المشتركين فقط (أصحاب الاشتراكات النشطة)</option>
+                    <option value="PUBLIC">متاح للجميع (محتوى مجاني وعام)</option>
                   </select>
                 </div>
 
@@ -1016,9 +1016,9 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
               className="h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
             >
               <option value="ALL">جميع الفئات المستهدفة</option>
-              <option value="ALL_STUDENTS">👥 جميع طلاب الصف</option>
-              <option value="SUBSCRIBERS_ONLY">👑 المشتركين فقط</option>
-              <option value="PUBLIC">🌐 متاح للجميع (عام)</option>
+              <option value="ALL_STUDENTS">جميع طلاب الصف</option>
+              <option value="SUBSCRIBERS_ONLY">المشتركين فقط</option>
+              <option value="PUBLIC">متاح للجميع (عام)</option>
             </select>
 
             {/* Entry Type Filter */}
@@ -1288,10 +1288,10 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
                 </span>
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk-muted">
                   {previewQuestion.targetAudience === 'SUBSCRIBERS_ONLY'
-                    ? '👑 المشتركين فقط'
+                    ? 'المشتركين فقط'
                     : previewQuestion.targetAudience === 'PUBLIC'
-                    ? '🌐 متاح للجميع'
-                    : '👥 جميع طلاب الصف'}
+                    ? 'متاح للجميع'
+                    : 'جميع طلاب الصف'}
                 </span>
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk-muted">
                   {previewQuestion.branchName}

@@ -131,7 +131,7 @@ export function SubscriptionsTab({ initialSubscriptions }: SubscriptionsTabProps
 
                 <td className="py-4 px-3 text-left">
                   <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-chalk">
-                    {sub.source === 'CODE' ? 'كود شحن' : 'يدوي'}
+                    {sub.source === 'CODE' ? 'كود سابق' : 'تفعيل الإدارة'}
                   </span>
                 </td>
               </tr>

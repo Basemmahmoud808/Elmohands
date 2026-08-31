@@ -14,6 +14,7 @@ import {
   Filter,
   UserCheck,
   UserX,
+  Clock,
 } from 'lucide-react';
 
 interface StudentsManagementTabProps {
@@ -83,7 +84,8 @@ export function StudentsManagementTab({ initialStudents }: StudentsManagementTab
               onClick={() => setStatusFilter('inactive')}
               className="flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse hover:bg-amber-500/25 transition-all"
             >
-              <span>⏳ بانتظار موافقتك: {students.filter((s) => !s.isActive).length}</span>
+              <Clock className="w-3.5 h-3.5" />
+              <span>بانتظار موافقتك: {students.filter((s) => !s.isActive).length}</span>
             </button>
           )}
 
@@ -212,7 +214,7 @@ export function StudentsManagementTab({ initialStudents }: StudentsManagementTab
                       ) : (
                         <>
                           <UserCheck className="w-3.5 h-3.5" />
-                          <span>⏳ موافقة وتفعيل</span>
+                          <span>موافقة وتفعيل</span>
                         </>
                       )}
                     </button>

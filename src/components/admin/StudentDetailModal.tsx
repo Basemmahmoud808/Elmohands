@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Clock,
   Loader2,
+  Zap,
 } from 'lucide-react';
 import { AdminStudentDTO } from '@/lib/types/dashboard';
 import { grantStudentSubscriptionAction, cancelStudentSubscriptionAction } from '@/lib/actions/admin';
@@ -189,30 +190,31 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
 
               {/* Direct Grant Buttons */}
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
-                <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-electric block">
-                  ⚡ تفعيل اشتراك فوري (بعد تأكيد تحويل واتساب):
+                <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-electric flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>تفعيل اشتراك فوري (بعد تأكيد تحويل واتساب):</span>
                 </span>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     disabled={subLoading}
                     onClick={() => handleGrantSubscription(30, 'اشتراك شهر')}
-                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-electric border border-cyan-500/30 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-slate-100 dark:bg-slate-900 hover:bg-cyan-500/10 hover:border-cyan-500/40 text-slate-800 dark:text-chalk border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                   >
-                    <span>شهر (30يوم)</span>
+                    <span>شهر (30 يوم)</span>
                   </button>
                   <button
                     disabled={subLoading}
                     onClick={() => handleGrantSubscription(120, 'اشتراك ترم كامل')}
-                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-slate-100 dark:bg-slate-900 hover:bg-cyan-500/10 hover:border-cyan-500/40 text-slate-800 dark:text-chalk border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                   >
-                    <span>ترم (120يوم)</span>
+                    <span>ترم (120 يوم)</span>
                   </button>
                   <button
                     disabled={subLoading}
                     onClick={() => handleGrantSubscription(365, 'اشتراك عام دراسي')}
-                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-500/30 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                    className="py-2 px-2 rounded-xl text-[11px] font-black bg-slate-100 dark:bg-slate-900 hover:bg-cyan-500/10 hover:border-cyan-500/40 text-slate-800 dark:text-chalk border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                   >
-                    <span>سنة (365يوم)</span>
+                    <span>سنة (365 يوم)</span>
                   </button>
                 </div>
                 {subSuccessMsg && (

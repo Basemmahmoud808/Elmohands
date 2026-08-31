@@ -1,6 +1,6 @@
 'use client';
 
-import { Video, HelpCircle, KeyRound, TrendingUp, Lock, FileText, CheckCircle } from 'lucide-react';
+import { Video, HelpCircle, CreditCard, TrendingUp, Lock, FileText, CheckCircle } from 'lucide-react';
 
 const FEATURES = [
   {
@@ -14,9 +14,9 @@ const FEATURES = [
     description: 'تقييم كفاءة ومستوى فهم الطالب بعد كل درس فوراً مع تصحيح تلقائي وعرض نموذج الإجابة.',
   },
   {
-    icon: KeyRound,
-    title: 'تفعيل سريع بأكواد الشحن',
-    description: 'نظام اشتراكات مباشر ومبسط باستخدام أكواد شحن سريعة بدون تعقيدات الدفع الإلكتروني.',
+    icon: CreditCard,
+    title: 'اشتراك وتفعيل مباشر وسهل',
+    description: 'تحويل مرن عبر فودافون كاش وإنستاباي وتفعيل فوري لحساب الطالب دون تعقيد.',
   },
   {
     icon: TrendingUp,
