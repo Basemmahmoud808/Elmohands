@@ -37,6 +37,7 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
   const [subSuccessMsg, setSubSuccessMsg] = useState('');
   const [passLoading, setPassLoading] = useState(false);
   const [passSuccessMsg, setPassSuccessMsg] = useState('');
+  const [lastWhatsAppUrl, setLastWhatsAppUrl] = useState<string | null>(null);
 
   if (!student) return null;
 
@@ -53,8 +54,11 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
         student.subscriptionPlanName = name;
         student.daysRemaining = days;
         student.isActive = true;
+        if (res.data?.whatsAppUrl) {
+          setLastWhatsAppUrl(res.data.whatsAppUrl);
+        }
         setSubSuccessMsg(res.message || `تم تفعيل ${name} بنجاح!`);
-        setTimeout(() => setSubSuccessMsg(''), 4000);
+        setTimeout(() => setSubSuccessMsg(''), 8000);
       } else {
         alert(res.error || 'فشل تفعيل الاشتراك');
       }
@@ -98,8 +102,11 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
     try {
       const res = await adminResetStudentPasswordAction(student.id, newPass.trim());
       if (res.success) {
+        if (res.data?.whatsAppUrl) {
+          setLastWhatsAppUrl(res.data.whatsAppUrl);
+        }
         setPassSuccessMsg(res.message || 'تم تحديث كلمة المرور بنجاح');
-        setTimeout(() => setPassSuccessMsg(''), 5000);
+        setTimeout(() => setPassSuccessMsg(''), 8000);
       } else {
         alert(res.error || 'فشل تغيير كلمة المرور');
       }
@@ -384,7 +391,7 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
 
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/90 dark:bg-slate-950/90">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button
               disabled={passLoading}
               onClick={handleResetPassword}
@@ -393,6 +400,20 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
               {passLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <KeyRound className="w-3.5 h-3.5 text-cyan-electric" />}
               <span>إعادة تعيين كلمة المرور</span>
             </button>
+
+            {lastWhatsAppUrl && (
+              <a
+                href={lastWhatsAppUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all flex items-center justify-center gap-1.5 shadow-sm animate-in fade-in"
+                title="فتح محادثة واتساب مع الطالب بالبيانات مباشرة"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>إرسال التفاصيل واتساب</span>
+              </a>
+            )}
+
             {passSuccessMsg && (
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in">
                 {passSuccessMsg}

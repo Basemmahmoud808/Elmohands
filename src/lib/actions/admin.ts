@@ -10,6 +10,12 @@ import {
   AdminAuditLogDTO,
   AdminSubscriptionDTO,
 } from '@/lib/types/dashboard';
+import {
+  sendWhatsAppNotification,
+  getSubscriptionWelcomeMessage,
+  getPasswordResetMessage,
+  getWhatsAppDirectUrl,
+} from '@/lib/services/whatsapp';
 
 // Admin Actions
 
@@ -481,7 +487,7 @@ export async function grantStudentSubscriptionAction(
   studentId: string,
   durationDays: number = 30,
   customPlanName?: string
-): Promise<ActionResult<{ subscriptionId: string; expiresAt: string }>> {
+): Promise<ActionResult<{ subscriptionId: string; expiresAt: string; whatsAppUrl?: string }>> {
   try {
     const admin = await getCurrentUser();
     if (!admin || admin.role !== 'ADMIN') {
@@ -557,11 +563,39 @@ export async function grantStudentSubscriptionAction(
       return { success: false, error: 'فشل تفعيل الاشتراك في قاعدة البيانات.' };
     }
 
-    // 4. Ensure student profile is active
+    // 4. Ensure student profile is active and fetch info for WhatsApp notification
+    const { data: studentProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name, phone, parent_phone, grades (name)')
+      .eq('id', studentId)
+      .maybeSingle();
+
     await supabaseAdmin
       .from('profiles')
       .update({ is_active: true })
       .eq('id', studentId);
+
+    const studentName = studentProfile?.full_name || 'طالب منصة المهندس';
+    const gradeObj = Array.isArray(studentProfile?.grades) ? studentProfile.grades[0] : studentProfile?.grades;
+    const gradeName = gradeObj?.name || 'الصف الدراسي';
+    const studentPhone = studentProfile?.phone || '';
+
+    let whatsAppUrl: string | undefined = undefined;
+    if (studentPhone) {
+      const welcomeMsg = getSubscriptionWelcomeMessage({
+        studentName,
+        planName: defaultName,
+        gradeName,
+        durationDays,
+      });
+
+      whatsAppUrl = getWhatsAppDirectUrl(studentPhone, welcomeMsg);
+
+      // Automated OpenWA dispatch in background
+      sendWhatsAppNotification({ phone: studentPhone, message: welcomeMsg }).catch((e) => {
+        console.warn('WhatsApp gateway notification failed:', e);
+      });
+    }
 
     // 5. Log audit action
     try {
@@ -578,7 +612,7 @@ export async function grantStudentSubscriptionAction(
 
     return {
       success: true,
-      data: { subscriptionId: newSub.id, expiresAt: newSub.expires_at },
+      data: { subscriptionId: newSub.id, expiresAt: newSub.expires_at, whatsAppUrl },
       message: `تم تفعيل ${defaultName} للطالب بنجاح حتى تاريخ ${expiresAt.toLocaleDateString('ar-EG')}`,
     };
   } catch (err: unknown) {
@@ -623,7 +657,7 @@ export async function cancelStudentSubscriptionAction(
 export async function adminResetStudentPasswordAction(
   studentId: string,
   newPassword?: string
-): Promise<ActionResult<{ studentId: string; temporaryPassword: string }>> {
+): Promise<ActionResult<{ studentId: string; temporaryPassword: string; whatsAppUrl?: string }>> {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== 'ADMIN') {
@@ -646,6 +680,26 @@ export async function adminResetStudentPasswordAction(
       return { success: false, error: 'حدث خطأ في قاعدة البيانات أثناء تحديث كلمة المرور' };
     }
 
+    const { data: studentProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name, phone')
+      .eq('id', studentId)
+      .maybeSingle();
+
+    let whatsAppUrl: string | undefined = undefined;
+    if (studentProfile?.phone) {
+      const resetMsg = getPasswordResetMessage({
+        studentName: studentProfile.full_name || 'الطالب',
+        phone: studentProfile.phone,
+        temporaryPassword: tempPass,
+      });
+      whatsAppUrl = getWhatsAppDirectUrl(studentProfile.phone, resetMsg);
+
+      sendWhatsAppNotification({ phone: studentProfile.phone, message: resetMsg }).catch((e) => {
+        console.warn('WhatsApp password reset notification failed:', e);
+      });
+    }
+
     await supabaseAdmin.from('audit_logs').insert({
       user_id: user.id,
       action: 'STUDENT_PASSWORD_RESET_BY_ADMIN',
@@ -656,7 +710,7 @@ export async function adminResetStudentPasswordAction(
 
     return {
       success: true,
-      data: { studentId, temporaryPassword: tempPass },
+      data: { studentId, temporaryPassword: tempPass, whatsAppUrl },
       message: `تم إعادة تعيين كلمة مرور الطالب بنجاح إلى: (${tempPass})`,
     };
   } catch (err: unknown) {
