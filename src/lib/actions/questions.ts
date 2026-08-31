@@ -396,3 +396,68 @@ export async function deleteQuestionAction(questionId: string): Promise<ActionRe
     return { success: false, error: msg };
   }
 }
+
+/**
+ * Fetches questions and exercise files for students (accessible to authenticated students and admins).
+ */
+export async function getStudentQuestionsListAction(params?: {
+  gradeName?: string;
+  branchName?: string;
+  entryType?: 'QUESTION' | 'FILE';
+}): Promise<ActionResult<QuestionItemDTO[]>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: 'يرجى تسجيل الدخول أولاً' };
+    }
+
+    let query = supabaseAdmin
+      .from('questions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (params?.gradeName && params.gradeName !== 'ALL') {
+      query = query.ilike('grade_name', `%${params.gradeName}%`);
+    }
+
+    if (params?.branchName && params.branchName !== 'ALL') {
+      query = query.ilike('branch_name', `%${params.branchName}%`);
+    }
+
+    if (params?.entryType) {
+      query = query.eq('entry_type', params.entryType);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const list: QuestionItemDTO[] = (data || []).map((q: any) => ({
+      id: q.id,
+      questionText: q.question_text,
+      questionLatex: q.question_latex,
+      imageUrl: q.image_url,
+      difficulty: q.difficulty || 'MEDIUM',
+      questionType: q.question_type || 'MCQ',
+      entryType: q.entry_type || (q.question_type === 'FILE' ? 'FILE' : 'QUESTION'),
+      options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options || [],
+      correctAnswer: q.correct_answer,
+      explanation: q.explanation,
+      branchName: q.branch_name || 'فرع الرياضيات',
+      gradeName: q.grade_name || 'الصف الأول الإعدادي',
+      targetAudience: q.target_audience || 'ALL_STUDENTS',
+      fileUrl: q.file_url,
+      fileName: q.file_name,
+      fileType: q.file_type,
+      createdBy: q.created_by,
+      createdAt: q.created_at || new Date().toISOString(),
+    }));
+
+    return { success: true, data: list };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'فشل جلب بنك الأسئلة';
+    return { success: false, error: msg };
+  }
+}
+

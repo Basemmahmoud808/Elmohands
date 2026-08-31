@@ -13,6 +13,7 @@ import { QuickAccessCards } from '@/components/student/QuickAccessCards';
 import { StudentSubscriptionPaymentCard } from '@/components/student/StudentSubscriptionPaymentCard';
 import { StudentResultsTable } from '@/components/student/StudentResultsTable';
 import { NotificationCenter } from '@/components/student/NotificationCenter';
+import { StudentQuestionBankTab } from '@/components/student/StudentQuestionBankTab';
 import { ExamViewerModal } from '@/components/student/modals/ExamViewerModal';
 import { QuizSolveModal } from '@/components/student/modals/QuizSolveModal';
 import { VideoPreviewModal } from '@/components/student/modals/VideoPreviewModal';
@@ -155,7 +156,34 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* TAB 3: QUIZZES (الاختبارات والامتحانات) */}
+          {/* TAB 3: QUESTION BANK (بنك الأسئلة والتمارين) */}
+          {selectedTab === 'question-bank' && (
+            <div className="animate-in fade-in duration-200">
+              <StudentQuestionBankTab
+                studentGradeName={data.profile.gradeName || undefined}
+                onOpenPdf={(title, url) =>
+                  setActiveExamFileModal({
+                    id: 'qb-pdf',
+                    lessonId: 'qb-les',
+                    lessonTitle: title,
+                    branchName: 'بنك الأسئلة',
+                    title,
+                    durationMinutes: 0,
+                    passScore: 0,
+                    maxAttempts: 0,
+                    questionsCount: 0,
+                    attemptsCount: 0,
+                    hasPassed: false,
+                    isLocked: false,
+                    pdfPath: url,
+                    type: 'file',
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {/* TAB 4: QUIZZES (الاختبارات والامتحانات) */}
           {selectedTab === 'my-quizzes' && (
             <div className="space-y-6 animate-in fade-in duration-200">
               <div>
