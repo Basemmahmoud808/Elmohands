@@ -56,7 +56,7 @@ export function EnrolledCoursesGrid({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-chalk">
-            مناهجي والدروس الدراسية ({gradeName})
+            المقرارات الدراسية ({gradeName})
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-chalk-muted mt-0.5">
             استعرض وحدات المنهج وشاهد شرح الفيديو التفاعلي وحمل مذكرات PDF لكل درس

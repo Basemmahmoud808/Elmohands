@@ -126,7 +126,7 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* TAB 2: CURRICULUM (مناهجي والدروس) */}
+          {/* TAB 2: CURRICULUM (المقرارات الدراسية) */}
           {selectedTab === 'my-courses' && (
             <div className="animate-in fade-in duration-200">
               <EnrolledCoursesGrid

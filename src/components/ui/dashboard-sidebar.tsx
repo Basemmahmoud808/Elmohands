@@ -69,7 +69,7 @@ export function DashboardSidebar({
   // Student options
   const studentOptions: SidebarOption[] = [
     { id: 'overview', title: 'الرئيسية', icon: LayoutDashboard },
-    { id: 'my-courses', title: 'مناهجي والدروس', icon: BookOpen },
+    { id: 'my-courses', title: 'المقرارات الدراسية', icon: BookOpen },
     { id: 'question-bank', title: 'بنك الأسئلة والتمارين', icon: FileQuestion },
     { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle },
     { id: 'my-results', title: 'نتائجي وتقييماتي', icon: AwardIcon },
