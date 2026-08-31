@@ -15,10 +15,36 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: 'منصة المهندس — م/ رضا خيرت | تعليم الرياضيات (إعدادي وثانوي)',
+  metadataBase: new URL('https://elmohands-one.vercel.app'),
+  title: {
+    default: 'منصة المهندس — م/ رضا خيرت | تعليم الرياضيات',
+    template: '%s | منصة المهندس',
+  },
   description: 'منصتك الأولى لتعلم وفهم الرياضيات بأسلوب بسيط وممتع مع م/ رضا خيرت للمرحلة الإعدادية والصف الأول الثانوي.',
   keywords: ['رياضيات', 'منصة المهندس', 'رضا خيرت', 'شرح رياضيات', 'إعدادي', 'أولى ثانوي', 'اختبارات رياضيات'],
   authors: [{ name: 'م/ رضا خيرت' }],
+  creator: 'م/ رضا خيرت',
+  publisher: 'منصة المهندس لتعليم الرياضيات',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/apple-icon',
+  },
+  openGraph: {
+    title: 'منصة المهندس — م/ رضا خيرت | تعليم الرياضيات',
+    description: 'منصتك الأولى لتعلم وفهم الرياضيات بأسلوب بسيط وممتع مع م/ رضا خيرت للمرحلة الإعدادية والصف الأول الثانوي.',
+    url: 'https://elmohands-one.vercel.app',
+    siteName: 'منصة المهندس',
+    locale: 'ar_EG',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'منصة المهندس — م/ رضا خيرت',
+    description: 'منصتك الأولى لتعلم وفهم الرياضيات بأسلوب بسيط وممتع مع م/ رضا خيرت.',
+  },
 };
 
 export const viewport: Viewport = {

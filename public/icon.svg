@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="brand_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00CFFF"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="inner_glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00CFFF" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00CFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background squircle -->
+  <rect width="512" height="512" rx="128" fill="#0A0F1D"/>
+  <rect x="8" y="8" width="496" height="496" rx="120" stroke="url(#brand_grad)" stroke-width="10" stroke-opacity="0.5"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#inner_glow)"/>
+
+  <!-- Graduation Cap Rhombus (Top) -->
+  <polygon points="256,115 445,210 256,305 67,210" fill="url(#brand_grad)"/>
+
+  <!-- Graduation Cap Skull Under (Depth) -->
+  <path d="M140,248 V340 C140,385 372,385 372,340 V248 L256,305 Z" fill="#0088CC"/>
+  
+  <!-- Highlight on Skull Rim -->
+  <path d="M140,340 C140,385 372,385 372,340 C372,380 140,380 140,340 Z" fill="#00CFFF" opacity="0.8"/>
+
+  <!-- Tassel -->
+  <path d="M380,225 C405,245 420,290 420,360" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="420" cy="375" r="16" fill="#FFFFFF"/>
+  <polygon points="412,388 428,388 434,430 406,430" fill="#FFFFFF"/>
+
+  <!-- Center Button on Top of Cap -->
+  <circle cx="256" cy="210" r="16" fill="#FFFFFF"/>
+
+  <!-- Math Symbol (Engineering Sigma / Compass Arc at bottom) -->
+  <path d="M185,420 Q256,380 327,420" stroke="url(#brand_grad)" stroke-width="14" stroke-linecap="round" fill="none"/>
+</svg>
