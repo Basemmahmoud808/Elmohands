@@ -30,6 +30,7 @@ interface DashboardSidebarProps {
   userFullName?: string;
   selectedTab: string;
   setSelectedTab: (tab: string) => void;
+  hasActiveSubscription?: boolean;
 }
 
 export function DashboardSidebar({
@@ -37,6 +38,7 @@ export function DashboardSidebar({
   userFullName = 'أحمد محمد',
   selectedTab,
   setSelectedTab,
+  hasActiveSubscription = false,
 }: DashboardSidebarProps) {
   const [desktopOpen, setDesktopOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -73,7 +75,10 @@ export function DashboardSidebar({
     { id: 'question-bank', title: 'بنك الأسئلة والتمارين', icon: FileQuestion },
     { id: 'my-quizzes', title: 'الاختبارات المتاحة', icon: HelpCircle },
     { id: 'my-results', title: 'نتائجي وتقييماتي', icon: AwardIcon },
-    { id: 'subscribe', title: 'الاشتراك وتفعيل الحساب', icon: CreditCard },
+    // Conditionally show subscription tab only when not subscribed or expired
+    ...(!hasActiveSubscription
+      ? [{ id: 'subscribe', title: 'الاشتراك وتفعيل الحساب', icon: CreditCard }]
+      : []),
     { id: 'account', title: 'حسابي الشخصي', icon: User },
   ];
 

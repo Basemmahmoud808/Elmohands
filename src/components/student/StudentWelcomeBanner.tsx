@@ -7,9 +7,14 @@ import { Sparkles, Calendar, ShieldCheck, AlertTriangle } from 'lucide-react';
 interface StudentWelcomeBannerProps {
   profile: StudentProfileDTO;
   subscription: StudentSubscriptionDTO;
+  onNavigateToSubscribe?: () => void;
 }
 
-export function StudentWelcomeBanner({ profile, subscription }: StudentWelcomeBannerProps) {
+export function StudentWelcomeBanner({
+  profile,
+  subscription,
+  onNavigateToSubscribe,
+}: StudentWelcomeBannerProps) {
   const sub = subscription.subscription;
   const daysRemaining = sub?.daysRemaining ?? 0;
   const isActive = subscription.hasActiveSubscription && daysRemaining > 0;
@@ -68,14 +73,20 @@ export function StudentWelcomeBanner({ profile, subscription }: StudentWelcomeBa
             </div>
           </div>
         ) : (
-          <div className="p-3 sm:p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 backdrop-blur-md">
+          <div
+            onClick={onNavigateToSubscribe}
+            className={`p-3 sm:p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 backdrop-blur-md ${
+              onNavigateToSubscribe ? 'cursor-pointer hover:border-red-500/60 hover:scale-[1.02] transition-all' : ''
+            }`}
+            title="اضغط للاشتراك وتفعيل الحساب"
+          >
             <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
             <div className="flex flex-col text-right">
               <span className="text-xs font-black text-red-600 dark:text-red-400">
                 اشتراك غير نشط
               </span>
               <span className="text-[11px] font-semibold text-slate-600 dark:text-chalk-muted">
-                يرجى الاشتراك لتفعيل الدروس والمحاضرات
+                اضغط هنا للاشتراك وتفعيل الدروس
               </span>
             </div>
           </div>

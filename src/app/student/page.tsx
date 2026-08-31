@@ -96,6 +96,13 @@ export default function StudentDashboard() {
           userFullName={data.profile.fullName}
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
+          hasActiveSubscription={
+            Boolean(
+              data.subscription.hasActiveSubscription &&
+              data.subscription.subscription &&
+              data.subscription.subscription.daysRemaining > 0
+            )
+          }
         />
 
         {/* Main Content Container */}
@@ -104,6 +111,7 @@ export default function StudentDashboard() {
           <StudentWelcomeBanner
             profile={data.profile}
             subscription={data.subscription}
+            onNavigateToSubscribe={() => setSelectedTab('subscribe')}
           />
 
           {/* TAB 1: OVERVIEW (الرئيسية) */}
