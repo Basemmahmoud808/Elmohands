@@ -486,12 +486,31 @@ export async function getAdminSubscriptionsListAction(): Promise<ActionResult<Ad
 export async function grantStudentSubscriptionAction(
   studentId: string,
   durationDays: number = 30,
-  customPlanName?: string
+  customPlanName?: string,
+  transactionRef?: string
 ): Promise<ActionResult<{ subscriptionId: string; expiresAt: string; whatsAppUrl?: string }>> {
   try {
     const admin = await getCurrentUser();
     if (!admin || admin.role !== 'ADMIN') {
       return { success: false, error: 'غير مصرح بتفعيل الاشتراكات. يجب تسجيل الدخول كأدمن.' };
+    }
+
+    // Check duplicate transaction reference number if provided
+    const cleanRef = (transactionRef || '').trim();
+    if (cleanRef) {
+      const { data: existingRef } = await supabaseAdmin
+        .from('audit_logs')
+        .select('id, metadata')
+        .contains('metadata', { transactionRef: cleanRef })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingRef) {
+        return {
+          success: false,
+          error: `رقم عملية التحويل (${cleanRef}) مسجل مسبقاً لاشتراك آخر! يرجى مراجعة إيصال فودافون كاش لمنع التكرار.`,
+        };
+      }
     }
 
     // 1. Fetch or match corresponding plan
@@ -604,7 +623,7 @@ export async function grantStudentSubscriptionAction(
         action: 'SUBSCRIPTION_GRANTED_MANUAL',
         entity_type: 'subscriptions',
         entity_id: newSub.id,
-        metadata: { studentId, durationDays, planName: defaultName },
+        metadata: { studentId, durationDays, planName: defaultName, transactionRef: cleanRef || null },
       });
     } catch {
       // non-critical

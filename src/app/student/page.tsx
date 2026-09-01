@@ -305,6 +305,8 @@ export default function StudentDashboard() {
       <VideoPreviewModal
         video={activeVideoModal}
         onClose={() => setActiveVideoModal(null)}
+        studentName={data.profile.fullName}
+        studentPhone={data.profile.phone}
       />
     </DarkGradientBg>
   );

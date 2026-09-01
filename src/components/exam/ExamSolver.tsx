@@ -64,6 +64,35 @@ export function ExamSolver({ session, onFinish, onExit }: ExamSolverProps) {
   // Lightbox preview for images
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // LocalStorage Auto-Save & Recovery for network disconnection resilience
+  const cacheKey = `almohands_quiz_answers_${quiz.id}_att_${currentAttemptNumber}_${student?.phone || 'student'}`;
+
+  // Restore cached answers on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(cacheKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+          setAnswers((prev) => ({ ...parsed, ...prev }));
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [cacheKey]);
+
+  // Persist answers on every change
+  useEffect(() => {
+    try {
+      if (Object.keys(answers).length > 0 && step !== 'results') {
+        localStorage.setItem(cacheKey, JSON.stringify(answers));
+      }
+    } catch {
+      // ignore
+    }
+  }, [answers, cacheKey, step]);
+
   const activeQuestion = questions[activeIdx] || questions[0];
 
   const renderMath = (latex: string, displayMode: boolean = false) => {
@@ -123,6 +152,7 @@ export function ExamSolver({ session, onFinish, onExit }: ExamSolverProps) {
         });
 
         if (res.success && res.data) {
+          try { localStorage.removeItem(cacheKey); } catch {}
           setResult(res.data);
           setStep('results');
           if (onFinish) onFinish(res.data);

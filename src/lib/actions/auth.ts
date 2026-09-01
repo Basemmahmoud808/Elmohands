@@ -11,6 +11,7 @@ import {
   setAuthCookies,
   clearAuthCookies,
   createSessionRecord,
+  revokeUserSessions,
   getCurrentUser as getJwtCurrentUser,
 } from '@/lib/auth';
 
@@ -145,6 +146,15 @@ export async function loginUser(
     const accessToken = await createAccessToken(tokenPayload);
     const refreshToken = await createRefreshToken(tokenPayload);
     await setAuthCookies(accessToken, refreshToken);
+
+    // Enforce Single Active Device Session for students (prevents password sharing across multiple phones)
+    if (profile.role === 'STUDENT') {
+      try {
+        await revokeUserSessions(profile.id);
+      } catch {
+        // non-critical
+      }
+    }
 
     try {
       await createSessionRecord(profile.id, refreshToken);

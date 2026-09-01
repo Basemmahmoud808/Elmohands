@@ -3,14 +3,22 @@
 import React from 'react';
 import { X, PlayCircle } from 'lucide-react';
 
+import { VideoWatermark } from '@/components/lessons/VideoWatermark';
 import { parseMediaUrlHelper } from '@/lib/utils';
 
 interface VideoPreviewModalProps {
   video: { title: string; url: string } | null;
   onClose: () => void;
+  studentName?: string;
+  studentPhone?: string;
 }
 
-export function VideoPreviewModal({ video, onClose }: VideoPreviewModalProps) {
+export function VideoPreviewModal({
+  video,
+  onClose,
+  studentName,
+  studentPhone,
+}: VideoPreviewModalProps) {
   if (!video) return null;
 
   const parsed = parseMediaUrlHelper(video.url);
@@ -43,8 +51,12 @@ export function VideoPreviewModal({ video, onClose }: VideoPreviewModalProps) {
           </button>
         </div>
 
-        {/* Video Player Area */}
-        <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+        {/* Video Player Area with Anti-Piracy Floating Watermark */}
+        <div
+          onContextMenu={(e) => e.preventDefault()}
+          className="relative aspect-video bg-black flex items-center justify-center overflow-hidden select-none"
+        >
+          <VideoWatermark studentName={studentName} studentPhone={studentPhone} />
           {parsed.type === 'iframe' ? (
             <iframe
               src={parsed.src}
