@@ -5,6 +5,7 @@ import { X, PlayCircle, Clock, CheckCircle2, RotateCcw } from 'lucide-react';
 import { VideoWatermark } from '@/components/lessons/VideoWatermark';
 import { parseMediaUrlHelper } from '@/lib/utils';
 import { updateLessonProgressAction } from '@/lib/actions/progress';
+import { syncLessonDurationAction } from '@/lib/actions/lessons';
 
 interface VideoPreviewModalProps {
   video: {
@@ -129,6 +130,9 @@ export function VideoPreviewModal({
         lastSavedPosRef.current = cleanPos;
         try {
           await updateLessonProgressAction(video.lessonId, cleanPos, pct);
+          if (dur > 0) {
+            syncLessonDurationAction(video.lessonId, dur).catch(() => {});
+          }
           if (onProgressSaved) {
             onProgressSaved(video.lessonId, pct, cleanPos);
           }

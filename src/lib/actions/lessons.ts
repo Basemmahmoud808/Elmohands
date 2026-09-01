@@ -660,7 +660,7 @@ export async function getLessonsList(gradeName?: string): Promise<LessonItem[]> 
         videoPath: l.video_path || undefined,
         pdfPath: l.pdf_path || undefined,
         thumbnailPath: l.thumbnail_path || '/teacher_reda_kheyrat.jpg',
-        durationMinutes: l.duration || 45,
+        durationMinutes: l.duration ? Number(l.duration) : 0,
         gradeName: hierarchy.gradeName,
         branchName: hierarchy.branchName,
         isPublished: l.is_published !== false,
@@ -760,7 +760,7 @@ export async function createLessonAction(
     let rawVideoUrl = '';
     let pdfUrl = '';
     let thumbnailPath = '';
-    let durationMinutes = 45;
+    let durationMinutes = 0;
     let sequenceOrder = 1;
     let isPublished = true;
     let isLocked = false;
@@ -768,7 +768,7 @@ export async function createLessonAction(
     if (inputOrFormData instanceof FormData) {
       title = (inputOrFormData.get('title') as string) || '';
       description = (inputOrFormData.get('description') as string) || '';
-      durationMinutes = Number(inputOrFormData.get('durationMinutes')) || 45;
+      durationMinutes = Number(inputOrFormData.get('durationMinutes')) || 0;
       thumbnailPath = (inputOrFormData.get('thumbnailPath') as string) || '/teacher_reda_kheyrat.jpg';
       rawVideoUrl = (inputOrFormData.get('videoUrl') as string) || '';
       pdfUrl = (inputOrFormData.get('pdfUrl') as string) || '';
@@ -782,10 +782,23 @@ export async function createLessonAction(
       rawVideoUrl = inputOrFormData.videoPath || '';
       pdfUrl = inputOrFormData.pdfPath || '';
       thumbnailPath = inputOrFormData.thumbnailPath || '/teacher_reda_kheyrat.jpg';
-      durationMinutes = inputOrFormData.durationMinutes || 45;
+      durationMinutes = inputOrFormData.durationMinutes || 0;
       sequenceOrder = inputOrFormData.sortOrder || 1;
       isPublished = inputOrFormData.isPublished !== false;
       isLocked = Boolean(inputOrFormData.isLocked);
+    }
+
+    // Auto-detect exact video duration if missing or default
+    if (rawVideoUrl && (!durationMinutes || durationMinutes === 45 || durationMinutes === 0)) {
+      try {
+        const { detectVideoDurationAction } = await import('@/lib/actions/media');
+        const detected = await detectVideoDurationAction(rawVideoUrl);
+        if (detected.success && detected.data?.durationMinutes && detected.data.durationMinutes > 0) {
+          durationMinutes = detected.data.durationMinutes;
+        }
+      } catch (err) {
+        console.warn('Server auto-duration detection error:', err);
+      }
     }
 
     const { data: dbData, error: insertError } = await supabaseAdmin
@@ -797,7 +810,7 @@ export async function createLessonAction(
         video_path: rawVideoUrl || null,
         pdf_path: pdfUrl || null,
         thumbnail_path: thumbnailPath || '/teacher_reda_kheyrat.jpg',
-        duration: durationMinutes,
+        duration: durationMinutes > 0 ? durationMinutes : 45,
         sort_order: sequenceOrder,
         is_published: isPublished,
         is_locked: isLocked,
@@ -827,6 +840,31 @@ export async function createLessonAction(
 }
 
 /**
+ * Syncs real video duration detected during playback back to the database.
+ */
+export async function syncLessonDurationAction(lessonId: string, durationSeconds: number) {
+  if (!lessonId || !durationSeconds || durationSeconds <= 0) return;
+  const minutes = Math.round(durationSeconds / 60);
+  if (minutes <= 0) return;
+  try {
+    const { data: current } = await supabaseAdmin
+      .from('lessons')
+      .select('duration')
+      .eq('id', lessonId)
+      .maybeSingle();
+
+    if (!current?.duration || Math.abs((current.duration || 0) - minutes) >= 1) {
+      await supabaseAdmin
+        .from('lessons')
+        .update({ duration: minutes })
+        .eq('id', lessonId);
+    }
+  } catch (e) {
+    console.warn('Failed to auto-sync lesson duration:', e);
+  }
+}
+
+/**
  * Updates a lesson in Supabase.
  */
 export async function updateLessonAction(
@@ -839,6 +877,19 @@ export async function updateLessonAction(
       return { success: false, error: 'غير مصرح بتعديل الدرس' };
     }
 
+    let finalDuration = data.durationMinutes;
+    if (data.videoPath && (!finalDuration || finalDuration === 45 || finalDuration === 0)) {
+      try {
+        const { detectVideoDurationAction } = await import('@/lib/actions/media');
+        const detected = await detectVideoDurationAction(data.videoPath);
+        if (detected.success && detected.data?.durationMinutes && detected.data.durationMinutes > 0) {
+          finalDuration = detected.data.durationMinutes;
+        }
+      } catch (err) {
+        console.warn('Server auto-duration detection error on update:', err);
+      }
+    }
+
     const { error } = await supabaseAdmin
       .from('lessons')
       .update({
@@ -847,7 +898,7 @@ export async function updateLessonAction(
         video_path: data.videoPath,
         pdf_path: data.pdfPath,
         thumbnail_path: data.thumbnailPath,
-        duration: data.durationMinutes,
+        duration: finalDuration,
         sort_order: data.sequenceOrder,
         is_published: data.isPublished,
         is_locked: data.isLocked,

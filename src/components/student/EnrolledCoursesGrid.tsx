@@ -222,7 +222,7 @@ export function EnrolledCoursesGrid({
                                     </span>
                                   ) : (
                                     <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                      {les.durationMinutes} دقيقة فيديو
+                                      {les.durationMinutes > 0 ? `${les.durationMinutes} دقيقة فيديو` : 'فيديو تعليمي تفاعلي'}
                                     </span>
                                   )}
                                 </div>

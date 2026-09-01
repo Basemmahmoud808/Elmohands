@@ -184,7 +184,7 @@ export async function getFullCurriculumTreeAction(): Promise<ActionResult<Curric
                       videoPath: l.video_path,
                       pdfPath: l.pdf_path,
                       thumbnailPath: l.thumbnail_path,
-                      durationMinutes: l.duration || 45,
+                      durationMinutes: l.duration ? Number(l.duration) : 0,
                       sortOrder: l.sort_order || 0,
                       isPublished: l.is_published !== false,
                       isLocked: l.is_locked || false,
