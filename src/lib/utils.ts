@@ -50,7 +50,7 @@ export function parseMediaUrlHelper(rawUrl: string, startSeconds?: number): Pars
       const startParam = startTime > 0 ? `&start=${startTime}` : '';
       return {
         type: 'iframe',
-        src: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1${startParam}`,
+        src: `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1${startParam}`,
         isEmbed: true,
         provider: 'youtube',
       };

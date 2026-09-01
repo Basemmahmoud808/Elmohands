@@ -46,7 +46,9 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const hasSeekedHtml5Ref = useRef<boolean>(false);
 
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -70,6 +72,13 @@ export function VideoPlayer({
   const lastSavedPositionRef = useRef<number>(initialPosition);
   const hideControlsTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Helper to extract YouTube video ID
+  const getYouTubeId = (rawUrl?: string): string | null => {
+    if (!rawUrl) return null;
+    const match = rawUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+    return match ? match[1] : null;
+  };
+
   // Format seconds to MM:SS or HH:MM:SS
   const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return '00:00';
@@ -82,22 +91,30 @@ export function VideoPlayer({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Check both initialPosition and localStorage for most recent progress
+  // Check both initialPosition and localStorage across multiple keys
   const getEffectiveStartPosition = useCallback(() => {
-    let pos = initialPosition;
-    if (typeof window !== 'undefined' && lessonId) {
-      const localData = localStorage.getItem(`almohands_vid_${lessonId}`);
-      if (localData) {
+    let bestPos = initialPosition || 0;
+    if (typeof window !== 'undefined') {
+      const keysToCheck: string[] = [];
+      if (lessonId) keysToCheck.push(`almohands_vid_${lessonId}`);
+      if (media.src) keysToCheck.push(`almohands_vid_${media.src}`);
+      const ytId = getYouTubeId(media.src);
+      if (ytId) keysToCheck.push(`almohands_yt_${ytId}`);
+
+      for (const key of keysToCheck) {
         try {
-          const parsed = JSON.parse(localData);
-          if (parsed.pos && parsed.pos > pos) {
-            pos = parsed.pos;
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed.pos === 'number' && parsed.pos > bestPos) {
+              bestPos = Math.round(parsed.pos);
+            }
           }
         } catch {}
       }
     }
-    return pos;
-  }, [initialPosition, lessonId]);
+    return bestPos;
+  }, [initialPosition, lessonId, media.src]);
 
   const [resumedPosition, setResumedPosition] = useState<number>(0);
   const [showResumedBadge, setShowResumedBadge] = useState<boolean>(false);
@@ -107,19 +124,21 @@ export function VideoPlayer({
     setResumedPosition(startPos);
     maxWatchedTimeRef.current = Math.max(maxWatchedTimeRef.current, startPos);
     lastSavedPositionRef.current = startPos;
+    hasSeekedHtml5Ref.current = false;
     if (startPos > 5) {
       setShowResumedBadge(true);
-      const timer = setTimeout(() => setShowResumedBadge(false), 5000);
+      const timer = setTimeout(() => setShowResumedBadge(false), 6000);
       return () => clearTimeout(timer);
     }
   }, [getEffectiveStartPosition]);
 
-  // Debounced progress saving to server
+  // Debounced progress saving to server & instant localStorage
   const saveProgressToServer = useCallback(
     async (pos: number, dur: number) => {
       if (!dur || dur <= 0 || !lessonId) return;
 
-      const calculatedPct = Math.min(100, Math.round((Math.max(pos, maxWatchedTimeRef.current) / dur) * 100));
+      const cleanPos = Math.max(0, Math.round(pos));
+      const calculatedPct = Math.min(100, Math.round((Math.max(cleanPos, maxWatchedTimeRef.current) / dur) * 100));
       const newPct = Math.max(watchPercentage, calculatedPct);
       const newlyCompleted = newPct >= 90;
 
@@ -131,26 +150,70 @@ export function VideoPlayer({
       }
 
       if (onProgressUpdate) {
-        onProgressUpdate(newPct, pos, newlyCompleted);
+        onProgressUpdate(newPct, cleanPos, newlyCompleted);
       }
 
-      // Save locally to localStorage
-      if (typeof window !== 'undefined' && lessonId) {
-        localStorage.setItem(`almohands_vid_${lessonId}`, JSON.stringify({ pos: Math.round(pos), pct: newPct, updatedAt: Date.now() }));
+      // Save locally to localStorage under all matching keys
+      if (typeof window !== 'undefined') {
+        const payload = JSON.stringify({ pos: cleanPos, pct: newPct, dur, updatedAt: Date.now() });
+        if (lessonId) localStorage.setItem(`almohands_vid_${lessonId}`, payload);
+        if (media.src) localStorage.setItem(`almohands_vid_${media.src}`, payload);
+        const ytId = getYouTubeId(media.src);
+        if (ytId) localStorage.setItem(`almohands_yt_${ytId}`, payload);
       }
 
       // Avoid spamming DB if position change is minor
-      if (Math.abs(pos - lastSavedPositionRef.current) >= 4 || newlyCompleted) {
-        lastSavedPositionRef.current = pos;
+      if (Math.abs(cleanPos - lastSavedPositionRef.current) >= 3 || newlyCompleted) {
+        lastSavedPositionRef.current = cleanPos;
         try {
-          await updateLessonProgressAction(lessonId, pos, newPct);
+          await updateLessonProgressAction(lessonId, cleanPos, newPct);
         } catch (e) {
           console.warn('Progress update error:', e);
         }
       }
     },
-    [lessonId, watchPercentage, isCompleted, onProgressUpdate, onCompleted]
+    [lessonId, watchPercentage, isCompleted, onProgressUpdate, onCompleted, media.src]
   );
+
+  // YouTube / Iframe postMessage listener to track real-time position
+  useEffect(() => {
+    if (media.type !== 'iframe') return;
+
+    const handshakeInterval = setInterval(() => {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        try {
+          iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'listening' }), '*');
+        } catch {}
+      }
+    }, 1500);
+
+    const handleWindowMessage = (event: MessageEvent) => {
+      try {
+        let payload = event.data;
+        if (typeof payload === 'string' && payload.startsWith('{')) {
+          payload = JSON.parse(payload);
+        }
+
+        if (payload && payload.event === 'infoDelivery' && payload.info) {
+          if (typeof payload.info.currentTime === 'number') {
+            const cur = Math.round(payload.info.currentTime);
+            const dur = Math.round(payload.info.duration || duration);
+            if (cur > 0) {
+              if (dur > 0 && duration === 0) setDuration(dur);
+              setCurrentTime(cur);
+              saveProgressToServer(cur, dur > 0 ? dur : 2700);
+            }
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('message', handleWindowMessage);
+    return () => {
+      clearInterval(handshakeInterval);
+      window.removeEventListener('message', handleWindowMessage);
+    };
+  }, [media.type, duration, saveProgressToServer]);
 
   // Auto-save on page close, back button, or unmount
   useEffect(() => {
@@ -396,6 +459,7 @@ export function VideoPlayer({
       {/* 3. Media Rendering */}
       {media.type === 'iframe' ? (
         <iframe
+          ref={iframeRef}
           src={effectiveIframeSrc}
           className="w-full h-full border-0 bg-black"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -409,8 +473,20 @@ export function VideoPlayer({
             src={media.src}
             poster={poster || '/teacher_reda_kheyrat.jpg'}
             onLoadedMetadata={handleLoadedMetadata}
+            onCanPlay={() => {
+              if (resumedPosition > 0 && !hasSeekedHtml5Ref.current && videoRef.current) {
+                videoRef.current.currentTime = resumedPosition;
+                hasSeekedHtml5Ref.current = true;
+              }
+            }}
+            onPlay={() => {
+              setIsPlaying(true);
+              if (resumedPosition > 0 && !hasSeekedHtml5Ref.current && videoRef.current) {
+                videoRef.current.currentTime = resumedPosition;
+                hasSeekedHtml5Ref.current = true;
+              }
+            }}
             onTimeUpdate={handleTimeUpdate}
-            onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onEnded={() => {
               setIsPlaying(false);
