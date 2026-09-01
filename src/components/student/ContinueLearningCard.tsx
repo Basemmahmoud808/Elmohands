@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ContinueLearningLessonDTO } from '@/lib/types/dashboard';
-import { PlayCircle, Clock, BookOpen, ChevronLeft, Lock } from 'lucide-react';
+import { PlayCircle, Clock, BookOpen, ChevronLeft, Lock, CheckCircle2 } from 'lucide-react';
 
 interface ContinueLearningCardProps {
   lesson: ContinueLearningLessonDTO | null;
@@ -60,6 +60,7 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
   const currentMinutes = Math.floor(lesson.lastPosition / 60);
   const totalMinutes = lesson.durationMinutes || 45;
   const progressPercent = Math.min(100, Math.max(0, lesson.watchPercentage || 0));
+  const isLessonCompleted = Boolean(lesson.isCompleted) || progressPercent >= 90;
 
   const handlePlayClick = (e: React.MouseEvent) => {
     if (onOpenVideo && lesson.videoPath) {
@@ -76,14 +77,25 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
   };
 
   return (
-    <div className="chalk-card rounded-3xl p-6 lg:p-8 bg-gradient-to-r from-cyan-electric/15 via-blue-ink/20 to-transparent border border-cyan-electric/30 relative overflow-hidden shadow-lg shadow-cyan-electric/5">
+    <div className={`chalk-card rounded-3xl p-6 lg:p-8 bg-gradient-to-r ${
+      isLessonCompleted
+        ? 'from-emerald-500/15 via-slate-900/60 to-transparent border-emerald-500/30 shadow-emerald-500/5'
+        : 'from-cyan-electric/15 via-blue-ink/20 to-transparent border-cyan-electric/30 shadow-cyan-electric/5'
+    } border relative overflow-hidden shadow-lg`}>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
         <div className="lg:col-span-8 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric text-xs font-extrabold border border-cyan-electric/30">
-              <Clock className="w-3.5 h-3.5" />
-              <span>تابع دراستك (الدرس المتاح حالياً)</span>
-            </div>
+            {isLessonCompleted ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-extrabold border border-emerald-500/30">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>تم إكمال هذا الدرس بنجاح (100%)</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric text-xs font-extrabold border border-cyan-electric/30">
+                <Clock className="w-3.5 h-3.5" />
+                <span>تابع دراستك (الدرس المتاح حالياً)</span>
+              </div>
+            )}
             <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted">
               {lesson.branchName} • {lesson.unitTitle}
             </span>
@@ -101,14 +113,22 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
           <div className="space-y-2 pt-1 max-w-xl">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-slate-700 dark:text-chalk/90">
-                مستوى الإنجاز: دقيقة {currentMinutes} من {totalMinutes} دقيقة
+                {isLessonCompleted
+                  ? 'تمت مشاهدة وإتقان كامل الدرس بنجاح'
+                  : `مستوى الإنجاز: دقيقة ${currentMinutes} من ${totalMinutes} دقيقة`}
               </span>
-              <span className="text-cyan-electric font-black">{progressPercent}%</span>
+              <span className={isLessonCompleted ? 'text-emerald-400 font-black' : 'text-cyan-electric font-black'}>
+                {isLessonCompleted ? '100%' : `${progressPercent}%`}
+              </span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-slate-800/80 rounded-full h-3 overflow-hidden p-0.5 border border-slate-300 dark:border-slate-700">
               <div
-                className="bg-gradient-to-r from-cyan-electric to-blue-ink h-full rounded-full shadow-cyan-glow transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isLessonCompleted
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                    : 'bg-gradient-to-r from-cyan-electric to-blue-ink shadow-cyan-glow'
+                }`}
+                style={{ width: `${isLessonCompleted ? 100 : progressPercent}%` }}
               />
             </div>
           </div>
@@ -118,10 +138,14 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
           <Link
             href={`/lessons/${lesson.id}`}
             onClick={handlePlayClick}
-            className="px-6 py-4 rounded-2xl text-sm font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 group"
+            className={`px-6 py-4 rounded-2xl text-sm font-black transition-all flex items-center justify-center gap-2 group ${
+              isLessonCompleted
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-chalk hover:bg-emerald-500 hover:text-black'
+                : 'text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow'
+            }`}
           >
             <PlayCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
-            <span>متابعة مشاهدة الدرس</span>
+            <span>{isLessonCompleted ? 'إعادة مشاهدة الدرس' : 'متابعة مشاهدة الدرس'}</span>
             <ChevronLeft className="w-4 h-4 mr-auto sm:mr-0 lg:mr-auto" />
           </Link>
           <span className="text-[11px] text-center text-slate-500 dark:text-chalk-muted font-medium flex items-center justify-center gap-1">

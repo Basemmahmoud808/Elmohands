@@ -131,12 +131,13 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
 
       if (progressRows && progressRows.length > 0) {
         progressRows.forEach((r: { lesson_id: string; watch_percentage?: number; is_completed?: boolean; last_position?: number }) => {
+          const isDone = Boolean(r.is_completed || (r.watch_percentage && r.watch_percentage >= 90));
           progressMap[r.lesson_id] = {
             watch_percentage: r.watch_percentage || 0,
-            is_completed: r.is_completed || false,
+            is_completed: isDone,
             last_position: r.last_position || 0,
           };
-          if (r.is_completed) completedCount++;
+          if (isDone) completedCount++;
           totalWatchSec += r.last_position || 0;
         });
       }

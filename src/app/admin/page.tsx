@@ -136,7 +136,7 @@ export default function AdminDashboard() {
                 لوحة تحكم منصة المهندس — جاري تجهيز البيانات...
               </h2>
               <p className="text-xs text-slate-500 dark:text-chalk-muted font-bold">
-                تحميل شجرة المناهج، الطلاب، وأكواد الشحن
+                تحميل شجرة المناهج، الطلاب، والاشتراكات
               </p>
             </div>
           </div>

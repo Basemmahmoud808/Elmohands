@@ -362,7 +362,7 @@ export default function AccountPage() {
                 <div className="space-y-1">
                   <h4 className="text-lg font-black text-slate-900 dark:text-chalk">لوحة تحكم المشرف العام</h4>
                   <p className="text-xs text-slate-500 dark:text-chalk-muted leading-relaxed">
-                    تمتلك كامل الصلاحيات لإدارة الطلاب، نشر وتعديل الدروس، بناء الاختبارات وبنوك الأسئلة، وتوليد أكواد الشحن.
+                    تمتلك كامل الصلاحيات لإدارة الطلاب، نشر وتعديل الدروس، بناء الاختبارات وبنوك الأسئلة، وتفعيل الاشتراكات.
                   </p>
                 </div>
 
@@ -384,9 +384,9 @@ export default function AccountPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="text-lg font-black text-slate-900 dark:text-chalk">الوصول للمحتوى التعليمي</h4>
+                  <h4 className="text-lg font-black text-slate-900 dark:text-chalk">الاشتراك والمحتوى التعليمي</h4>
                   <p className="text-xs text-slate-500 dark:text-chalk-muted leading-relaxed">
-                    يمكنك تفعيل أكواد الشحن للوصول الفوري للمحاضرات والأوراق الامتحانية.
+                    يمكنك متابعة وتفعيل اشتراكك والوصول الفوري لجميع المحاضرات والامتحانات التفاعلية وبنك الأسئلة.
                   </p>
                 </div>
 
@@ -394,8 +394,8 @@ export default function AccountPage() {
                   href="/student"
                   className="w-full py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow flex items-center justify-center gap-2 transition-all block text-center"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>الانتقال للوحة الطالب وتفعيل كود</span>
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>الانتقال للوحة تحكم الطالب</span>
                 </Link>
               </div>
             )}

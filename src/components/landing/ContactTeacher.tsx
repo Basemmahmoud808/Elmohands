@@ -24,7 +24,7 @@ export default function ContactTeacher() {
           </h2>
 
           <p className="text-sm text-slate-600 dark:text-chalk-muted font-bold leading-relaxed">
-            لأي استفسارات حول الاشتراكات، أكواد الشحن، أو المواعيد في السنتر، يسعدنا التواصل مع الطلاب وأولياء الأمور مباشرة.
+            لأي استفسارات حول الاشتراكات، تفعيل الحسابات، أو المواعيد في السنتر، يسعدنا التواصل مع الطلاب وأولياء الأمور مباشرة.
           </p>
         </div>
 

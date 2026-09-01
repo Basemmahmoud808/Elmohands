@@ -37,6 +37,30 @@ export function StudentQuestionBankTab({
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [revealedAnswers, setRevealedAnswers] = useState<Record<string, boolean>>({});
 
+  // Persistent completed questions/sheets map: id -> true
+  const [completedItems, setCompletedItems] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('almohands_completed_qb');
+        if (saved) {
+          setCompletedItems(JSON.parse(saved));
+        }
+      } catch {}
+    }
+  }, []);
+
+  const markItemCompleted = (id: string) => {
+    setCompletedItems((prev) => {
+      const updated = { ...prev, [id]: true };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('almohands_completed_qb', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
   useEffect(() => {
     async function loadQuestions() {
       setLoading(true);
@@ -80,7 +104,15 @@ export function StudentQuestionBankTab({
 
   const handleCheckAnswer = (questionId: string) => {
     setRevealedAnswers((prev) => ({ ...prev, [questionId]: true }));
+    const q = questions.find((item) => item.id === questionId);
+    if (q && userAnswers[questionId] === q.correctAnswer) {
+      markItemCompleted(questionId);
+    }
   };
+
+  const completedCount = Object.keys(completedItems).filter((id) =>
+    questions.some((q) => q.id === id)
+  ).length;
 
   return (
     <div className="space-y-6 font-arabic" dir="rtl">
@@ -100,15 +132,24 @@ export function StudentQuestionBankTab({
             </p>
           </div>
 
-          {/* Grade Badge */}
-          <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-electric/30 text-right space-y-1 shrink-0 self-start sm:self-auto">
-            <div className="flex items-center gap-2 text-xs font-black text-cyan-electric">
-              <GraduationCap className="w-4 h-4" />
-              <span>محتوى مخصص لصفك:</span>
+          {/* Stats & Grade Badge */}
+          <div className="flex flex-col sm:items-end gap-2 shrink-0 self-start sm:self-auto">
+            <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-electric/30 text-right space-y-0.5">
+              <div className="flex items-center gap-2 text-xs font-black text-cyan-electric">
+                <GraduationCap className="w-4 h-4" />
+                <span>الصف الدراسي:</span>
+              </div>
+              <p className="text-xs font-bold text-chalk">
+                {studentGradeName}
+              </p>
             </div>
-            <p className="text-xs font-bold text-chalk">
-              {studentGradeName}
-            </p>
+
+            {completedCount > 0 && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>أنجزت {completedCount} من أصل {questions.length} تمرين وشيت 🎯</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -243,17 +284,25 @@ export function StudentQuestionBankTab({
                       </span>
                     </div>
 
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        item.difficulty === 'HARD'
-                          ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                          : item.difficulty === 'EASY'
-                          ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                      }`}
-                    >
-                      {item.difficulty === 'HARD' ? 'مستوى متقدم' : item.difficulty === 'EASY' ? 'مستوى سهل' : 'مستوى متوسط'}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {completedItems[item.id] && (
+                        <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          <span>{isFile ? 'تمت دراسته' : 'تم الحل بنجاح'}</span>
+                        </span>
+                      )}
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          item.difficulty === 'HARD'
+                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                            : item.difficulty === 'EASY'
+                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                        }`}
+                      >
+                        {item.difficulty === 'HARD' ? 'مستوى متقدم' : item.difficulty === 'EASY' ? 'مستوى سهل' : 'مستوى متوسط'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Title / Description */}
@@ -351,7 +400,10 @@ export function StudentQuestionBankTab({
                   {isFile && item.fileUrl ? (
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => onOpenPdf(item.fileName || 'ملف التمرين', item.fileUrl!)}
+                        onClick={() => {
+                          markItemCompleted(item.id);
+                          onOpenPdf(item.fileName || 'ملف التمرين', item.fileUrl!);
+                        }}
                         className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
                       >
                         <Eye className="w-3.5 h-3.5" />

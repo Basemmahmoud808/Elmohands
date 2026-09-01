@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { CurriculumGradeDTO, CurriculumLessonDTO } from '@/lib/types/dashboard';
 import { createLessonAction, createUnitAction, deleteLessonAction, toggleLessonPublishAction } from '@/lib/actions/courses';
 import { updateLessonAction, LessonItem } from '@/lib/actions/lessons';
+import { detectVideoDurationAction } from '@/lib/actions/media';
 import { uploadRealFileWithProgress } from '@/lib/supabase/storage';
 import { UploadProgressBar } from './UploadProgressBar';
 import {
@@ -25,6 +26,7 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 
 interface LessonsManagementTabProps {
@@ -50,6 +52,91 @@ export function LessonsManagementTab({
   const [durationMinutes, setDurationMinutes] = useState(45);
   const [sortOrder, setSortOrder] = useState(1);
   const [isLocked, setIsLocked] = useState(false);
+
+  // Video Duration Auto-detection State
+  const [isDetectingDuration, setIsDetectingDuration] = useState(false);
+  const [durationDetectedMsg, setDurationDetectedMsg] = useState<string | null>(null);
+
+  const detectDurationFromFile = (file: File | null) => {
+    setSelectedVideoFile(file);
+    if (!file) return;
+    setIsDetectingDuration(true);
+    setDurationDetectedMsg(null);
+    try {
+      const url = URL.createObjectURL(file);
+      const tempVid = document.createElement('video');
+      tempVid.preload = 'metadata';
+      tempVid.src = url;
+      tempVid.onloadedmetadata = () => {
+        const mins = Math.max(1, Math.round(tempVid.duration / 60));
+        setDurationMinutes(mins);
+        setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${mins} دقيقة (${Math.round(tempVid.duration)} ثانية)`);
+        URL.revokeObjectURL(url);
+        setIsDetectingDuration(false);
+      };
+      tempVid.onerror = () => {
+        setIsDetectingDuration(false);
+        URL.revokeObjectURL(url);
+      };
+    } catch {
+      setIsDetectingDuration(false);
+    }
+  };
+
+  const autoDetectUrlDuration = async (urlToTest: string, forEditing = false) => {
+    if (!urlToTest || urlToTest.trim().length < 5) return;
+    setIsDetectingDuration(true);
+    setDurationDetectedMsg(null);
+    try {
+      const cleanUrl = urlToTest.trim();
+      // Direct video test in browser first
+      if (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.includes('/play_')) {
+        const tempVid = document.createElement('video');
+        tempVid.preload = 'metadata';
+        tempVid.src = cleanUrl;
+        tempVid.onloadedmetadata = () => {
+          const mins = Math.max(1, Math.round(tempVid.duration / 60));
+          if (forEditing) {
+            setEditingLesson((prev) => prev ? { ...prev, durationMinutes: mins } : null);
+          } else {
+            setDurationMinutes(mins);
+          }
+          setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${mins} دقيقة`);
+          setIsDetectingDuration(false);
+        };
+        tempVid.onerror = async () => {
+          const res = await detectVideoDurationAction(cleanUrl);
+          if (res.success && res.data) {
+            if (forEditing) {
+              setEditingLesson((prev) => prev ? { ...prev, durationMinutes: res.data.durationMinutes } : null);
+            } else {
+              setDurationMinutes(res.data.durationMinutes);
+            }
+            setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${res.data.durationMinutes} دقيقة`);
+          }
+          setIsDetectingDuration(false);
+        };
+        return;
+      }
+
+      // YouTube or Vimeo
+      const res = await detectVideoDurationAction(cleanUrl);
+      if (res.success && res.data) {
+        if (forEditing) {
+          setEditingLesson((prev) => prev ? { ...prev, durationMinutes: res.data.durationMinutes } : null);
+        } else {
+          setDurationMinutes(res.data.durationMinutes);
+        }
+        setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${res.data.durationMinutes} دقيقة (${res.data.durationSeconds} ثانية)`);
+      } else {
+        setDurationDetectedMsg(null);
+      }
+    } catch (e) {
+      console.warn('Auto detect duration error:', e);
+    } finally {
+      setIsDetectingDuration(false);
+    }
+  };
 
   // Media Source Mode: 'file' | 'url'
   const [videoMode, setVideoMode] = useState<'file' | 'url'>('url');
@@ -460,14 +547,27 @@ export function LessonsManagementTab({
             </div>
 
             <div className="sm:col-span-3 space-y-1.5">
-              <label className="text-slate-800 dark:text-chalk block">المدة التقديرية (دقائق):</label>
+              <div className="flex items-center justify-between">
+                <label className="text-slate-800 dark:text-chalk block">المدة (دقائق):</label>
+                {isDetectingDuration ? (
+                  <span className="text-[10px] text-cyan-electric font-bold flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>فحص...</span>
+                  </span>
+                ) : durationDetectedMsg ? (
+                  <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1 truncate max-w-[120px]" title={durationDetectedMsg}>
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>تلقائي</span>
+                  </span>
+                ) : null}
+              </div>
               <div className="relative">
                 <input
                   type="number"
-                  min={5}
-                  max={240}
+                  min={1}
+                  max={400}
                   value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(Number(e.target.value) || 45)}
+                  onChange={(e) => setDurationMinutes(Number(e.target.value) || 1)}
                   className="w-full h-11 px-4 pl-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
                 />
                 <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -530,29 +630,57 @@ export function LessonsManagementTab({
             </div>
 
             {videoMode === 'url' ? (
-              <div className="relative">
-                <input
-                  type="url"
-                  dir="ltr"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=... أو BunnyCDN/MP4 URL"
-                  className="w-full h-11 px-4 pl-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
-                />
-                <Link2 className="w-4 h-4 text-cyan-electric absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <input
+                    type="url"
+                    dir="ltr"
+                    value={videoUrl}
+                    onChange={(e) => {
+                      setVideoUrl(e.target.value);
+                      if (e.target.value.includes('youtube.com') || e.target.value.includes('youtu.be') || e.target.value.endsWith('.mp4')) {
+                        autoDetectUrlDuration(e.target.value);
+                      }
+                    }}
+                    onBlur={() => autoDetectUrlDuration(videoUrl)}
+                    placeholder="https://www.youtube.com/watch?v=... أو BunnyCDN/MP4 URL"
+                    className="w-full h-11 px-4 pl-24 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => autoDetectUrlDuration(videoUrl)}
+                    disabled={isDetectingDuration || !videoUrl}
+                    className="absolute left-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-cyan-electric/15 hover:bg-cyan-electric/25 text-cyan-electric text-[10px] font-bold transition-all disabled:opacity-40 flex items-center gap-1"
+                    title="استخراج مدة الفيديو تلقائياً"
+                  >
+                    {isDetectingDuration ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
+                    <span>فحص المدة</span>
+                  </button>
+                </div>
+                {durationDetectedMsg && (
+                  <p className="text-[11px] text-emerald-500 font-bold flex items-center gap-1 pt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{durationDetectedMsg}</span>
+                  </p>
+                )}
               </div>
             ) : (
               <label className="block p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center cursor-pointer hover:border-cyan-electric bg-white dark:bg-slate-900 transition-all">
                 <input
                   type="file"
                   accept="video/mp4,video/webm"
-                  onChange={(e) => setSelectedVideoFile(e.target.files?.[0] || null)}
+                  onChange={(e) => detectDurationFromFile(e.target.files?.[0] || null)}
                   className="hidden"
                 />
                 <UploadCloud className="w-6 h-6 text-cyan-electric mx-auto mb-1" />
                 <span className="text-xs text-slate-800 dark:text-chalk block">
                   {selectedVideoFile ? selectedVideoFile.name : 'اضغط لاختيار ملف فيديو MP4 من جهازك'}
                 </span>
+                {durationDetectedMsg && (
+                  <span className="text-[11px] text-emerald-500 font-bold block mt-1">
+                    {durationDetectedMsg}
+                  </span>
+                )}
               </label>
             )}
           </div>
@@ -883,12 +1011,23 @@ export function LessonsManagementTab({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-chalk block">رابط الفيديو (Embed / MP4):</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-chalk block">رابط الفيديو (Embed / MP4):</label>
+                  <button
+                    type="button"
+                    onClick={() => autoDetectUrlDuration(editingLesson.videoPath, true)}
+                    className="text-[10px] text-cyan-electric hover:underline flex items-center gap-1"
+                  >
+                    <Clock className="w-3 h-3" />
+                    <span>فحص وتحديث المدة تلقائياً</span>
+                  </button>
+                </div>
                 <input
                   type="text"
                   dir="ltr"
                   value={editingLesson.videoPath}
                   onChange={(e) => setEditingLesson({ ...editingLesson, videoPath: e.target.value })}
+                  onBlur={() => autoDetectUrlDuration(editingLesson.videoPath, true)}
                   className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-chalk font-mono text-xs"
                 />
               </div>
