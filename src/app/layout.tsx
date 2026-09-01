@@ -40,6 +40,10 @@ export const metadata: Metadata = {
     locale: 'ar_EG',
     type: 'website',
   },
+  manifest: '/manifest.webmanifest',
+  alternates: {
+    canonical: 'https://elmohands-one.vercel.app',
+  },
   twitter: {
     card: 'summary_large_image',
     title: 'منصة المهندس — م/ رضا خيرت',
@@ -57,9 +61,33 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOrganization',
+    name: 'منصة المهندس لتعليم الرياضيات',
+    alternateName: 'منصة المهندس — م/ رضا خيرت',
+    url: 'https://elmohands-one.vercel.app',
+    logo: 'https://elmohands-one.vercel.app/icon.svg',
+    description: 'منصتك الأولى لتعلم وفهم الرياضيات بأسلوب بسيط وممتع مع م/ رضا خيرت للمرحلة الإعدادية والصف الأول الثانوي.',
+    telephone: '+201008901896',
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'EG',
+    },
+    founder: {
+      '@type': 'Person',
+      name: 'رضا خيرت',
+      jobTitle: 'معلم أول الرياضيات',
+    },
+  };
+
   return (
     <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <style dangerouslySetInnerHTML={{ __html: `
           :root { --background: 255 255 255; --foreground: 15 23 42; }
           .dark { --background: 0 0 0; --foreground: 248 250 252; }
