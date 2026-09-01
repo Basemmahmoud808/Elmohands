@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { formatEgyptianWhatsAppPhone, sendWhatsAppNotification } from '@/lib/services/whatsapp';
+import { sanitizeInput } from '@/lib/security';
 
 /**
  * Webhook Handler for OpenWA WhatsApp Gateway.
@@ -14,8 +15,8 @@ export async function POST(req: NextRequest) {
     const event = body.event || body.type;
     const message = body.data || body.message || body;
 
-    const from = message.from || message.sender || '';
-    const text = message.body || message.text || message.caption || '';
+    const from = sanitizeInput(message.from || message.sender || '');
+    const text = sanitizeInput(message.body || message.text || message.caption || '');
     const hasMedia = Boolean(message.hasMedia || message.mediaUrl || message.mimetype);
     const mediaUrl = message.mediaUrl || message.url || null;
 

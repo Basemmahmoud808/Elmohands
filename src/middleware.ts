@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
-import { checkIpRateLimit } from '@/lib/security';
-
+import { checkRateLimit, extractClientIp } from '@/lib/security';
 
 const JWT_SECRET_VALUE = process.env.JWT_SECRET || '_build_placeholder_jwt_';
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
   console.error('FATAL: JWT_SECRET environment variable is not set.');
 }
 const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE);
-
 
 interface TokenPayload {
   userId: string;
@@ -30,22 +28,44 @@ async function verifyToken(token: string): Promise<TokenPayload | null> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Extract Client IP & Anti-DDoS Rate Limiting
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : request.ip || '127.0.0.1';
-  const rateCheck = checkIpRateLimit(clientIp, 120, 60000);
+  // 1. Extract Client IP Safely
+  const clientIp = extractClientIp(request.headers);
+
+  // 2. Multi-Tier Granular Rate Limiting (Anti-Brute Force & Anti-DDoS)
+  const isAuthPath = pathname.startsWith('/api/auth') || pathname === '/sign-in' || pathname === '/sign-up';
+  const isWebhookPath = pathname.startsWith('/api/webhooks');
+
+  let rateLimitConfig = { maxRequests: 120, windowMs: 60000, tier: 'general' };
+
+  if (isAuthPath) {
+    // Strict limit on authentication endpoints to prevent credential stuffing and brute-force
+    rateLimitConfig = { maxRequests: 15, windowMs: 60000, tier: 'auth' };
+  } else if (isWebhookPath) {
+    // Moderate limit on external webhooks
+    rateLimitConfig = { maxRequests: 30, windowMs: 60000, tier: 'webhook' };
+  }
+
+  const rateCheck = checkRateLimit({
+    key: `${rateLimitConfig.tier}_${clientIp}`,
+    maxRequests: rateLimitConfig.maxRequests,
+    windowMs: rateLimitConfig.windowMs,
+  });
 
   if (!rateCheck.allowed) {
     return new NextResponse(
       JSON.stringify({
         error: 'Too Many Requests',
-        message: `تنبيه حماية السيرفر: تم تجاوز الحد المسموح من الطلبات (Anti-DDoS Shield). يرجى الانتظار ${rateCheck.resetInSeconds} ثانية.`,
+        message: `تنبيه حماية السيرفر: تم تجاوز الحد المسموح من المحاولات (${rateLimitConfig.maxRequests} طلب/دقيقة). يرجى الانتظار ${rateCheck.resetInSeconds} ثانية.`,
+        retryAfter: rateCheck.resetInSeconds,
       }),
       {
         status: 429,
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
           'Retry-After': String(rateCheck.resetInSeconds),
+          'X-RateLimit-Limit': String(rateCheck.limit),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(rateCheck.resetInSeconds),
         },
       }
     );

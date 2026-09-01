@@ -1,0 +1,713 @@
+{
+  "timestamp": "2026-09-01T13:49:08.236Z",
+  "passed": 88,
+  "failed": 0,
+  "warnings": 0,
+  "successRate": 100,
+  "results": [
+    {
+      "axis": "INFRA",
+      "id": "12.1",
+      "name": "نقطة /api/health تستجيب بنجاح",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 200"
+    },
+    {
+      "axis": "INFRA",
+      "id": "12.2",
+      "name": "WhatsApp Webhook GET — online status",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 200 | service: Almohands WhatsApp Webhook Gateway"
+    },
+    {
+      "axis": "INFRA",
+      "id": "12.3",
+      "name": "صفحة 404 تُعيد 404 أو تُعيد توجيهاً",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 404"
+    },
+    {
+      "axis": "INFRA",
+      "id": "12.4",
+      "name": "ملف .env.local موجود محلياً",
+      "ok": true,
+      "warn": false,
+      "msg": "Found"
+    },
+    {
+      "axis": "INFRA",
+      "id": "12.5",
+      "name": "ملف /api/health/route.ts موجود",
+      "ok": true,
+      "warn": false,
+      "msg": "Found"
+    },
+    {
+      "axis": "PERF",
+      "id": "10.1",
+      "name": "سرعة تحميل الصفحة الرئيسية",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 200 | Time: 216ms"
+    },
+    {
+      "axis": "PERF",
+      "id": "10.2",
+      "name": "استجابة مسار /student (redirect)",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 307 | Time: 140ms"
+    },
+    {
+      "axis": "PERF",
+      "id": "10.3",
+      "name": "استجابة مسار /admin (redirect)",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 307 | Time: 133ms"
+    },
+    {
+      "axis": "PERF",
+      "id": "10.4",
+      "name": "Health Check Response Time",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 200 | Time: 141ms | DB: connected"
+    },
+    {
+      "axis": "PERF",
+      "id": "10.5",
+      "name": "Health Check — قاعدة البيانات متصلة",
+      "ok": true,
+      "warn": false,
+      "msg": "{\"status\":\"healthy\",\"db\":\"connected\",\"activeProfilesCount\":7,\"durationMs\":777,\"platform\":\"منصة المهندس — م/ رضا خيرت\",\"t"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.1",
+      "name": "محاولة الوصول لـ /admin بدون جلسة → redirect",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 307"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.2",
+      "name": "محاولة الوصول لـ /student بدون جلسة → redirect",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 307"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.3",
+      "name": "Middleware يحمي /admin من الطلاب",
+      "ok": true,
+      "warn": false,
+      "msg": "Role check found in middleware"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.4",
+      "name": "نظام الجلسة الواحدة مُفعّل في auth.ts",
+      "ok": true,
+      "warn": false,
+      "msg": "Single session logic found"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.5",
+      "name": "Middleware يتحقق من JWT Token",
+      "ok": true,
+      "warn": false,
+      "msg": "JWT verification found"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.6",
+      "name": "Rate Limiting مُفعّل في Middleware",
+      "ok": true,
+      "warn": false,
+      "msg": "Rate limiting code found"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.7",
+      "name": "دالة sanitizeInput تحمي من XSS",
+      "ok": true,
+      "warn": false,
+      "msg": "Sanitization code found"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.8",
+      "name": "التحقق من طول كلمة المرور (≥ 6) في validations.ts",
+      "ok": true,
+      "warn": false,
+      "msg": "Password min(6) validation found"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.9",
+      "name": "تعطيل Right-Click على مشغل الفيديو",
+      "ok": true,
+      "warn": false,
+      "msg": "onContextMenu prevention found"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.10",
+      "name": "العلامة المائية مدمجة في مشغل الفيديو",
+      "ok": true,
+      "warn": false,
+      "msg": "VideoWatermark component used"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.11",
+      "name": "العلامة المائية في مشغل الدروس أيضاً",
+      "ok": true,
+      "warn": false,
+      "msg": "VideoWatermark in VideoPlayer"
+    },
+    {
+      "axis": "SEC",
+      "id": "1.12",
+      "name": "Auth Cookies محمية بـ httpOnly + secure",
+      "ok": true,
+      "warn": false,
+      "msg": "httpOnly and secure flags found"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.1",
+      "name": "تحويل الأرقام العربية إلى إنجليزية عند تسجيل الدخول",
+      "ok": true,
+      "warn": false,
+      "msg": "Arabic digits normalization found"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.2",
+      "name": "التحقق من رقم هاتف مكرر عند التسجيل",
+      "ok": true,
+      "warn": false,
+      "msg": "Duplicate phone check in register route"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.3",
+      "name": "التحقق من طول كلمة المرور (≥ 6)",
+      "ok": true,
+      "warn": false,
+      "msg": "Password length check found"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.4",
+      "name": "تطبيع تنسيق الهاتف المصري (+20 / 20 → 01)",
+      "ok": true,
+      "warn": false,
+      "msg": "Phone normalization code found"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.5",
+      "name": "البحث عن الطالب بالاسم عند تسجيل الدخول",
+      "ok": true,
+      "warn": false,
+      "msg": "Name-based login found"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.6",
+      "name": "فحص is_active قبل السماح بتسجيل الدخول",
+      "ok": true,
+      "warn": false,
+      "msg": "Activation check found"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.7",
+      "name": "إنشاء Access + Refresh Tokens عند الدخول",
+      "ok": true,
+      "warn": false,
+      "msg": "Both token types implemented"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.8",
+      "name": "تسجيل الخروج يمسح كوكيز الجلسة",
+      "ok": true,
+      "warn": false,
+      "msg": "Cookie deletion in logout"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.9",
+      "name": "إعادة توجيه المستخدم المسجل بعيداً عن /sign-in",
+      "ok": true,
+      "warn": false,
+      "msg": "Redirect logic found in middleware"
+    },
+    {
+      "axis": "AUTH",
+      "id": "2.10",
+      "name": "محاولات تحقق متعددة من كلمة المرور",
+      "ok": true,
+      "warn": false,
+      "msg": "Multiple password candidate check found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.1",
+      "name": "دالة إحصائيات لوحة التحكم getAdminOverviewStatsAction",
+      "ok": true,
+      "warn": false,
+      "msg": "Overview stats action found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.2",
+      "name": "دالة جلب الطلاب getAdminStudentsAction",
+      "ok": true,
+      "warn": false,
+      "msg": "Students list action found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.3",
+      "name": "تفعيل الاشتراك مع بيانات الطالب من قاعدة البيانات",
+      "ok": true,
+      "warn": false,
+      "msg": "Student profile fetched for WhatsApp on subscription"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.4",
+      "name": "إلغاء الاشتراك cancelStudentSubscriptionAction",
+      "ok": true,
+      "warn": false,
+      "msg": "Cancel subscription action found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.5",
+      "name": "إعادة تعيين كلمة المرور adminResetStudentPasswordAction",
+      "ok": true,
+      "warn": false,
+      "msg": "Password reset action found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.6",
+      "name": "تفعيل/إيقاف حساب الطالب",
+      "ok": true,
+      "warn": false,
+      "msg": "Toggle student status found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.7",
+      "name": "ADMIN-only guard في كل Action",
+      "ok": true,
+      "warn": false,
+      "msg": "ADMIN guard used 9 times"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.8",
+      "name": "Audit logging لكل عملية حساسة",
+      "ok": true,
+      "warn": false,
+      "msg": "Audit logging found"
+    },
+    {
+      "axis": "ADMIN",
+      "id": "3.9",
+      "name": "مودال الطالب يعرض زر واتساب ديناميكياً",
+      "ok": true,
+      "warn": false,
+      "msg": "Dynamic WhatsApp button in modal"
+    },
+    {
+      "axis": "STU",
+      "id": "4.1",
+      "name": "بانر الترحيب مع اسم الطالب وحالة الاشتراك",
+      "ok": true,
+      "warn": false,
+      "msg": "Welcome banner with student name found"
+    },
+    {
+      "axis": "STU",
+      "id": "4.2",
+      "name": "تبويب المقررات الدراسية",
+      "ok": true,
+      "warn": false,
+      "msg": "Curriculum tab found"
+    },
+    {
+      "axis": "STU",
+      "id": "4.3",
+      "name": "إخفاء تبويب الاشتراك عند وجود اشتراك نشط",
+      "ok": true,
+      "warn": false,
+      "msg": "Conditional subscription tab logic found"
+    },
+    {
+      "axis": "STU",
+      "id": "4.4",
+      "name": "ظهور تبويب الاشتراك عند عدم الاشتراك",
+      "ok": true,
+      "warn": false,
+      "msg": "Subscription tab toggle logic found"
+    },
+    {
+      "axis": "STU",
+      "id": "4.5",
+      "name": "شارة \"غير نشط\" قابلة للنقر للانتقال للاشتراك",
+      "ok": true,
+      "warn": false,
+      "msg": "Clickable inactive badge found"
+    },
+    {
+      "axis": "STU",
+      "id": "4.6",
+      "name": "تبويب بنك الأسئلة",
+      "ok": true,
+      "warn": false,
+      "msg": "Question bank tab found"
+    },
+    {
+      "axis": "STU",
+      "id": "4.7",
+      "name": "بنك الأسئلة مرتبط بصف الطالب تلقائياً",
+      "ok": true,
+      "warn": false,
+      "msg": "StudentQuestionBankTab component exists"
+    },
+    {
+      "axis": "STU",
+      "id": "4.8",
+      "name": "مشغل الفيديو يستقبل بيانات الطالب للعلامة المائية",
+      "ok": true,
+      "warn": false,
+      "msg": "Student data passed to VideoPreviewModal"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.3",
+      "name": "ميزة وضع علامة (Flag) على الأسئلة",
+      "ok": true,
+      "warn": false,
+      "msg": "Flagging feature found"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.4",
+      "name": "الحفظ التلقائي في localStorage عند انقطاع الإنترنت",
+      "ok": true,
+      "warn": false,
+      "msg": "localStorage auto-save implemented"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.5",
+      "name": "التسليم التلقائي عند انتهاء الوقت",
+      "ok": true,
+      "warn": false,
+      "msg": "Auto-submit on timer found"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.6",
+      "name": "مكافحة الغش: رصد مغادرة التبويب",
+      "ok": true,
+      "warn": false,
+      "msg": "Tab switch detection found"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.7",
+      "name": "تسليم تلقائي بعد مخالفتين",
+      "ok": true,
+      "warn": false,
+      "msg": "Violation threshold found"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.8",
+      "name": "عرض نتائج الامتحان التفصيلية",
+      "ok": true,
+      "warn": false,
+      "msg": "Results and breakdown display found"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.9",
+      "name": "عرض معادلات رياضية بـ KaTeX",
+      "ok": true,
+      "warn": false,
+      "msg": "KaTeX rendering found"
+    },
+    {
+      "axis": "EXAM",
+      "id": "5.10",
+      "name": "تنظيف localStorage بعد تسليم الامتحان",
+      "ok": true,
+      "warn": false,
+      "msg": "Cache cleanup after submission found"
+    },
+    {
+      "axis": "QB",
+      "id": "6.1",
+      "name": "مكون بنك الأسئلة StudentQuestionBankTab موجود",
+      "ok": true,
+      "warn": false,
+      "msg": "Found"
+    },
+    {
+      "axis": "QB",
+      "id": "6.2",
+      "name": "بنك الأسئلة يعرض حسب صف الطالب",
+      "ok": true,
+      "warn": false,
+      "msg": "Grade filtering found"
+    },
+    {
+      "axis": "QB",
+      "id": "6.3",
+      "name": "عارض PDF للشيتات",
+      "ok": true,
+      "warn": false,
+      "msg": "PDF viewer support found"
+    },
+    {
+      "axis": "QB",
+      "id": "6.4",
+      "name": "أسئلة MCQ تفاعلية",
+      "ok": true,
+      "warn": false,
+      "msg": "Interactive MCQ questions found"
+    },
+    {
+      "axis": "QB",
+      "id": "6.5",
+      "name": "Server Action لجلب أسئلة الصف تلقائياً",
+      "ok": true,
+      "warn": false,
+      "msg": "Student questions action with grade auto-detection found"
+    },
+    {
+      "axis": "QB",
+      "id": "6.6",
+      "name": "تصفية الأسئلة بناءً على صف الطالب المسجل",
+      "ok": true,
+      "warn": false,
+      "msg": "Grade-based question filtering found"
+    },
+    {
+      "axis": "VID",
+      "id": "7.1",
+      "name": "دعم فيديو يوتيوب (iframe embed)",
+      "ok": true,
+      "warn": false,
+      "msg": "YouTube iframe support found"
+    },
+    {
+      "axis": "VID",
+      "id": "7.2",
+      "name": "دعم فيديو مباشر HTML5 (MP4)",
+      "ok": true,
+      "warn": false,
+      "msg": "HTML5 video player found"
+    },
+    {
+      "axis": "VID",
+      "id": "7.3",
+      "name": "العلامة المائية في VideoPlayer",
+      "ok": true,
+      "warn": false,
+      "msg": "VideoWatermark in VideoPlayer"
+    },
+    {
+      "axis": "VID",
+      "id": "7.4",
+      "name": "تتبع نسبة المشاهدة وحفظ الموضع",
+      "ok": true,
+      "warn": false,
+      "msg": "Watch progress tracking found"
+    },
+    {
+      "axis": "VID",
+      "id": "7.5",
+      "name": "إكمال الدرس عند 90% مشاهدة",
+      "ok": true,
+      "warn": false,
+      "msg": "Lesson completion at 90% found"
+    },
+    {
+      "axis": "VID",
+      "id": "7.6",
+      "name": "أزرار التحكم: تشغيل، إيقاف، تقديم، ترجيع، سرعة",
+      "ok": true,
+      "warn": false,
+      "msg": "All playback controls found"
+    },
+    {
+      "axis": "VID",
+      "id": "7.7",
+      "name": "الوضع المسرحي (Theater Mode)",
+      "ok": true,
+      "warn": false,
+      "msg": "Theater mode found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.1",
+      "name": "دالة تفعيل الاشتراك grantStudentSubscriptionAction",
+      "ok": true,
+      "warn": false,
+      "msg": "Grant subscription action found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.2",
+      "name": "دعم الاشتراك الشهري والترم والسنوي",
+      "ok": true,
+      "warn": false,
+      "msg": "All subscription durations found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.3",
+      "name": "منع تكرار أرقام عمليات فودافون كاش",
+      "ok": true,
+      "warn": false,
+      "msg": "Duplicate transaction ref guard found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.4",
+      "name": "دالة إلغاء الاشتراك cancelStudentSubscriptionAction",
+      "ok": true,
+      "warn": false,
+      "msg": "Cancel subscription action found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.5",
+      "name": "فحص انتهاء صلاحية الاشتراك عند الطالب",
+      "ok": true,
+      "warn": false,
+      "msg": "Subscription expiry logic found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.6",
+      "name": "زر واتساب يظهر بعد تفعيل الاشتراك",
+      "ok": true,
+      "warn": false,
+      "msg": "WhatsApp button after activation found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.7",
+      "name": "زر واتساب يظهر بعد إعادة تعيين كلمة المرور",
+      "ok": true,
+      "warn": false,
+      "msg": "WhatsApp button on reset found"
+    },
+    {
+      "axis": "SUB",
+      "id": "8.8",
+      "name": "إخفاء تبويب الاشتراك عند وجود اشتراك نشط",
+      "ok": true,
+      "warn": false,
+      "msg": "Conditional subscription tab found"
+    },
+    {
+      "axis": "WA",
+      "id": "9.1",
+      "name": "دالة توليد رابط wa.me المباشر",
+      "ok": true,
+      "warn": false,
+      "msg": "Direct URL generator found"
+    },
+    {
+      "axis": "WA",
+      "id": "9.2",
+      "name": "قالب رسالة الترحيب بعد تفعيل الاشتراك",
+      "ok": true,
+      "warn": false,
+      "msg": "Welcome message template found"
+    },
+    {
+      "axis": "WA",
+      "id": "9.3",
+      "name": "قالب رسالة إعادة تعيين كلمة المرور",
+      "ok": true,
+      "warn": false,
+      "msg": "Password reset message template found"
+    },
+    {
+      "axis": "WA",
+      "id": "9.4",
+      "name": "ملف Webhook واتساب موجود",
+      "ok": true,
+      "warn": false,
+      "msg": "Webhook route file exists"
+    },
+    {
+      "axis": "WA",
+      "id": "9.5",
+      "name": "Webhook GET يُعيد حالة online",
+      "ok": true,
+      "warn": false,
+      "msg": "Status: 200 | response: {\"status\":\"online\",\"service\":\"Almohands WhatsApp Webhook Gateway\",\"timestamp\":\"2"
+    },
+    {
+      "axis": "WA",
+      "id": "9.6",
+      "name": "تنسيق الأرقام المصرية (01...) إلى 201...",
+      "ok": true,
+      "warn": false,
+      "msg": "Phone normalization to 20-prefix found"
+    },
+    {
+      "axis": "COMPAT",
+      "id": "11.6",
+      "name": "دعم RTL (اتجاه اليمين لليسار)",
+      "ok": true,
+      "warn": false,
+      "msg": "RTL direction found in layout"
+    },
+    {
+      "axis": "COMPAT",
+      "id": "11.5",
+      "name": "دعم الوضع الداكن (Dark Mode)",
+      "ok": true,
+      "warn": false,
+      "msg": "Dark mode CSS found"
+    },
+    {
+      "axis": "COMPAT",
+      "id": "11.1-4",
+      "name": "تصميم متجاوب (Responsive — sm:, md:, lg:)",
+      "ok": true,
+      "warn": false,
+      "msg": "Responsive breakpoints found"
+    },
+    {
+      "axis": "COMPAT",
+      "id": "11.Arabic",
+      "name": "دعم الخط العربي",
+      "ok": true,
+      "warn": false,
+      "msg": "Arabic font configured"
+    }
+  ]
+}

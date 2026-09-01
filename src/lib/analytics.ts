@@ -1,8 +1,8 @@
 'use client';
 
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-ALMOHANDS_SAMPLE';
-export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '000000000000000';
-export const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || 'y4pmq5c8dc';
+export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '';
+export const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || '';
 
 declare global {
   interface Window {
@@ -13,12 +13,12 @@ declare global {
 
 // Track Pageview
 export const pageview = (url: string) => {
-  if (typeof window !== 'undefined' && window.gtag) {
+  if (typeof window !== 'undefined' && window.gtag && GA_MEASUREMENT_ID) {
     window.gtag('config', GA_MEASUREMENT_ID, {
       page_path: url,
     });
   }
-  if (typeof window !== 'undefined' && window.fbq) {
+  if (typeof window !== 'undefined' && window.fbq && META_PIXEL_ID) {
     window.fbq('track', 'PageView');
   }
 };

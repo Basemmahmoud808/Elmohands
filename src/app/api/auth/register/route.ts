@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { sanitizeInput, checkIpRateLimit } from '@/lib/security';
+import { sanitizeInput, sanitizeObject, checkIpRateLimit } from '@/lib/security';
 import {
   hashPassword,
   createAccessToken,
@@ -26,16 +26,9 @@ export async function POST(req: NextRequest) {
     }
 
     const rawBody = await req.json();
+    const sanitizedBody = sanitizeObject(rawBody);
 
-    // Normalize Arabic numbers before schema parsing
-    if (typeof rawBody.phone === 'string') {
-      rawBody.phone = rawBody.phone.replace(/[٠-٩]/g, (d: string) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString()).replace(/\s+/g, '');
-    }
-    if (typeof rawBody.parentPhone === 'string') {
-      rawBody.parentPhone = rawBody.parentPhone.replace(/[٠-٩]/g, (d: string) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString()).replace(/\s+/g, '');
-    }
-
-    const parseResult = RegisterSchema.safeParse(rawBody);
+    const parseResult = RegisterSchema.safeParse(sanitizedBody);
     if (!parseResult.success) {
       const firstError = parseResult.error.issues[0]?.message || 'بيانات التسجيل غير صالحة';
       return NextResponse.json(

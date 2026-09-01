@@ -9,6 +9,7 @@ import {
 } from '@/lib/auth';
 
 import { LoginSchema } from '@/lib/validations';
+import { sanitizeObject } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ const LOGIN_LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.json();
-    const parseResult = LoginSchema.safeParse(rawBody);
+    const parseResult = LoginSchema.safeParse(sanitizeObject(rawBody));
 
     if (!parseResult.success) {
       const firstError = parseResult.error.issues[0]?.message || 'بيانات الدخول غير صحيحة';

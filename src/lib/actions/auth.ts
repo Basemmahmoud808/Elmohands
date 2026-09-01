@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { sanitizeInput } from '@/lib/security';
+import { sanitizeInput, sanitizeSearchQuery, normalizeArabicDigits } from '@/lib/security';
 import {
   hashPassword,
   verifyPassword,
@@ -36,7 +36,7 @@ export async function loginUser(
   passwordInput?: string
 ): Promise<{ success: boolean; user?: UserSession; message?: string }> {
   try {
-    const rawIdentifier = (phoneOrUsername || '').trim();
+    const rawIdentifier = sanitizeInput(phoneOrUsername || '');
     if (!rawIdentifier) {
       return { success: false, message: 'يرجى إدخال رقم الهاتف أو الاسم المسجل به.' };
     }
@@ -47,9 +47,7 @@ export async function loginUser(
     }
 
     // Normalize phone digits (convert Arabic numerals to English, strip spaces)
-    let cleanDigits = rawIdentifier
-      .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
-      .replace(/\s+/g, '');
+    let cleanDigits = normalizeArabicDigits(rawIdentifier).replace(/\s+/g, '');
 
     // Normalize Egyptian mobile format (+201... or 201... → 01...)
     if (cleanDigits.startsWith('+20')) {
@@ -82,10 +80,11 @@ export async function loginUser(
 
     // 3. Try finding by student full name (case/diacritics insensitive substring)
     if (!profile && rawIdentifier.length >= 2) {
+      const cleanName = sanitizeSearchQuery(rawIdentifier);
       const { data: nameUser } = await supabaseAdmin
         .from('profiles')
         .select('*')
-        .ilike('full_name', `%${rawIdentifier}%`)
+        .ilike('full_name', `%${cleanName}%`)
         .limit(1)
         .maybeSingle();
       profile = nameUser;
