@@ -23,13 +23,15 @@ export interface ParsedMediaResult {
 /**
  * Universal media URL parser that converts external video links (YouTube, BunnyCDN, Vimeo, Google Drive, Cloudflare, etc.)
  * into secure, embeddable iframe URLs or direct HTML5 video sources.
+ * Supports startSeconds for automatically resuming playback where the student left off.
  */
-export function parseMediaUrlHelper(rawUrl: string): ParsedMediaResult {
+export function parseMediaUrlHelper(rawUrl: string, startSeconds?: number): ParsedMediaResult {
   if (!rawUrl || typeof rawUrl !== 'string') {
     return { type: 'video', src: '', isEmbed: false, provider: 'direct' };
   }
 
   const url = rawUrl.trim();
+  const startTime = startSeconds && startSeconds > 0 ? Math.floor(startSeconds) : 0;
 
   // 1. YouTube (Supports watch?v=, youtu.be/, /embed/, /shorts/, m.youtube.com, etc.)
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -45,9 +47,10 @@ export function parseMediaUrlHelper(rawUrl: string): ParsedMediaResult {
     }
 
     if (videoId) {
+      const startParam = startTime > 0 ? `&start=${startTime}` : '';
       return {
         type: 'iframe',
-        src: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`,
+        src: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1${startParam}`,
         isEmbed: true,
         provider: 'youtube',
       };
@@ -58,9 +61,10 @@ export function parseMediaUrlHelper(rawUrl: string): ParsedMediaResult {
   if (url.includes('mediadelivery.net') || url.includes('bunnycdn.com') || url.includes('b-cdn.net')) {
     if (url.includes('/embed/') || url.includes('/play/')) {
       const normalizedUrl = url.replace('/play/', '/embed/');
+      const startParam = startTime > 0 ? `&t=${startTime}` : '';
       return {
         type: 'iframe',
-        src: normalizedUrl.includes('?') ? `${normalizedUrl}&autoplay=true` : `${normalizedUrl}?autoplay=true`,
+        src: normalizedUrl.includes('?') ? `${normalizedUrl}&autoplay=true${startParam}` : `${normalizedUrl}?autoplay=true${startParam}`,
         isEmbed: true,
         provider: 'bunny',
       };
@@ -77,9 +81,10 @@ export function parseMediaUrlHelper(rawUrl: string): ParsedMediaResult {
     const vimeoIdMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
     const vimeoId = vimeoIdMatch ? vimeoIdMatch[1] : url.split('vimeo.com/')[1]?.split('?')[0];
     if (vimeoId) {
+      const startHash = startTime > 0 ? `#t=${startTime}s` : '';
       return {
         type: 'iframe',
-        src: `https://player.vimeo.com/video/${vimeoId}?autoplay=1&dnt=1`,
+        src: `https://player.vimeo.com/video/${vimeoId}?autoplay=1&dnt=1${startHash}`,
         isEmbed: true,
         provider: 'vimeo',
       };

@@ -27,7 +27,14 @@ export default function StudentDashboard() {
   // Modals state
   const [activeQuizModal, setActiveQuizModal] = useState<StudentQuizItemDTO | null>(null);
   const [activeExamFileModal, setActiveExamFileModal] = useState<StudentQuizItemDTO | null>(null);
-  const [activeVideoModal, setActiveVideoModal] = useState<{ title: string; url: string } | null>(null);
+  const [activeVideoModal, setActiveVideoModal] = useState<{
+    title: string;
+    url: string;
+    lessonId?: string;
+    lastPosition?: number;
+    watchPercentage?: number;
+    durationMinutes?: number;
+  } | null>(null);
 
   const loadData = async () => {
     try {
@@ -120,7 +127,9 @@ export default function StudentDashboard() {
               <ContinueLearningCard
                 lesson={data.continueLearning}
                 hasActiveSubscription={data.subscription.hasActiveSubscription}
-                onOpenVideo={(title, url) => setActiveVideoModal({ title, url })}
+                onOpenVideo={(title, url, lessonId, lastPosition, watchPercentage, durationMinutes) =>
+                  setActiveVideoModal({ title, url, lessonId, lastPosition, watchPercentage, durationMinutes })
+                }
               />
 
               <StudentStatsGrid summary={data.progressSummary} />
@@ -141,7 +150,9 @@ export default function StudentDashboard() {
                 curriculum={data.curriculum}
                 gradeName={data.profile.gradeName || undefined}
                 hasActiveSubscription={data.subscription.hasActiveSubscription}
-                onOpenVideo={(title, url) => setActiveVideoModal({ title, url })}
+                onOpenVideo={(title, url, lessonId, lastPosition, watchPercentage, durationMinutes) =>
+                  setActiveVideoModal({ title, url, lessonId, lastPosition, watchPercentage, durationMinutes })
+                }
                 onOpenPdf={(title, url) =>
                   setActiveExamFileModal({
                     id: 'doc-pdf',
@@ -304,9 +315,15 @@ export default function StudentDashboard() {
 
       <VideoPreviewModal
         video={activeVideoModal}
-        onClose={() => setActiveVideoModal(null)}
+        onClose={() => {
+          setActiveVideoModal(null);
+          loadData();
+        }}
         studentName={data.profile.fullName}
         studentPhone={data.profile.phone}
+        onProgressSaved={() => {
+          loadData();
+        }}
       />
     </DarkGradientBg>
   );

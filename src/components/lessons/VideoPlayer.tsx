@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { VideoWatermark } from './VideoWatermark';
 import { updateLessonProgressAction } from '@/lib/actions/progress';
 import {
@@ -16,6 +16,7 @@ import {
   Tv,
   Settings,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 
 interface VideoPlayerProps {
@@ -81,6 +82,38 @@ export function VideoPlayer({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  // Check both initialPosition and localStorage for most recent progress
+  const getEffectiveStartPosition = useCallback(() => {
+    let pos = initialPosition;
+    if (typeof window !== 'undefined' && lessonId) {
+      const localData = localStorage.getItem(`almohands_vid_${lessonId}`);
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          if (parsed.pos && parsed.pos > pos) {
+            pos = parsed.pos;
+          }
+        } catch {}
+      }
+    }
+    return pos;
+  }, [initialPosition, lessonId]);
+
+  const [resumedPosition, setResumedPosition] = useState<number>(0);
+  const [showResumedBadge, setShowResumedBadge] = useState<boolean>(false);
+
+  useEffect(() => {
+    const startPos = getEffectiveStartPosition();
+    setResumedPosition(startPos);
+    maxWatchedTimeRef.current = Math.max(maxWatchedTimeRef.current, startPos);
+    lastSavedPositionRef.current = startPos;
+    if (startPos > 5) {
+      setShowResumedBadge(true);
+      const timer = setTimeout(() => setShowResumedBadge(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [getEffectiveStartPosition]);
+
   // Debounced progress saving to server
   const saveProgressToServer = useCallback(
     async (pos: number, dur: number) => {
@@ -101,6 +134,11 @@ export function VideoPlayer({
         onProgressUpdate(newPct, pos, newlyCompleted);
       }
 
+      // Save locally to localStorage
+      if (typeof window !== 'undefined' && lessonId) {
+        localStorage.setItem(`almohands_vid_${lessonId}`, JSON.stringify({ pos: Math.round(pos), pct: newPct, updatedAt: Date.now() }));
+      }
+
       // Avoid spamming DB if position change is minor
       if (Math.abs(pos - lastSavedPositionRef.current) >= 4 || newlyCompleted) {
         lastSavedPositionRef.current = pos;
@@ -114,6 +152,24 @@ export function VideoPlayer({
     [lessonId, watchPercentage, isCompleted, onProgressUpdate, onCompleted]
   );
 
+  // Auto-save on page close, back button, or unmount
+  useEffect(() => {
+    const handleUnload = () => {
+      if (videoRef.current && lessonId) {
+        const cur = videoRef.current.currentTime;
+        const dur = videoRef.current.duration || 1;
+        saveProgressToServer(cur, dur);
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+      handleUnload();
+    };
+  }, [lessonId, saveProgressToServer]);
+
   // Initial resume setup
   const handleLoadedMetadata = () => {
     if (!videoRef.current) return;
@@ -121,12 +177,35 @@ export function VideoPlayer({
     const dur = vid.duration || 0;
     setDuration(dur);
 
-    if (initialPosition > 0 && initialPosition < dur - 5) {
-      vid.currentTime = initialPosition;
-      setCurrentTime(initialPosition);
-      maxWatchedTimeRef.current = initialPosition;
+    const startPos = resumedPosition > 0 ? resumedPosition : getEffectiveStartPosition();
+    if (startPos > 0 && startPos < dur - 5) {
+      vid.currentTime = startPos;
+      setCurrentTime(startPos);
+      maxWatchedTimeRef.current = Math.max(maxWatchedTimeRef.current, startPos);
     }
   };
+
+  const effectiveIframeSrc = useMemo(() => {
+    if (media.type !== 'iframe' || !media.src) return media.src;
+    const startSec = Math.floor(resumedPosition > 0 ? resumedPosition : getEffectiveStartPosition());
+    if (startSec <= 0) return media.src;
+
+    let url = media.src;
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      if (!url.includes('start=')) {
+        url += (url.includes('?') ? '&' : '?') + `start=${startSec}`;
+      }
+    } else if (url.includes('vimeo.com')) {
+      if (!url.includes('#t=')) {
+        url += `#t=${startSec}s`;
+      }
+    } else if (url.includes('bunnycdn.com') || url.includes('mediadelivery.net')) {
+      if (!url.includes('t=')) {
+        url += (url.includes('?') ? '&' : '?') + `t=${startSec}`;
+      }
+    }
+    return url;
+  }, [media, resumedPosition, getEffectiveStartPosition]);
 
   // Time update handler
   const handleTimeUpdate = () => {
@@ -291,10 +370,33 @@ export function VideoPlayer({
         </div>
       )}
 
+      {/* 2b. Resumed Position Notification Badge */}
+      {showResumedBadge && (resumedPosition > 5) && (
+        <div className="absolute top-4 left-4 z-40 bg-slate-900/90 text-chalk px-3 py-1.5 rounded-xl border border-cyan-electric/40 text-xs font-bold shadow-lg backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Clock className="w-3.5 h-3.5 text-cyan-electric" />
+          <span>تم استئناف الدرس من {formatTime(resumedPosition)}</span>
+          <button
+            onClick={() => {
+              if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+              }
+              setResumedPosition(0);
+              setShowResumedBadge(false);
+              saveProgressToServer(0, duration);
+            }}
+            className="mr-1 text-[11px] text-cyan-electric hover:underline flex items-center gap-1 border-r border-slate-700 pr-2"
+            title="البدء من الأول"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>من البداية</span>
+          </button>
+        </div>
+      )}
+
       {/* 3. Media Rendering */}
       {media.type === 'iframe' ? (
         <iframe
-          src={media.src}
+          src={effectiveIframeSrc}
           className="w-full h-full border-0 bg-black"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen

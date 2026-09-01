@@ -18,7 +18,14 @@ interface EnrolledCoursesGridProps {
   curriculum: CurriculumTermDTO[];
   gradeName?: string;
   hasActiveSubscription?: boolean;
-  onOpenVideo?: (title: string, url: string) => void;
+  onOpenVideo?: (
+    title: string,
+    url: string,
+    lessonId?: string,
+    lastPosition?: number,
+    watchPercentage?: number,
+    durationMinutes?: number
+  ) => void;
   onOpenPdf?: (title: string, url: string) => void;
 }
 
@@ -246,7 +253,14 @@ export function EnrolledCoursesGrid({
                                       onClick={(e) => {
                                         if (onOpenVideo && les.videoPath) {
                                           e.preventDefault();
-                                          onOpenVideo(les.title, les.videoPath);
+                                          onOpenVideo(
+                                            les.title,
+                                            les.videoPath,
+                                            les.id,
+                                            les.lastPosition,
+                                            les.watchPercentage,
+                                            les.durationMinutes
+                                          );
                                         }
                                       }}
                                       className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"

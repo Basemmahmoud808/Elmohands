@@ -8,7 +8,14 @@ import { PlayCircle, Clock, BookOpen, ChevronLeft, Lock } from 'lucide-react';
 interface ContinueLearningCardProps {
   lesson: ContinueLearningLessonDTO | null;
   hasActiveSubscription?: boolean;
-  onOpenVideo?: (title: string, url: string) => void;
+  onOpenVideo?: (
+    title: string,
+    url: string,
+    lessonId?: string,
+    lastPosition?: number,
+    watchPercentage?: number,
+    durationMinutes?: number
+  ) => void;
 }
 
 export function ContinueLearningCard({ lesson, hasActiveSubscription = false, onOpenVideo }: ContinueLearningCardProps) {
@@ -57,7 +64,14 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
   const handlePlayClick = (e: React.MouseEvent) => {
     if (onOpenVideo && lesson.videoPath) {
       e.preventDefault();
-      onOpenVideo(lesson.title, lesson.videoPath);
+      onOpenVideo(
+        lesson.title,
+        lesson.videoPath,
+        lesson.id,
+        lesson.lastPosition,
+        lesson.watchPercentage,
+        lesson.durationMinutes
+      );
     }
   };
 
