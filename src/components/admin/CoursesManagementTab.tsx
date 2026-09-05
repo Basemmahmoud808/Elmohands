@@ -74,14 +74,25 @@ export function CoursesManagementTab({
 }: CoursesManagementTabProps) {
   const [curriculum, setCurriculum] = useState<CurriculumGradeDTO[]>(initialCurriculum);
 
+  // Selected Grade
+  const [selectedGradeId, setSelectedGradeId] = useState<string>(() => {
+    return initialCurriculum[0]?.id || DEFAULT_GRADES[0].id;
+  });
+
   React.useEffect(() => {
     setCurriculum(initialCurriculum);
+    if (initialCurriculum && initialCurriculum.length > 0) {
+      const match = initialCurriculum.find(
+        (g) => g.id === selectedGradeId || g.name === selectedGradeId || DEFAULT_GRADES.find(dg => dg.id === selectedGradeId)?.name === g.name
+      );
+      if (match) {
+        setSelectedGradeId(match.id);
+      } else if (!selectedGradeId || selectedGradeId.startsWith('grade-')) {
+        setSelectedGradeId(initialCurriculum[0].id);
+      }
+    }
   }, [initialCurriculum]);
 
-  // Selected Grade
-  const [selectedGradeId, setSelectedGradeId] = useState<string>(
-    initialCurriculum[0]?.id || DEFAULT_GRADES[0].id
-  );
   const [selectedTermId, setSelectedTermId] = useState<string>('');
 
   // Active Sub-Tab: 'curriculum' | 'pdfs' | 'exams' | 'questions' | 'students'
