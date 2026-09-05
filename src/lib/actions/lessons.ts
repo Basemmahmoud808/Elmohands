@@ -465,12 +465,43 @@ export async function getCurriculumByGradeAction(
   try {
     const user = await getCurrentUser();
 
-    // 1. Fetch grade record
-    const { data: dbGrade } = await supabaseAdmin
-      .from('grades')
-      .select('id, name, stage, description, sort_order')
-      .or(`id.eq.${gradeIdOrName},name.ilike.%${gradeIdOrName}%`)
-      .maybeSingle();
+    // 1. Fetch grade record (Check UUID format first to avoid Postgres 22P02 error)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gradeIdOrName.trim());
+    let dbGrade = null;
+
+    if (isUuid) {
+      const { data } = await supabaseAdmin
+        .from('grades')
+        .select('id, name, stage, description, sort_order')
+        .eq('id', gradeIdOrName.trim())
+        .maybeSingle();
+      dbGrade = data;
+    } else {
+      const cleanName = gradeIdOrName.trim();
+      const { data } = await supabaseAdmin
+        .from('grades')
+        .select('id, name, stage, description, sort_order')
+        .ilike('name', `%${cleanName}%`)
+        .order('sort_order', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      dbGrade = data;
+    }
+
+    if (!dbGrade) {
+      // Fallback: search with first two words if string has multiple words
+      const parts = gradeIdOrName.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        const partialName = `${parts[0]} ${parts[1]}`;
+        const { data } = await supabaseAdmin
+          .from('grades')
+          .select('id, name, stage, description, sort_order')
+          .ilike('name', `%${partialName}%`)
+          .limit(1)
+          .maybeSingle();
+        dbGrade = data;
+      }
+    }
 
     const gradeId = dbGrade?.id || gradeIdOrName;
     const gradeName = dbGrade?.name || gradeIdOrName;
