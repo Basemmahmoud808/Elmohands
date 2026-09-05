@@ -49,7 +49,7 @@ export function LessonsManagementTab({
   const [selectedUnitId, setSelectedUnitId] = useState(curriculum[0]?.terms[0]?.branches[0]?.units[0]?.id || '');
   const [quickUnitTitle, setQuickUnitTitle] = useState('');
   const [quickUnitLoading, setQuickUnitLoading] = useState(false);
-  const [durationMinutes, setDurationMinutes] = useState(45);
+  const [durationMinutes, setDurationMinutes] = useState(0);
   const [sortOrder, setSortOrder] = useState(1);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -84,13 +84,19 @@ export function LessonsManagementTab({
   };
 
   const autoDetectUrlDuration = async (urlToTest: string, forEditing = false) => {
-    if (!urlToTest || urlToTest.trim().length < 5) return;
+    if (!urlToTest || urlToTest.trim().length < 5) {
+      if (!forEditing) {
+        setDurationMinutes(0);
+        setDurationDetectedMsg(null);
+      }
+      return;
+    }
     setIsDetectingDuration(true);
     setDurationDetectedMsg(null);
     try {
       const cleanUrl = urlToTest.trim();
       // Direct video test in browser first
-      if (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.includes('/play_')) {
+      if (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.includes('/play_') || cleanUrl.includes('.mp4?')) {
         const tempVid = document.createElement('video');
         tempVid.preload = 'metadata';
         tempVid.src = cleanUrl;
@@ -101,7 +107,7 @@ export function LessonsManagementTab({
           } else {
             setDurationMinutes(mins);
           }
-          setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${mins} دقيقة`);
+          setDurationDetectedMsg(`تم حساب المدة تلقائياً: ${mins} دقيقة (${Math.round(tempVid.duration)} ثانية)`);
           setIsDetectingDuration(false);
         };
         tempVid.onerror = async () => {
@@ -112,7 +118,7 @@ export function LessonsManagementTab({
             } else {
               setDurationMinutes(res.data.durationMinutes);
             }
-            setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${res.data.durationMinutes} دقيقة`);
+            setDurationDetectedMsg(`تم حساب المدة تلقائياً: ${res.data.durationMinutes} دقيقة`);
           }
           setIsDetectingDuration(false);
         };
@@ -127,7 +133,7 @@ export function LessonsManagementTab({
         } else {
           setDurationMinutes(res.data.durationMinutes);
         }
-        setDurationDetectedMsg(`تم استخراج المدة تلقائياً: ${res.data.durationMinutes} دقيقة (${res.data.durationSeconds} ثانية)`);
+        setDurationDetectedMsg(`تم حساب المدة تلقائياً: ${res.data.durationMinutes} دقيقة`);
       } else {
         setDurationDetectedMsg(null);
       }
@@ -532,9 +538,9 @@ export function LessonsManagementTab({
             </div>
           </div>
 
-          {/* Lesson Title, Duration & Sequence */}
+          {/* Lesson Title & Sequence */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div className="sm:col-span-6 space-y-1.5">
+            <div className="sm:col-span-9 space-y-1.5">
               <label className="text-slate-800 dark:text-chalk block">عنوان الدرس والموضوع:</label>
               <input
                 type="text"
@@ -544,34 +550,6 @@ export function LessonsManagementTab({
                 placeholder="مثال: الدرس الثالث: العمليات على الأعداد النسبية وتطبيقاتها"
                 className="w-full h-11 px-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
               />
-            </div>
-
-            <div className="sm:col-span-3 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-slate-800 dark:text-chalk block">المدة (دقائق):</label>
-                {isDetectingDuration ? (
-                  <span className="text-[10px] text-cyan-electric font-bold flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span>فحص...</span>
-                  </span>
-                ) : durationDetectedMsg ? (
-                  <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1 truncate max-w-[120px]" title={durationDetectedMsg}>
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>تلقائي</span>
-                  </span>
-                ) : null}
-              </div>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={1}
-                  max={400}
-                  value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(Number(e.target.value) || 1)}
-                  className="w-full h-11 px-4 pl-10 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
-                />
-                <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
             </div>
 
             <div className="sm:col-span-3 space-y-1.5">
@@ -601,11 +579,22 @@ export function LessonsManagementTab({
 
           {/* Video Input Mode Switch */}
           <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-800 dark:text-chalk flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
                 <Video className="w-4 h-4 text-cyan-electric" />
-                <span>مصدر الفيديو:</span>
-              </span>
+                <span className="text-slate-800 dark:text-chalk font-bold">مصدر الفيديو:</span>
+                {isDetectingDuration ? (
+                  <span className="text-[11px] text-cyan-electric font-bold flex items-center gap-1.5 bg-cyan-electric/10 px-2.5 py-0.5 rounded-lg">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>جاري حساب مدة الفيديو تلقائياً...</span>
+                  </span>
+                ) : durationMinutes > 0 ? (
+                  <span className="text-[11px] text-emerald-500 font-bold flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>مدة الفيديو تلقائياً: {durationMinutes} دقيقة</span>
+                  </span>
+                ) : null}
+              </div>
 
               <div className="flex items-center gap-2 bg-slate-200 dark:bg-slate-900 p-1 rounded-xl">
                 <button
@@ -637,14 +626,26 @@ export function LessonsManagementTab({
                     dir="ltr"
                     value={videoUrl}
                     onChange={(e) => {
-                      setVideoUrl(e.target.value);
-                      if (e.target.value.includes('youtube.com') || e.target.value.includes('youtu.be') || e.target.value.endsWith('.mp4')) {
-                        autoDetectUrlDuration(e.target.value);
+                      const val = e.target.value;
+                      setVideoUrl(val);
+                      if (val.trim()) {
+                        autoDetectUrlDuration(val);
+                      } else {
+                        setDurationMinutes(0);
+                        setDurationDetectedMsg(null);
                       }
                     }}
-                    onBlur={() => autoDetectUrlDuration(videoUrl)}
+                    onPaste={(e) => {
+                      const pasted = e.clipboardData.getData('text');
+                      if (pasted) {
+                        setTimeout(() => autoDetectUrlDuration(pasted), 50);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (videoUrl.trim()) autoDetectUrlDuration(videoUrl);
+                    }}
                     placeholder="https://www.youtube.com/watch?v=... أو BunnyCDN/MP4 URL"
-                    className="w-full h-11 px-4 pl-24 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
+                    className="w-full h-11 px-4 pl-28 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
                   />
                   <button
                     type="button"
@@ -985,34 +986,29 @@ export function LessonsManagementTab({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-chalk block">المدة (دقائق):</label>
-                  <input
-                    type="number"
-                    value={editingLesson.durationMinutes}
-                    onChange={(e) =>
-                      setEditingLesson({ ...editingLesson, durationMinutes: Number(e.target.value) || 45 })
-                    }
-                    className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-chalk"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-chalk block">ترتيب الدرس:</label>
-                  <input
-                    type="number"
-                    value={editingLesson.sortOrder}
-                    onChange={(e) =>
-                      setEditingLesson({ ...editingLesson, sortOrder: Number(e.target.value) || 1 })
-                    }
-                    className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-chalk"
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <label className="text-chalk block">ترتيب الدرس (#):</label>
+                <input
+                  type="number"
+                  value={editingLesson.sortOrder}
+                  onChange={(e) =>
+                    setEditingLesson({ ...editingLesson, sortOrder: Number(e.target.value) || 1 })
+                  }
+                  className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-chalk"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-chalk block">رابط الفيديو (Embed / MP4):</label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-chalk block">رابط الفيديو (Embed / MP4):</label>
+                    {editingLesson.durationMinutes > 0 && (
+                      <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                        <Clock className="w-3 h-3" />
+                        <span>{editingLesson.durationMinutes} دقيقة</span>
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => autoDetectUrlDuration(editingLesson.videoPath, true)}
@@ -1026,8 +1022,20 @@ export function LessonsManagementTab({
                   type="text"
                   dir="ltr"
                   value={editingLesson.videoPath}
-                  onChange={(e) => setEditingLesson({ ...editingLesson, videoPath: e.target.value })}
-                  onBlur={() => autoDetectUrlDuration(editingLesson.videoPath, true)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEditingLesson({ ...editingLesson, videoPath: v });
+                    if (v.trim()) autoDetectUrlDuration(v, true);
+                  }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData.getData('text');
+                    if (pasted) {
+                      setTimeout(() => autoDetectUrlDuration(pasted, true), 50);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (editingLesson.videoPath.trim()) autoDetectUrlDuration(editingLesson.videoPath, true);
+                  }}
                   className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-chalk font-mono text-xs"
                 />
               </div>

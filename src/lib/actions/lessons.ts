@@ -788,8 +788,8 @@ export async function createLessonAction(
       isLocked = Boolean(inputOrFormData.isLocked);
     }
 
-    // Auto-detect exact video duration if missing or default
-    if (rawVideoUrl && (!durationMinutes || durationMinutes === 45 || durationMinutes === 0)) {
+    // Auto-detect exact video duration if missing or 0
+    if (rawVideoUrl && (!durationMinutes || durationMinutes === 0)) {
       try {
         const { detectVideoDurationAction } = await import('@/lib/actions/media');
         const detected = await detectVideoDurationAction(rawVideoUrl);
@@ -810,7 +810,7 @@ export async function createLessonAction(
         video_path: rawVideoUrl || null,
         pdf_path: pdfUrl || null,
         thumbnail_path: thumbnailPath || '/teacher_reda_kheyrat.jpg',
-        duration: durationMinutes > 0 ? durationMinutes : 45,
+        duration: durationMinutes > 0 ? durationMinutes : 0,
         sort_order: sequenceOrder,
         is_published: isPublished,
         is_locked: isLocked,
@@ -878,7 +878,7 @@ export async function updateLessonAction(
     }
 
     let finalDuration = data.durationMinutes;
-    if (data.videoPath && (!finalDuration || finalDuration === 45 || finalDuration === 0)) {
+    if (data.videoPath && (!finalDuration || finalDuration === 0)) {
       try {
         const { detectVideoDurationAction } = await import('@/lib/actions/media');
         const detected = await detectVideoDurationAction(data.videoPath);

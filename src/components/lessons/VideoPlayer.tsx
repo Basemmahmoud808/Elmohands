@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { VideoWatermark } from './VideoWatermark';
 import { updateLessonProgressAction } from '@/lib/actions/progress';
+import { syncLessonDurationAction } from '@/lib/actions/lessons';
 import {
   Play,
   Pause,
@@ -167,6 +168,9 @@ export function VideoPlayer({
         lastSavedPositionRef.current = cleanPos;
         try {
           await updateLessonProgressAction(lessonId, cleanPos, newPct);
+          if (dur > 0) {
+            syncLessonDurationAction(lessonId, dur).catch(() => {});
+          }
         } catch (e) {
           console.warn('Progress update error:', e);
         }
@@ -199,7 +203,10 @@ export function VideoPlayer({
             const cur = Math.round(payload.info.currentTime);
             const dur = Math.round(payload.info.duration || duration);
             if (cur > 0) {
-              if (dur > 0 && duration === 0) setDuration(dur);
+              if (dur > 0 && duration === 0) {
+                setDuration(dur);
+                syncLessonDurationAction(lessonId, dur).catch(() => {});
+              }
               setCurrentTime(cur);
               saveProgressToServer(cur, dur > 0 ? dur : 2700);
             }
@@ -213,7 +220,7 @@ export function VideoPlayer({
       clearInterval(handshakeInterval);
       window.removeEventListener('message', handleWindowMessage);
     };
-  }, [media.type, duration, saveProgressToServer]);
+  }, [media.type, duration, saveProgressToServer, lessonId]);
 
   // Auto-save on page close, back button, or unmount
   useEffect(() => {
@@ -239,6 +246,9 @@ export function VideoPlayer({
     const vid = videoRef.current;
     const dur = vid.duration || 0;
     setDuration(dur);
+    if (dur > 0 && lessonId) {
+      syncLessonDurationAction(lessonId, dur).catch(() => {});
+    }
 
     const startPos = resumedPosition > 0 ? resumedPosition : getEffectiveStartPosition();
     if (startPos > 0 && startPos < dur - 5) {

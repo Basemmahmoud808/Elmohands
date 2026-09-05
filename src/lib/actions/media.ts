@@ -19,13 +19,16 @@ export async function detectVideoDurationAction(
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       let videoId = '';
       if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || '';
+        videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0]?.split('#')[0] || '';
       } else if (url.includes('/embed/')) {
-        videoId = url.split('/embed/')[1]?.split('?')[0]?.split('&')[0] || '';
+        videoId = url.split('/embed/')[1]?.split('?')[0]?.split('&')[0]?.split('#')[0] || '';
       } else if (url.includes('/shorts/')) {
-        videoId = url.split('/shorts/')[1]?.split('?')[0]?.split('&')[0] || '';
+        videoId = url.split('/shorts/')[1]?.split('?')[0]?.split('&')[0]?.split('#')[0] || '';
       } else if (url.includes('v=')) {
-        videoId = url.split('v=')[1]?.split('&')[0]?.split('?')[0] || '';
+        videoId = url.split('v=')[1]?.split('&')[0]?.split('?')[0]?.split('#')[0] || '';
+      } else {
+        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+        if (match) videoId = match[1];
       }
 
       if (!videoId) {
@@ -44,15 +47,21 @@ export async function detectVideoDurationAction(
       if (ytResponse.ok) {
         const html = await ytResponse.text();
 
-        // Check lengthSeconds
+        // Check lengthSeconds or approxDurationMs or duration in microformat
         const lengthMatch = html.match(/"lengthSeconds":"(\d+)"/);
         const approxMatch = html.match(/"approxDurationMs":"(\d+)"/);
+        const isoMatch = html.match(/itemprop="duration" content="PT(\d+H)?(\d+M)?(\d+S)?"/);
 
         let seconds = 0;
         if (lengthMatch && lengthMatch[1]) {
           seconds = parseInt(lengthMatch[1], 10);
         } else if (approxMatch && approxMatch[1]) {
           seconds = Math.round(parseInt(approxMatch[1], 10) / 1000);
+        } else if (isoMatch) {
+          const hours = parseInt(isoMatch[1]?.replace('H', '') || '0', 10);
+          const mins = parseInt(isoMatch[2]?.replace('M', '') || '0', 10);
+          const secs = parseInt(isoMatch[3]?.replace('S', '') || '0', 10);
+          seconds = hours * 3600 + mins * 60 + secs;
         }
 
         if (seconds > 0) {
