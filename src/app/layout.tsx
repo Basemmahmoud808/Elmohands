@@ -69,7 +69,7 @@ export default function RootLayout({
     url: 'https://elmohands-one.vercel.app',
     logo: 'https://elmohands-one.vercel.app/icon.svg',
     description: 'منصتك الأولى لتعلم وفهم الرياضيات بأسلوب بسيط وممتع مع م/ رضا خيرت للمرحلة الإعدادية والصف الأول الثانوي.',
-    telephone: '+201008901896',
+    telephone: '+201030548198',
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'EG',

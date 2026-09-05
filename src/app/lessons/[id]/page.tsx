@@ -393,7 +393,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                   تواصل مباشرة مع فريق م/ رضا خيرت للمساعدة وشرح خطوات الحل.
                 </p>
                 <a
-                  href="https://wa.me/201008901896"
+                  href="https://wa.me/201030548198"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all text-xs font-bold"

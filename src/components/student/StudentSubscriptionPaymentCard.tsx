@@ -71,7 +71,7 @@ export function StudentSubscriptionPaymentCard({
   const [selectedPlan, setSelectedPlan] = useState(PLANS[1]); // Default to term
   const [copiedNumber, setCopiedNumber] = useState(false);
 
-  const paymentPhone = '01008901896';
+  const paymentPhone = '01030548198';
 
   const handleCopyNumber = () => {
     navigator.clipboard.writeText(paymentPhone);

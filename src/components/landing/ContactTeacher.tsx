@@ -41,13 +41,13 @@ export default function ContactTeacher() {
                 <span className="text-xs font-bold text-cyan-electric block">رقم الاتصال والواتساب</span>
                 <h3 className="text-2xl font-black text-slate-900 dark:text-chalk tracking-wider pt-1" dir="ltr">
                   <a
-                    href="https://wa.me/201008901896"
+                    href="https://wa.me/201030548198"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-cyan-electric transition-colors underline decoration-cyan-electric/40 decoration-2 underline-offset-4"
                     title="فتح واتساب م/ رضا خيرت مباشرة"
                   >
-                    01008901896
+                    01030548198
                   </a>
                 </h3>
               </div>
@@ -58,7 +58,7 @@ export default function ContactTeacher() {
 
             <div className="pt-2 flex flex-col gap-2">
               <a
-                href="https://wa.me/201008901896"
+                href="https://wa.me/201030548198"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 rounded-2xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
@@ -67,7 +67,7 @@ export default function ContactTeacher() {
                 <span>محادثة واتساب م/ رضا خيرت</span>
               </a>
               <a
-                href="tel:01008901896"
+                href="tel:01030548198"
                 className="w-full py-2.5 rounded-2xl text-xs font-bold text-slate-700 dark:text-chalk bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 hover:border-cyan-electric/40 transition-all text-center"
               >
                 اتصال هاتفي مباشر

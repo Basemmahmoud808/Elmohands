@@ -59,7 +59,7 @@ export async function loginUser(
     let profile: any = null;
 
     // 1. Try finding by phone if digits look like a valid phone
-    if (cleanDigits && (/^01\d{9}$/.test(cleanDigits) || cleanDigits === '01008901896')) {
+    if (cleanDigits && (/^01\d{9}$/.test(cleanDigits) || cleanDigits === '01030548198' || cleanDigits === '01008901896')) {
       const { data: phoneUser } = await supabaseAdmin
         .from('profiles')
         .select('*')
@@ -207,7 +207,7 @@ export async function registerUser(data: {
       .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
     const cleanParentEmail = data.parentEmail ? sanitizeInput(data.parentEmail.trim()) : '';
 
-    const isDedicatedAdmin = cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
+    const isDedicatedAdmin = cleanPhone === '01030548198' || cleanPhone === '01008901896' || cleanPhone === 'admin_almohands';
 
     // 1. Validation
     const nameWords = cleanFullName.split(/\s+/).filter(Boolean);
@@ -348,11 +348,11 @@ export async function getCurrentUser(): Promise<UserSession | null> {
       .maybeSingle();
 
     if (!profile) {
-      if (jwtUser.role === 'ADMIN' || jwtUser.phone === '01008901896') {
+      if (jwtUser.role === 'ADMIN' || jwtUser.phone === '01030548198' || jwtUser.phone === '01008901896') {
         return {
           id: jwtUser.userId,
           fullName: jwtUser.fullName || 'م/ رضا خيرت',
-          phone: jwtUser.phone || '01008901896',
+          phone: jwtUser.phone || '01030548198',
           role: 'ADMIN',
           createdAt: new Date().toISOString(),
         };

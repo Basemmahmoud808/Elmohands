@@ -248,7 +248,7 @@ export default function Navbar() {
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-slate-800 text-xs">
                   <span className="text-slate-400 font-bold">رقم هاتف ولي الأمر:</span>
-                  <span className="font-mono font-bold text-slate-300" dir="ltr">{user.parentPhone || '01008901896'}</span>
+                  <span className="font-mono font-bold text-slate-300" dir="ltr">{user.parentPhone || '01030548198'}</span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-slate-800 text-xs">
                   <span className="text-slate-400 font-bold">المحافظة:</span>

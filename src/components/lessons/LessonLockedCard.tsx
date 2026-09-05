@@ -69,7 +69,7 @@ export function LessonLockedCard({
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a
-              href="https://wa.me/201008901896"
+              href="https://wa.me/201030548198"
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-500/25 transition-all"
@@ -96,7 +96,7 @@ export function LessonLockedCard({
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <a
-              href={`https://wa.me/201008901896?text=${encodeURIComponent(`السلام عليكم يا مستر رضا، أود الاشتراك في المنصة لمشاهدة درس: (${lessonTitle}). ما هي باقات الاشتراك المتاحة؟`)}`}
+              href={`https://wa.me/201030548198?text=${encodeURIComponent(`السلام عليكم يا مستر رضا، أود الاشتراك في المنصة لمشاهدة درس: (${lessonTitle}). ما هي باقات الاشتراك المتاحة؟`)}`}
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"

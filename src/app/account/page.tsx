@@ -164,7 +164,7 @@ export default function AccountPage() {
                       رقم الهاتف / واتساب التواصل:
                     </span>
                     <span className="text-sm font-mono font-extrabold text-cyan-electric block" dir="ltr">
-                      {user?.phone || '01008901896'}
+                      {user?.phone || '01030548198'}
                     </span>
                   </div>
 
@@ -412,7 +412,7 @@ export default function AccountPage() {
                 </div>
               </div>
               <p className="text-xs text-slate-500 dark:text-chalk-muted leading-relaxed font-semibold">
-                الدقهلية — منية النصر — النزل. تواصل المدرس عبر الواتساب: 01008901896
+                الدقهلية — منية النصر — النزل. تواصل المدرس عبر الواتساب: 01030548198
               </p>
             </div>
           </div>

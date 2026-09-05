@@ -108,7 +108,7 @@ export default function SignUpPage() {
 
           <div className="space-y-3 pt-2">
             <a
-              href={`https://wa.me/201008901896?text=${encodeURIComponent(`السلام عليكم، قمت بالتسجيل في منصة المهندس باسم: ${studentInfo.name} ورقم الهاتف: ${studentInfo.phone}، وأرجو تفعيل الحساب.`)}`}
+              href={`https://wa.me/201030548198?text=${encodeURIComponent(`السلام عليكم، قمت بالتسجيل في منصة المهندس باسم: ${studentInfo.name} ورقم الهاتف: ${studentInfo.phone}، وأرجو تفعيل الحساب.`)}`}
               target="_blank"
               rel="noreferrer"
               className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"

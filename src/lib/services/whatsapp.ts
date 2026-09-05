@@ -6,6 +6,9 @@
  * with seamless fallback to direct 1-click wa.me action links.
  */
 
+export const TEACHER_WHATSAPP_PHONE = process.env.NEXT_PUBLIC_TEACHER_PHONE || '01030548198';
+export const TEACHER_WHATSAPP_INTL = '201030548198';
+
 export interface WhatsAppSendResult {
   sentViaGateway: boolean;
   directUrl: string;
