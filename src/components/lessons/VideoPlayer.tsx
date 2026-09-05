@@ -133,9 +133,12 @@ export function VideoPlayer({
     }
   }, [getEffectiveStartPosition]);
 
+  // Server progress debouncing ref
+  const serverSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Debounced progress saving to server & instant localStorage
   const saveProgressToServer = useCallback(
-    async (pos: number, dur: number) => {
+    async (pos: number, dur: number, forceImmediate = false) => {
       if (!dur || dur <= 0 || !lessonId) return;
 
       const cleanPos = Math.max(0, Math.round(pos));
@@ -154,7 +157,7 @@ export function VideoPlayer({
         onProgressUpdate(newPct, cleanPos, newlyCompleted);
       }
 
-      // Save locally to localStorage under all matching keys
+      // 1. Instant local persistence (never lag the user interface)
       if (typeof window !== 'undefined') {
         const payload = JSON.stringify({ pos: cleanPos, pct: newPct, dur, updatedAt: Date.now() });
         if (lessonId) localStorage.setItem(`almohands_vid_${lessonId}`, payload);
@@ -163,17 +166,34 @@ export function VideoPlayer({
         if (ytId) localStorage.setItem(`almohands_yt_${ytId}`, payload);
       }
 
-      // Avoid spamming DB if position change is minor
-      if (Math.abs(cleanPos - lastSavedPositionRef.current) >= 3 || newlyCompleted) {
-        lastSavedPositionRef.current = cleanPos;
-        try {
-          await updateLessonProgressAction(lessonId, cleanPos, newPct);
-          if (dur > 0) {
-            syncLessonDurationAction(lessonId, dur).catch(() => {});
+      // 2. Debounced server persistence: prevent flooding Supabase DB
+      const executeServerSave = async () => {
+        if (Math.abs(cleanPos - lastSavedPositionRef.current) >= 3 || newlyCompleted) {
+          lastSavedPositionRef.current = cleanPos;
+          try {
+            await updateLessonProgressAction(lessonId, cleanPos, newPct);
+            if (dur > 0) {
+              syncLessonDurationAction(lessonId, dur).catch(() => {});
+            }
+          } catch (e) {
+            console.warn('Progress update error:', e);
           }
-        } catch (e) {
-          console.warn('Progress update error:', e);
         }
+      };
+
+      if (forceImmediate || newlyCompleted) {
+        if (serverSaveTimeoutRef.current) {
+          clearTimeout(serverSaveTimeoutRef.current);
+          serverSaveTimeoutRef.current = null;
+        }
+        executeServerSave();
+      } else {
+        if (serverSaveTimeoutRef.current) {
+          clearTimeout(serverSaveTimeoutRef.current);
+        }
+        serverSaveTimeoutRef.current = setTimeout(() => {
+          executeServerSave();
+        }, 2500);
       }
     },
     [lessonId, watchPercentage, isCompleted, onProgressUpdate, onCompleted, media.src]
@@ -228,7 +248,7 @@ export function VideoPlayer({
       if (videoRef.current && lessonId) {
         const cur = videoRef.current.currentTime;
         const dur = videoRef.current.duration || 1;
-        saveProgressToServer(cur, dur);
+        saveProgressToServer(cur, dur, true);
       }
     };
     window.addEventListener('beforeunload', handleUnload);
@@ -292,9 +312,9 @@ export function VideoPlayer({
       maxWatchedTimeRef.current = cur;
     }
 
-    // Save every 8 seconds of playback
-    if (Math.floor(cur) % 8 === 0) {
-      saveProgressToServer(cur, dur);
+    // Save periodically (debounced to 2.5s)
+    if (Math.floor(cur) % 4 === 0) {
+      saveProgressToServer(cur, dur, false);
     }
   };
 
@@ -302,7 +322,7 @@ export function VideoPlayer({
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
-      saveProgressToServer(videoRef.current.currentTime, videoRef.current.duration);
+      saveProgressToServer(videoRef.current.currentTime, videoRef.current.duration, true);
     } else {
       videoRef.current.play();
     }
@@ -314,7 +334,7 @@ export function VideoPlayer({
     const newTime = Math.max(0, Math.min(duration, videoRef.current.currentTime + delta));
     videoRef.current.currentTime = newTime;
     setCurrentTime(newTime);
-    saveProgressToServer(newTime, duration);
+    saveProgressToServer(newTime, duration, true);
   };
 
   const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {

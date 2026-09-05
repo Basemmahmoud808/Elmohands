@@ -149,6 +149,21 @@ export function LessonsManagementTab({
   const [videoUrl, setVideoUrl] = useState('');
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
 
+  // Debounce duration detection for create form URL
+  React.useEffect(() => {
+    if (videoMode !== 'url' || !videoUrl.trim() || videoUrl.trim().length < 5) {
+      if (!videoUrl.trim()) {
+        setDurationMinutes(0);
+        setDurationDetectedMsg(null);
+      }
+      return;
+    }
+    const timer = setTimeout(() => {
+      autoDetectUrlDuration(videoUrl);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [videoUrl, videoMode]);
+
   const [pdfMode, setPdfMode] = useState<'file' | 'url'>('url');
   const [pdfUrl, setPdfUrl] = useState('');
   const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
@@ -157,7 +172,6 @@ export function LessonsManagementTab({
   const [thumbnailUrl, setThumbnailUrl] = useState('/teacher_reda_kheyrat.jpg');
   const [selectedThumbnailFile, setSelectedThumbnailFile] = useState<File | null>(null);
 
-  // Edit Lesson Modal State
   const [editingLesson, setEditingLesson] = useState<{
     id: string;
     title: string;
@@ -171,6 +185,17 @@ export function LessonsManagementTab({
     isPublished: boolean;
   } | null>(null);
   const [editLoading, setEditLoading] = useState(false);
+
+  // Debounce duration detection for edit form URL
+  const editingVideoPath = editingLesson?.videoPath;
+  const editingLessonId = editingLesson?.id;
+  React.useEffect(() => {
+    if (!editingLessonId || !editingVideoPath || editingVideoPath.trim().length < 5) return;
+    const timer = setTimeout(() => {
+      autoDetectUrlDuration(editingVideoPath, true);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [editingVideoPath, editingLessonId]);
 
   // Upload Progress
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -642,9 +667,7 @@ export function LessonsManagementTab({
                     onChange={(e) => {
                       const val = e.target.value;
                       setVideoUrl(val);
-                      if (val.trim()) {
-                        autoDetectUrlDuration(val);
-                      } else {
+                      if (!val.trim()) {
                         setDurationMinutes(0);
                         setDurationDetectedMsg(null);
                       }
@@ -652,11 +675,8 @@ export function LessonsManagementTab({
                     onPaste={(e) => {
                       const pasted = e.clipboardData.getData('text');
                       if (pasted) {
-                        setTimeout(() => autoDetectUrlDuration(pasted), 50);
+                        setVideoUrl(pasted);
                       }
-                    }}
-                    onBlur={() => {
-                      if (videoUrl.trim()) autoDetectUrlDuration(videoUrl);
                     }}
                     placeholder="https://www.youtube.com/watch?v=... أو BunnyCDN/MP4 URL"
                     className="w-full h-11 px-4 pl-28 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk font-mono text-xs focus:outline-none focus:border-cyan-electric"
@@ -1039,16 +1059,12 @@ export function LessonsManagementTab({
                   onChange={(e) => {
                     const v = e.target.value;
                     setEditingLesson({ ...editingLesson, videoPath: v });
-                    if (v.trim()) autoDetectUrlDuration(v, true);
                   }}
                   onPaste={(e) => {
                     const pasted = e.clipboardData.getData('text');
                     if (pasted) {
-                      setTimeout(() => autoDetectUrlDuration(pasted, true), 50);
+                      setEditingLesson({ ...editingLesson, videoPath: pasted });
                     }
-                  }}
-                  onBlur={() => {
-                    if (editingLesson.videoPath.trim()) autoDetectUrlDuration(editingLesson.videoPath, true);
                   }}
                   className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-chalk font-mono text-xs"
                 />

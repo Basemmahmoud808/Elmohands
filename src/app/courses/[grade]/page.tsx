@@ -319,7 +319,7 @@ export default function GradeCoursesPage() {
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-chalk-muted">
                         <Clock className="w-3.5 h-3.5 text-cyan-electric" />
-                        <span>{lesson.durationMinutes || 45} دقيقة</span>
+                        <span>{lesson.durationMinutes > 0 ? `${lesson.durationMinutes} دقيقة` : 'فيديو تفاعلي'}</span>
                       </div>
 
                       <div className="flex items-center gap-2">

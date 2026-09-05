@@ -58,7 +58,7 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
   }
 
   const currentMinutes = Math.floor(lesson.lastPosition / 60);
-  const totalMinutes = lesson.durationMinutes || 45;
+  const totalMinutes = lesson.durationMinutes || 0;
   const progressPercent = Math.min(100, Math.max(0, lesson.watchPercentage || 0));
   const isLessonCompleted = Boolean(lesson.isCompleted) || progressPercent >= 90;
 
@@ -115,7 +115,9 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
               <span className="text-slate-700 dark:text-chalk/90">
                 {isLessonCompleted
                   ? 'تمت مشاهدة وإتقان كامل الدرس بنجاح'
-                  : `مستوى الإنجاز: دقيقة ${currentMinutes} من ${totalMinutes} دقيقة`}
+                  : totalMinutes > 0
+                  ? `مستوى الإنجاز: دقيقة ${currentMinutes} من ${totalMinutes} دقيقة`
+                  : `مستوى الإنجاز: ${currentMinutes} دقيقة تم إنجازها`}
               </span>
               <span className={isLessonCompleted ? 'text-emerald-400 font-black' : 'text-cyan-electric font-black'}>
                 {isLessonCompleted ? '100%' : `${progressPercent}%`}

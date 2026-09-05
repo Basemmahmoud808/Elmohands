@@ -289,7 +289,7 @@ export async function createLessonAction(input: CreateLessonInput): Promise<Acti
       videoPath: parsedMedia.src,
       pdfPath: input.pdfPath || null,
       thumbnailPath: input.thumbnailPath || '/teacher_reda_kheyrat.jpg',
-      durationMinutes: input.durationMinutes || 45,
+      durationMinutes: input.durationMinutes || 0,
       sortOrder: input.sortOrder || 1,
       isPublished: input.isPublished !== false,
       isLocked: input.isLocked || false,

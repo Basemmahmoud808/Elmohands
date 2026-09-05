@@ -276,7 +276,7 @@ export function CoursesManagementTab({
               id: l.id,
               title: l.title,
               description: l.description,
-              durationMinutes: l.durationMinutes || 45,
+              durationMinutes: l.durationMinutes || 0,
               videoPath: l.videoPath,
               pdfPath: l.pdfPath,
               thumbnailPath: l.thumbnailPath,

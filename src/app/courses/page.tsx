@@ -118,7 +118,7 @@ export default function CoursesCatalogPage() {
                 (b.units || []).forEach((u) => {
                   (u.lessons || []).forEach((l) => {
                     lessonsCnt++;
-                    totMin += l.durationMinutes || 45;
+                    totMin += l.durationMinutes || 0;
                   });
                 });
               });
