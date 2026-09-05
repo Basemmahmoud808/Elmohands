@@ -238,29 +238,32 @@ export function LessonsManagementTab({
       return;
     }
 
-    let targetUnitId = selectedUnitId;
-    if (!targetUnitId && units.length > 0) {
-      targetUnitId = units[0].id;
+    // Determine target branch
+    const branchIdToUse = selectedBranchId || currentBranch?.id;
+    if (!branchIdToUse) {
+      setFeedbackMsg({
+        success: false,
+        text: 'يرجى اختيار الصف الدراسي والترم والفرع أولاً',
+      });
+      return;
     }
 
+    // Determine target unit in the current branch
+    const isUnitInCurrentBranch = units.some((u) => u.id === selectedUnitId);
+    let targetUnitId = isUnitInCurrentBranch ? selectedUnitId : (units[0]?.id || '');
+
     if (!targetUnitId) {
-      if (quickUnitTitle.trim()) {
-        const uRes = await createUnitAction({
-          branchId: selectedBranchId || currentBranch?.id || '',
-          title: quickUnitTitle.trim(),
-        });
-        if (uRes.success && uRes.data) {
-          targetUnitId = uRes.data;
-        } else {
-          const uErr = !uRes.success ? uRes.error : 'يرجى إنشاء وحدة دراسية أولاً للدرس';
-          setFeedbackMsg({ success: false, text: uErr || 'يرجى إنشاء وحدة دراسية أولاً للدرس' });
-          return;
-        }
+      const unitTitleToCreate = quickUnitTitle.trim() || 'الوحدة الأولى';
+      const uRes = await createUnitAction({
+        branchId: branchIdToUse,
+        title: unitTitleToCreate,
+      });
+      if (uRes.success && uRes.data) {
+        targetUnitId = uRes.data;
+        setSelectedUnitId(targetUnitId);
       } else {
-        setFeedbackMsg({
-          success: false,
-          text: 'لا توجد وحدات دراسية مسجلة في هذا الفرع. يرجى كتابة اسم وحدة جديدة لإنشائها أولاً.',
-        });
+        const uErr = !uRes.success ? uRes.error : 'يرجى إنشاء وحدة دراسية أولاً للدرس';
+        setFeedbackMsg({ success: false, text: uErr || 'يرجى إنشاء وحدة دراسية أولاً للدرس' });
         return;
       }
     }
@@ -308,7 +311,7 @@ export function LessonsManagementTab({
       setUploadLabel('جاري حفظ الدرس ونشره للطلاب في قاعدة البيانات...');
 
       const actionRes = await createLessonAction({
-        unitId: selectedUnitId,
+        unitId: targetUnitId,
         title: title.trim(),
         description: description.trim(),
         videoPath: finalVideoUrl,
@@ -326,13 +329,18 @@ export function LessonsManagementTab({
       if (actionRes.success) {
         setFeedbackMsg({
           success: true,
-          text: 'تم رفع ونشر الدرس بنجاح للطلاب! ',
+          text: 'تم رفع ونشر الدرس بنجاح للطلاب!',
         });
         setTitle('');
         setDescription('');
         setSelectedVideoFile(null);
         setSelectedPdfFile(null);
         setSelectedThumbnailFile(null);
+        setVideoUrl('');
+        setPdfUrl('');
+        setDurationMinutes(0);
+        setDurationDetectedMsg(null);
+        setQuickUnitTitle('');
 
         if (onRefresh) onRefresh();
       } else {
@@ -437,13 +445,15 @@ export function LessonsManagementTab({
               <select
                 value={selectedGradeId}
                 onChange={(e) => {
-                  setSelectedGradeId(e.target.value);
-                  const g = curriculum.find((x) => x.id === e.target.value);
+                  const newGradeId = e.target.value;
+                  setSelectedGradeId(newGradeId);
+                  const g = curriculum.find((x) => x.id === newGradeId);
                   const t = g?.terms[0];
                   setSelectedTermId(t?.id || '');
                   const b = t?.branches[0];
                   setSelectedBranchId(b?.id || '');
                   setSelectedUnitId(b?.units[0]?.id || '');
+                  setQuickUnitTitle('');
                 }}
                 className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
               >
@@ -460,11 +470,13 @@ export function LessonsManagementTab({
               <select
                 value={selectedTermId}
                 onChange={(e) => {
-                  setSelectedTermId(e.target.value);
-                  const t = terms.find((x) => x.id === e.target.value);
+                  const newTermId = e.target.value;
+                  setSelectedTermId(newTermId);
+                  const t = terms.find((x) => x.id === newTermId);
                   const b = t?.branches[0];
                   setSelectedBranchId(b?.id || '');
                   setSelectedUnitId(b?.units[0]?.id || '');
+                  setQuickUnitTitle('');
                 }}
                 className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
               >
@@ -481,9 +493,11 @@ export function LessonsManagementTab({
               <select
                 value={selectedBranchId}
                 onChange={(e) => {
-                  setSelectedBranchId(e.target.value);
-                  const b = branches.find((x) => x.id === e.target.value);
+                  const newBranchId = e.target.value;
+                  setSelectedBranchId(newBranchId);
+                  const b = branches.find((x) => x.id === newBranchId);
                   setSelectedUnitId(b?.units[0]?.id || '');
+                  setQuickUnitTitle('');
                 }}
                 className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-chalk focus:outline-none focus:border-cyan-electric"
               >

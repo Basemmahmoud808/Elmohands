@@ -74,6 +74,10 @@ export function CoursesManagementTab({
 }: CoursesManagementTabProps) {
   const [curriculum, setCurriculum] = useState<CurriculumGradeDTO[]>(initialCurriculum);
 
+  React.useEffect(() => {
+    setCurriculum(initialCurriculum);
+  }, [initialCurriculum]);
+
   // Selected Grade
   const [selectedGradeId, setSelectedGradeId] = useState<string>(
     initialCurriculum[0]?.id || DEFAULT_GRADES[0].id
@@ -96,19 +100,6 @@ export function CoursesManagementTab({
   const [unitLoading, setUnitLoading] = useState(false);
   const [unitFeedbackMsg, setUnitFeedbackMsg] = useState<{ success: boolean; text: string } | null>(null);
 
-  const openAddUnitModal = () => {
-    setUnitFeedbackMsg(null);
-    setNewUnitTitle('');
-    setNewUnitDesc('');
-    const targetGrade = selectedGrade;
-    setUnitModalGradeId(targetGrade.id);
-    const targetTerm = targetGrade.terms[0];
-    setUnitModalTermId(targetTerm?.id || '');
-    const targetBranch = targetTerm?.branches[0];
-    setUnitModalBranchId(targetBranch?.id || '');
-    setIsAddUnitOpen(true);
-  };
-
   // KaTeX
   const renderMath = (latex: string) => {
     try {
@@ -120,12 +111,21 @@ export function CoursesManagementTab({
 
   // Find Selected Grade Object
   const selectedGrade = useMemo(() => {
-    const found = curriculum.find(
-      (g) => g.id === selectedGradeId || g.name === selectedGradeId
-    );
-    if (found) return found;
+    // 1. Direct ID match
+    const byId = curriculum.find((g) => g.id === selectedGradeId);
+    if (byId) return byId;
 
-    const def = DEFAULT_GRADES.find((dg) => dg.id === selectedGradeId) || DEFAULT_GRADES[0];
+    // 2. Direct Name match or default ID mapping
+    const defTarget = DEFAULT_GRADES.find((dg) => dg.id === selectedGradeId);
+    const byName = curriculum.find(
+      (g) => g.name === selectedGradeId || (defTarget && g.name === defTarget.name)
+    );
+    if (byName) return byName;
+
+    // 3. First curriculum grade
+    if (curriculum.length > 0) return curriculum[0];
+
+    const def = defTarget || DEFAULT_GRADES[0];
     return {
       id: def.id,
       name: def.name,
@@ -155,6 +155,19 @@ export function CoursesManagementTab({
       ],
     };
   }, [curriculum, selectedGradeId]);
+
+  const openAddUnitModal = () => {
+    setUnitFeedbackMsg(null);
+    setNewUnitTitle('');
+    setNewUnitDesc('');
+    const targetGrade = selectedGrade;
+    setUnitModalGradeId(targetGrade.id);
+    const targetTerm = targetGrade.terms[0];
+    setUnitModalTermId(targetTerm?.id || '');
+    const targetBranch = targetTerm?.branches[0];
+    setUnitModalBranchId(targetBranch?.id || '');
+    setIsAddUnitOpen(true);
+  };
 
   const terms = selectedGrade.terms || [];
 
@@ -383,7 +396,11 @@ export function CoursesManagementTab({
       {/* 4 GRADE CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {DEFAULT_GRADES.map((dg) => {
-          const isSelected = selectedGradeId === dg.id;
+          const gradeInCurriculum = curriculum.find(
+            (g) => g.id === dg.id || g.name === dg.name
+          );
+          const effectiveGradeId = gradeInCurriculum?.id || dg.id;
+          const isSelected = selectedGrade.id === effectiveGradeId || selectedGrade.name === dg.name;
           const stats = gradeStatsMap[dg.id] || {
             lessonsCount: 0,
             pdfsCount: 0,
@@ -396,7 +413,7 @@ export function CoursesManagementTab({
             <div
               key={dg.id}
               onClick={() => {
-                setSelectedGradeId(dg.id);
+                setSelectedGradeId(effectiveGradeId);
                 setSelectedTermId('');
               }}
               className={`chalk-card rounded-3xl p-5 sm:p-6 cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-4 border ${
