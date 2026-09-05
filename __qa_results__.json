@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-05T05:42:14.437Z",
+  "timestamp": "2026-09-05T06:34:50.803Z",
   "passed": 88,
   "failed": 0,
   "warnings": 0,
@@ -51,7 +51,7 @@
       "name": "سرعة تحميل الصفحة الرئيسية",
       "ok": true,
       "warn": false,
-      "msg": "Status: 200 | Time: 477ms"
+      "msg": "Status: 200 | Time: 195ms"
     },
     {
       "axis": "PERF",
@@ -59,7 +59,7 @@
       "name": "استجابة مسار /student (redirect)",
       "ok": true,
       "warn": false,
-      "msg": "Status: 307 | Time: 133ms"
+      "msg": "Status: 307 | Time: 134ms"
     },
     {
       "axis": "PERF",
@@ -67,7 +67,7 @@
       "name": "استجابة مسار /admin (redirect)",
       "ok": true,
       "warn": false,
-      "msg": "Status: 307 | Time: 139ms"
+      "msg": "Status: 307 | Time: 132ms"
     },
     {
       "axis": "PERF",
@@ -75,7 +75,7 @@
       "name": "Health Check Response Time",
       "ok": true,
       "warn": false,
-      "msg": "Status: 200 | Time: 149ms | DB: connected"
+      "msg": "Status: 200 | Time: 179ms | DB: connected"
     },
     {
       "axis": "PERF",
@@ -83,7 +83,7 @@
       "name": "Health Check — قاعدة البيانات متصلة",
       "ok": true,
       "warn": false,
-      "msg": "{\"status\":\"healthy\",\"db\":\"connected\",\"activeProfilesCount\":9,\"durationMs\":536,\"platform\":\"منصة المهندس — م/ رضا خيرت\",\"t"
+      "msg": "{\"status\":\"healthy\",\"db\":\"connected\",\"activeProfilesCount\":9,\"durationMs\":342,\"platform\":\"منصة المهندس — م/ رضا خيرت\",\"t"
     },
     {
       "axis": "SEC",

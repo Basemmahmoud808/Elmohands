@@ -143,22 +143,6 @@ export async function toggleStudentStatus(
   }
 }
 
-/**
- * Fetches full profile of a student including subscriptions, lessons progress, and quiz attempts.
- */
-export async function getStudentFullProfile(id: string) {
-  return getStudentDetails(id);
-}
-
-// Wrappers for compatibility in "use server" file
-export async function getAllStudentsWithDetails(params?: {
-  search?: string;
-  gradeId?: string;
-  isActive?: boolean;
-}) {
-  return getStudentsList(params);
-}
-
 export async function toggleStudentActiveStatusAction(id: string, isActive: boolean) {
   return toggleStudentStatus(id, isActive);
 }
