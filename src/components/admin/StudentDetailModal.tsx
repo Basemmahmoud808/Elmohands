@@ -18,6 +18,11 @@ import {
   Loader2,
   Zap,
   KeyRound,
+  Copy,
+  Check,
+  Send,
+  ExternalLink,
+  Users,
 } from 'lucide-react';
 import { AdminStudentDTO } from '@/lib/types/dashboard';
 import {
@@ -25,6 +30,11 @@ import {
   cancelStudentSubscriptionAction,
   adminResetStudentPasswordAction,
 } from '@/lib/actions/admin';
+import {
+  getSubscriptionWelcomeMessage,
+  getPasswordResetMessage,
+  getWhatsAppDirectUrl,
+} from '@/lib/services/whatsapp';
 
 interface StudentDetailModalProps {
   student: AdminStudentDTO | null;
@@ -39,10 +49,59 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
   const [passSuccessMsg, setPassSuccessMsg] = useState('');
   const [lastWhatsAppUrl, setLastWhatsAppUrl] = useState<string | null>(null);
 
+  // WhatsApp Message Hub state
+  const [activeMsgTab, setActiveMsgTab] = useState<'subscription' | 'password' | 'parent'>('subscription');
+  const [customTempPass, setCustomTempPass] = useState<string>('123456');
+  const [copiedMsg, setCopiedMsg] = useState(false);
+
   if (!student) return null;
 
   const studentCleanPhone = student.phone.replace(/^0/, '');
   const parentCleanPhone = student.parentPhone ? student.parentPhone.replace(/^0/, '') : '';
+
+  // Generate dynamic message templates
+  const subscriptionMsg = getSubscriptionWelcomeMessage({
+    studentName: student.fullName,
+    planName: student.subscriptionPlanName || 'اشتراك شهر',
+    gradeName: student.gradeName || 'الصف الدراسي',
+    durationDays: student.daysRemaining || 30,
+  });
+
+  const passwordMsg = getPasswordResetMessage({
+    studentName: student.fullName,
+    phone: student.phone,
+    temporaryPassword: customTempPass,
+  });
+
+  const parentFollowupMsg = `ولي أمر الطالب المحترم / ${student.fullName} 📊
+تقرير منصة المهندس في الرياضيات (م/ رضا خيرت)
+
+• حالة الحساب: ${student.isActive ? 'مفعل ونشط 🟢' : 'قيد المراجعة 🟡'}
+• الصف الدراسي: ${student.gradeName || 'الصف الدراسي'}
+• باقة الاشتراك: ${student.subscriptionPlanName || 'حساب عادي'}
+• المحاضرات المكتملة: ${student.completedLessonsCount || 0} درس
+• الاختبارات المنجزة: ${student.examAttemptsCount || 0} امتحان
+
+يمكنكم متابعة تقارير ابنكم الدورية عبر المنصة:
+https://elmohands-one.vercel.app
+
+مع تحيات م/ رضا خيرت 🌟`;
+
+  const activeMessageText =
+    activeMsgTab === 'subscription'
+      ? subscriptionMsg
+      : activeMsgTab === 'password'
+      ? passwordMsg
+      : parentFollowupMsg;
+
+  const studentDirectUrl = getWhatsAppDirectUrl(student.phone, activeMessageText);
+  const parentDirectUrl = student.parentPhone ? getWhatsAppDirectUrl(student.parentPhone, activeMessageText) : null;
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(activeMessageText);
+    setCopiedMsg(true);
+    setTimeout(() => setCopiedMsg(false), 2500);
+  };
 
   const handleGrantSubscription = async (days: number, name: string) => {
     setSubLoading(true);
@@ -54,6 +113,7 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
         student.subscriptionPlanName = name;
         student.daysRemaining = days;
         student.isActive = true;
+        setActiveMsgTab('subscription');
         if (res.data?.whatsAppUrl) {
           setLastWhatsAppUrl(res.data.whatsAppUrl);
         }
@@ -97,11 +157,14 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
       alert('كلمة المرور يجب أن تتكون من 6 خانات على الأقل');
       return;
     }
+    const cleanPass = newPass.trim();
+    setCustomTempPass(cleanPass);
     setPassLoading(true);
     setPassSuccessMsg('');
     try {
-      const res = await adminResetStudentPasswordAction(student.id, newPass.trim());
+      const res = await adminResetStudentPasswordAction(student.id, cleanPass);
       if (res.success) {
+        setActiveMsgTab('password');
         if (res.data?.whatsAppUrl) {
           setLastWhatsAppUrl(res.data.whatsAppUrl);
         }
@@ -121,13 +184,13 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
     <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-4 font-arabic" dir="rtl">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-cyan-electric/30 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/90">
+        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/90">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 dark:bg-cyan-electric/10 border border-cyan-500/20 dark:border-cyan-electric/30 flex items-center justify-center text-cyan-600 dark:text-cyan-electric shadow-sm shrink-0">
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-cyan-500/10 dark:bg-cyan-electric/10 border border-cyan-500/20 dark:border-cyan-electric/30 flex items-center justify-center text-cyan-600 dark:text-cyan-electric shadow-sm shrink-0">
               <User className="w-7 h-7" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-black text-slate-900 dark:text-chalk">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-chalk">
                 {student.fullName}
               </h3>
               <div className="flex items-center gap-2 text-xs">
@@ -153,7 +216,7 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm bg-white dark:bg-slate-900">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-sm bg-white dark:bg-slate-900">
           {/* Status & Subscription Highlight Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Account Status Card */}
@@ -264,7 +327,109 @@ export function StudentDetailModal({ student, onClose, onToggleStatus }: Student
             </div>
           </div>
 
-          {/* Contact Details */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* WHATSAPP MESSAGE HUB & INSTANT DISPATCH PREVIEW                           */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/5 dark:bg-slate-950 border border-emerald-500/30 space-y-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-500/20 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 dark:text-chalk">
+                    رسائل الواتساب الجاهزة للإرسال للطالب
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    اختر نوع الرسالة، عاين النص، وانسخها أو أرسلها بضغطة زر واحدة
+                  </p>
+                </div>
+              </div>
+
+              {/* Message Template Switcher */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
+                <button
+                  onClick={() => setActiveMsgTab('subscription')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                    activeMsgTab === 'subscription'
+                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-chalk'
+                  }`}
+                >
+                  تفعيل الاشتراك
+                </button>
+                <button
+                  onClick={() => setActiveMsgTab('password')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                    activeMsgTab === 'password'
+                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-chalk'
+                  }`}
+                >
+                  كلمة المرور
+                </button>
+                <button
+                  onClick={() => setActiveMsgTab('parent')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                    activeMsgTab === 'parent'
+                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-chalk'
+                  }`}
+                >
+                  تقرير ولي الأمر
+                </button>
+              </div>
+            </div>
+
+            {/* WhatsApp Bubble Preview Box */}
+            <div className="relative p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 pb-1 border-b border-slate-100 dark:border-slate-800/80">
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>معاينة نص الرسالة التي ستصل للطالب:</span>
+                </span>
+                <button
+                  onClick={handleCopyMessage}
+                  className="flex items-center gap-1 text-cyan-600 dark:text-cyan-electric hover:underline"
+                >
+                  {copiedMsg ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedMsg ? 'تم نسخ الرسالة!' : 'نسخ النص'}</span>
+                </button>
+              </div>
+
+              <pre className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-sans leading-relaxed select-all bg-slate-50 dark:bg-slate-950/70 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 max-h-48 overflow-y-auto">
+                {activeMessageText}
+              </pre>
+
+              {/* Action Buttons: Student WhatsApp & Parent WhatsApp */}
+              <div className="pt-2 flex flex-wrap items-center gap-2">
+                <a
+                  href={studentDirectUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-emerald-500 hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>إرسال إلى واتساب الطالب ({student.phone})</span>
+                </a>
+
+                {parentDirectUrl && (
+                  <a
+                    href={parentDirectUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-2.5 px-3.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5"
+                    title={`إرسال إلى ولي الأمر: ${student.parentPhone}`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>واتساب ولي الأمر</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Details Grid */}
           <div className="space-y-3">
             <h4 className="text-xs font-black text-cyan-700 dark:text-cyan-electric uppercase tracking-wider flex items-center gap-1.5">
               <span>بيانات الطالب والتواصل الحقيقية</span>
