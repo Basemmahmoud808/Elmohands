@@ -10,6 +10,7 @@ import {
   FileText,
   Lock,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 
 interface LessonPdfViewerProps {
@@ -18,6 +19,7 @@ interface LessonPdfViewerProps {
   studentName?: string;
   studentPhone?: string;
   allowDownload?: boolean;
+  onClose?: () => void;
 }
 
 export function LessonPdfViewer({
@@ -26,6 +28,7 @@ export function LessonPdfViewer({
   studentName = 'طالب منصة المهندس',
   studentPhone = '',
   allowDownload = false,
+  onClose,
 }: LessonPdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState<number>(100);
@@ -71,21 +74,21 @@ export function LessonPdfViewer({
     }
 
     getSignedUrl();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pdfUrl]);
 
-  // Block Print (Ctrl+P / Cmd+P)
+  // Block Print (Ctrl+P / Cmd+P) & Save (Ctrl+S / Cmd+S)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Block Ctrl+P (Print)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         alert('طباعة المحتوى محظورة لحماية حقوق النشر الخاصة بـ م/ رضا خيرت.');
       }
-      // Block Ctrl+S (Save)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        alert('تحميل المحتوى محظور. المحتوى محمي بحقوق النشر لـ م/ رضا خيرت.');
+        alert('تحميل وحفظ المحتوى محظور لحماية حقوق النشر الخاصة بـ م/ رضا خيرت.');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -140,16 +143,16 @@ export function LessonPdfViewer({
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
-  // Build the iframe src with maximum toolbar suppression
+  // PDF open parameters MUST be preceded by # (URL fragment), never query &
   const iframeSrc = secureUrl
-    ? `${secureUrl}${secureUrl.includes('?') ? '&' : '#'}toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0&download=0&print=0`
+    ? `${secureUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
     : '';
 
   return (
     <div
       ref={containerRef}
       onContextMenu={(e) => e.preventDefault()}
-      className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex flex-col w-full min-h-[600px] h-[75vh]"
+      className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex flex-col w-full h-full min-h-[500px]"
       style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     >
       {/* CSS to hide print and block selection */}
@@ -168,22 +171,22 @@ export function LessonPdfViewer({
       `}</style>
 
       {/* Top Toolbar */}
-      <div className="bg-slate-900/90 border-b border-slate-800 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2.5 z-20 backdrop-blur-md">
+      <div className="bg-slate-900/95 border-b border-slate-800 px-4 py-3 sm:px-5 sm:py-3.5 flex flex-wrap items-center justify-between gap-3 z-20 backdrop-blur-md shrink-0">
         {/* Title & Badge */}
-        <div className="flex items-center gap-2 max-w-sm truncate">
-          <div className="p-1.5 rounded-lg bg-cyan-electric/15 text-cyan-electric">
+        <div className="flex items-center gap-2.5 max-w-sm sm:max-w-md truncate">
+          <div className="p-2 rounded-xl bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/20 shrink-0">
             <FileText className="w-4 h-4" />
           </div>
           <div className="truncate">
-            <h4 className="text-xs sm:text-sm font-bold text-chalk truncate">{title}</h4>
-            <span className="text-[10px] text-chalk-muted font-medium">مذكرة الشرح والتدريبات المحلولة</span>
+            <h4 className="text-xs sm:text-sm font-black text-chalk truncate">{title}</h4>
+            <span className="text-[10px] text-chalk-muted font-bold block">مذكرة الشرح والتدريبات المحلولة</span>
           </div>
         </div>
 
         {/* Toolbar Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           {/* Zoom controls */}
-          <div className="flex items-center bg-slate-800/80 rounded-xl p-0.5 border border-slate-700">
+          <div className="flex items-center bg-slate-800/90 rounded-xl p-0.5 border border-slate-700">
             <button
               onClick={handleZoomOut}
               className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-electric hover:bg-slate-700/60 transition-colors"
@@ -213,7 +216,7 @@ export function LessonPdfViewer({
           {/* Fit Width toggle */}
           <button
             onClick={handleToggleFitWidth}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               isFitWidth
                 ? 'bg-cyan-electric/20 text-cyan-electric border border-cyan-electric/30'
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
@@ -231,16 +234,28 @@ export function LessonPdfViewer({
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
 
-          {/* Protected Badge — always shown, no download button */}
+          {/* Protected Badge */}
           <div className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5" />
             <span>محتوى محمي</span>
           </div>
+
+          {/* Optional Close Button (when embedded in a modal) */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700 transition-colors mr-1"
+              title="إغلاق المعاينة"
+              aria-label="إغلاق المعاينة"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Main Document Frame Area */}
-      <div className="flex-1 relative overflow-auto bg-slate-900 flex items-start justify-center p-2 sm:p-4">
+      <div className="flex-1 relative overflow-auto bg-slate-900 flex items-start justify-center p-2 sm:p-4 min-h-0">
         {/* Anti-Piracy Watermark Grid */}
         <div className="absolute inset-0 pointer-events-none z-10 select-none overflow-hidden flex flex-col justify-around opacity-15">
           {[...Array(6)].map((_, i) => (
@@ -264,7 +279,7 @@ export function LessonPdfViewer({
           </div>
         )}
 
-        {/* Embedded Iframe with zoom scaling — no toolbar, no download */}
+        {/* Embedded Iframe / Object with zoom scaling — NO sandbox attribute so browser PDF viewer plugin works smoothly */}
         {secureUrl && (
           <div
             className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-2xl transition-transform duration-200 origin-top"
@@ -274,24 +289,29 @@ export function LessonPdfViewer({
               minHeight: '100%',
             }}
           >
-            <iframe
-              src={iframeSrc}
+            <object
+              data={iframeSrc}
+              type="application/pdf"
               className="w-full h-full min-h-[500px] border-0"
               title={title}
-              sandbox="allow-same-origin allow-scripts"
-              loading="lazy"
-            />
+            >
+              <iframe
+                src={iframeSrc}
+                className="w-full h-full min-h-[500px] border-0"
+                title={title}
+              />
+            </object>
           </div>
         )}
       </div>
 
-      {/* Footer Info — no external link */}
-      <div className="bg-slate-900/90 border-t border-slate-800 px-4 py-2 flex items-center justify-between text-[11px] text-chalk-muted">
+      {/* Footer Info */}
+      <div className="bg-slate-900/95 border-t border-slate-800 px-4 py-2.5 flex items-center justify-between text-[11px] text-chalk-muted shrink-0">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span>محتوى تعليمي محمي ومخصص لـ: <strong className="text-chalk">{studentName}</strong></span>
         </div>
-        <span className="text-amber-400/80 flex items-center gap-1 font-semibold">
+        <span className="text-amber-400/80 flex items-center gap-1 font-bold">
           <Lock className="w-3 h-3" />
           <span>التحميل والنسخ محظور</span>
         </span>
