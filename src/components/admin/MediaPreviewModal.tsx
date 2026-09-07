@@ -41,16 +41,9 @@ export function MediaPreviewModal({ media, onClose }: MediaPreviewModalProps) {
                   <h3 className="text-sm sm:text-base font-black text-chalk truncate">
                     {media.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[11px] text-cyan-electric font-bold">
                       معاينة فيديو الشرح التفاعلي
                     </span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                      <ShieldCheck className="w-3 h-3" />
-                      <span>فيديو مؤمن</span>
-                    </span>
-                  </div>
                 </div>
               </div>
               <button
