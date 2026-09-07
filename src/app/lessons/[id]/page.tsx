@@ -53,6 +53,9 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
         setLessonDetails(res.data);
         setWatchPct(res.data.studentProgress?.watchPercentage || 0);
         setIsCompleted(Boolean(res.data.studentProgress?.isCompleted));
+        if (!res.data.videoPath && res.data.pdfPath) {
+          setActiveTab('pdf');
+        }
       } else {
         setErrorMsg(res.error || 'تعذر تحميل بيانات الدرس');
       }
@@ -192,17 +195,19 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
           {/* Tabs Switcher */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 overflow-x-auto gap-2">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setActiveTab('video')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shrink-0 ${
-                  activeTab === 'video'
-                    ? 'bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 shadow-cyan-glow'
-                    : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800'
-                }`}
-              >
-                <Video className="w-4 h-4" />
-                <span>فيديو الشرح التفاعلي</span>
-              </button>
+              {lessonDetails.videoPath && (
+                <button
+                  onClick={() => setActiveTab('video')}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all shrink-0 ${
+                    activeTab === 'video'
+                      ? 'bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 shadow-cyan-glow'
+                      : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                  }`}
+                >
+                  <Video className="w-4 h-4" />
+                  <span>فيديو الشرح التفاعلي</span>
+                </button>
+              )}
 
               {lessonDetails.pdfPath && (
                 <button

@@ -207,8 +207,12 @@ export function CoursesManagementTab({
         t.branches.forEach((b) => {
           b.units.forEach((u) => {
             u.lessons.forEach((l) => {
-              lessons++;
-              if (l.pdfPath) pdfs++;
+              if (l.videoPath && l.videoPath.trim()) {
+                lessons++;
+              } else if (!l.pdfPath) {
+                lessons++;
+              }
+              if (l.pdfPath && l.pdfPath.trim()) pdfs++;
             });
           });
         });
@@ -299,6 +303,18 @@ export function CoursesManagementTab({
         item.branchName.toLowerCase().includes(q)
     );
   }, [selectedGrade, selectedTermId, searchQuery]);
+
+  // Filtered Video Lessons (الدروس التي تحتوي على فيديو، أو مسودة درس ليس بها مذكرة فقط)
+  const videoLessons = useMemo(() => {
+    return allGradeLessons.filter(
+      (l) => Boolean(l.videoPath && l.videoPath.trim()) || (!l.videoPath && !l.pdfPath)
+    );
+  }, [allGradeLessons]);
+
+  // Filtered PDF Worksheets & Notes (الشيتات والمذكرات)
+  const pdfLessons = useMemo(() => {
+    return allGradeLessons.filter((l) => Boolean(l.pdfPath && l.pdfPath.trim()));
+  }, [allGradeLessons]);
 
   // Filtered Quizzes
   const gradeQuizzes = useMemo(() => {
@@ -524,7 +540,7 @@ export function CoursesManagementTab({
               }`}
             >
               <Video className="w-4 h-4" />
-              <span>الدروس ({allGradeLessons.length})</span>
+              <span>الدروس ({videoLessons.length})</span>
             </button>
 
             <button
@@ -536,7 +552,7 @@ export function CoursesManagementTab({
               }`}
             >
               <FileText className="w-4 h-4" />
-              <span>المذكرات ({allGradeLessons.filter((l) => l.pdfPath).length})</span>
+              <span>المذكرات ({pdfLessons.length})</span>
             </button>
 
             <button
@@ -619,19 +635,19 @@ export function CoursesManagementTab({
         {/* SUBTAB 1: LESSONS & VIDEOS */}
         {activeSubTab === 'curriculum' && (
           <div className="space-y-4">
-            {allGradeLessons.length === 0 ? (
+            {videoLessons.length === 0 ? (
               <div className="p-10 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <Video className="w-8 h-8 text-slate-400 mx-auto" />
                 <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">
-                  لم يتم رفع دروس لهذا الصف بعد
+                  لم يتم رفع دروس فيديو لهذا الصف بعد
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-chalk-muted">
-                  اضغط على زر &quot;إضافة درس&quot; لنشر أول محاضرة لطلاب {selectedGrade.name}.
+                  اضغط على زر &quot;إضافة درس&quot; لنشر أول محاضرة فيديو لطلاب {selectedGrade.name}.
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allGradeLessons.map((lesson) => (
+                {videoLessons.map((lesson) => (
                   <div
                     key={lesson.id}
                     className="p-5 rounded-3xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-cyan-electric/40 transition-all flex flex-col justify-between space-y-3.5"
@@ -723,7 +739,7 @@ export function CoursesManagementTab({
         {/* SUBTAB 2: WORKSHEETS & PDFS */}
         {activeSubTab === 'pdfs' && (
           <div className="space-y-3">
-            {allGradeLessons.filter((l) => l.pdfPath).length === 0 ? (
+            {pdfLessons.length === 0 ? (
               <div className="p-10 rounded-3xl bg-slate-50/50 dark:bg-slate-950/50 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
                 <FileText className="w-8 h-8 text-slate-400 mx-auto" />
                 <h4 className="text-sm font-bold text-slate-900 dark:text-chalk">
@@ -732,9 +748,7 @@ export function CoursesManagementTab({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {allGradeLessons
-                  .filter((l) => l.pdfPath)
-                  .map((l) => (
+                {pdfLessons.map((l) => (
                     <div
                       key={l.id}
                       className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
@@ -753,15 +767,20 @@ export function CoursesManagementTab({
                         </div>
                       </div>
 
-                      <a
-                        href={l.pdfPath || '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3.5 py-2 rounded-xl bg-cyan-electric text-black font-black text-xs flex items-center gap-1 shadow-cyan-glow transition-all shrink-0"
+                      <button
+                        onClick={() =>
+                          onPreviewMedia &&
+                          onPreviewMedia({
+                            type: 'pdf',
+                            title: l.title,
+                            url: l.pdfPath || '',
+                          })
+                        }
+                        className="px-3.5 py-2 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-black font-black text-xs flex items-center gap-1.5 shadow-cyan-glow transition-all shrink-0"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>تحميل</span>
-                      </a>
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>معاينة المذكرة</span>
+                      </button>
                     </div>
                   ))}
               </div>

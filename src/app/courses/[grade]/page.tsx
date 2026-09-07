@@ -270,8 +270,17 @@ export default function GradeCoursesPage() {
                       />
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-slate-400">
-                        <Video className="w-10 h-10 text-cyan-electric/60" />
-                        <span className="text-[11px] font-bold">محاضرة فيديو</span>
+                        {lesson.videoPath ? (
+                          <>
+                            <Video className="w-10 h-10 text-cyan-electric/60" />
+                            <span className="text-[11px] font-bold">محاضرة فيديو</span>
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-10 h-10 text-cyan-electric/60" />
+                            <span className="text-[11px] font-bold">شيت ومذكرة تدريبية</span>
+                          </>
+                        )}
                       </div>
                     )}
 
@@ -318,8 +327,17 @@ export default function GradeCoursesPage() {
                     {/* Footer Actions */}
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-chalk-muted">
-                        <Clock className="w-3.5 h-3.5 text-cyan-electric" />
-                        <span>{lesson.durationMinutes > 0 ? `${lesson.durationMinutes} دقيقة` : 'فيديو تفاعلي'}</span>
+                        {lesson.videoPath ? (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-cyan-electric" />
+                            <span>{lesson.durationMinutes > 0 ? `${lesson.durationMinutes} دقيقة` : 'فيديو تفاعلي'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-3.5 h-3.5 text-cyan-electric" />
+                            <span>شيت ومذكرة PDF</span>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -346,8 +364,22 @@ export default function GradeCoursesPage() {
                               : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-chalk hover:bg-cyan-electric hover:text-black border border-slate-300 dark:border-slate-700'
                           }`}
                         >
-                          {canDirectPlay ? <Play className="w-3.5 h-3.5 fill-current" /> : <Lock className="w-3.5 h-3.5 text-amber-500" />}
-                          <span>{canDirectPlay ? 'مشاهدة الدرس' : 'اشترك لفتح الدرس'}</span>
+                          {canDirectPlay ? (
+                            lesson.videoPath ? (
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                            ) : (
+                              <FileText className="w-3.5 h-3.5" />
+                            )
+                          ) : (
+                            <Lock className="w-3.5 h-3.5 text-amber-500" />
+                          )}
+                          <span>
+                            {canDirectPlay
+                              ? lesson.videoPath
+                                ? 'مشاهدة الدرس'
+                                : 'عرض المذكرة'
+                              : 'اشترك لفتح المحتوى'}
+                          </span>
                         </Link>
                       </div>
                     </div>
