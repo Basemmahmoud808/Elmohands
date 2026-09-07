@@ -1312,10 +1312,10 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
                     href={previewQuestion.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-electric text-slate-950 font-black text-xs shadow-cyan-glow"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-electric text-slate-950 font-black text-xs shadow-cyan-glow hover:bg-cyan-electric-hover transition-all"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>تحميل وفتح الملف في نافذة جديدة</span>
+                    <FileText className="w-4 h-4" />
+                    <span>معاينة المستند في نافذة جديدة</span>
                   </a>
                 </div>
               )}
