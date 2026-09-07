@@ -7,12 +7,9 @@ import {
   RotateCcw,
   Maximize,
   Minimize,
-  Download,
   FileText,
   Lock,
-  ExternalLink,
   ShieldCheck,
-  Printer,
 } from 'lucide-react';
 
 interface LessonPdfViewerProps {
@@ -28,23 +25,80 @@ export function LessonPdfViewer({
   title,
   studentName = 'طالب منصة المهندس',
   studentPhone = '',
-  allowDownload = true,
+  allowDownload = false,
 }: LessonPdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState<number>(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isFitWidth, setIsFitWidth] = useState(true);
+  const [secureUrl, setSecureUrl] = useState<string | null>(null);
+  const [loadingUrl, setLoadingUrl] = useState(true);
 
-  // Prevent Print (Ctrl+P / Cmd+P)
+  // Fetch a signed (time-limited) URL from server for private bucket files
+  useEffect(() => {
+    let cancelled = false;
+
+    async function getSignedUrl() {
+      setLoadingUrl(true);
+      try {
+        // If pdfUrl is already a signed URL or non-supabase URL, use it directly
+        if (!pdfUrl.includes('supabase.co/storage') || pdfUrl.includes('/object/sign/')) {
+          setSecureUrl(pdfUrl);
+          setLoadingUrl(false);
+          return;
+        }
+
+        const res = await fetch('/api/media/signed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filePath: pdfUrl }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data.signedUrl) {
+            setSecureUrl(data.signedUrl);
+          }
+        } else {
+          // Fallback to original URL if signed URL generation fails
+          if (!cancelled) setSecureUrl(pdfUrl);
+        }
+      } catch {
+        if (!cancelled) setSecureUrl(pdfUrl);
+      } finally {
+        if (!cancelled) setLoadingUrl(false);
+      }
+    }
+
+    getSignedUrl();
+    return () => { cancelled = true; };
+  }, [pdfUrl]);
+
+  // Block Print (Ctrl+P / Cmd+P)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Block Ctrl+P (Print)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         alert('طباعة المحتوى محظورة لحماية حقوق النشر الخاصة بـ م/ رضا خيرت.');
       }
+      // Block Ctrl+S (Save)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        alert('تحميل المحتوى محظور. المحتوى محمي بحقوق النشر لـ م/ رضا خيرت.');
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Block print via window.print()
+  useEffect(() => {
+    const handleBeforePrint = (e: Event) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeprint', handleBeforePrint);
+    return () => window.removeEventListener('beforeprint', handleBeforePrint);
   }, []);
 
   const handleZoomIn = () => {
@@ -86,12 +140,33 @@ export function LessonPdfViewer({
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
+  // Build the iframe src with maximum toolbar suppression
+  const iframeSrc = secureUrl
+    ? `${secureUrl}${secureUrl.includes('?') ? '&' : '#'}toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0&download=0&print=0`
+    : '';
+
   return (
     <div
       ref={containerRef}
       onContextMenu={(e) => e.preventDefault()}
       className="relative rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex flex-col w-full min-h-[600px] h-[75vh]"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     >
+      {/* CSS to hide print and block selection */}
+      <style>{`
+        @media print {
+          * { display: none !important; visibility: hidden !important; }
+          body::after {
+            content: 'طباعة المحتوى محظورة — م/ رضا خيرت';
+            display: block !important;
+            visibility: visible !important;
+            font-size: 24px;
+            text-align: center;
+            padding: 100px;
+          }
+        }
+      `}</style>
+
       {/* Top Toolbar */}
       <div className="bg-slate-900/90 border-b border-slate-800 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2.5 z-20 backdrop-blur-md">
         {/* Title & Badge */}
@@ -156,24 +231,11 @@ export function LessonPdfViewer({
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
 
-          {/* Download Button or Locked Badge */}
-          {allowDownload ? (
-            <a
-              href={pdfUrl}
-              download
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-electric to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 hover:shadow-cyan-glow transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>تحميل المذكرة</span>
-            </a>
-          ) : (
-            <div className="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5" />
-              <span>التحميل للمشتركين</span>
-            </div>
-          )}
+          {/* Protected Badge — always shown, no download button */}
+          <div className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" />
+            <span>محتوى محمي</span>
+          </div>
         </div>
       </div>
 
@@ -192,38 +254,47 @@ export function LessonPdfViewer({
           ))}
         </div>
 
-        {/* Embedded Iframe / Object with zoom scaling */}
-        <div
-          className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-2xl transition-transform duration-200 origin-top"
-          style={{
-            transform: isFitWidth ? 'none' : `scale(${zoom / 100})`,
-            width: isFitWidth ? '100%' : `${zoom}%`,
-            minHeight: '100%',
-          }}
-        >
-          <iframe
-            src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
-            className="w-full h-full min-h-[500px] border-0"
-            title={title}
-          />
-        </div>
+        {/* Loading State */}
+        {loadingUrl && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 bg-slate-900/80">
+            <div className="text-center space-y-3">
+              <div className="w-10 h-10 border-4 border-cyan-electric border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-bold text-chalk-muted">جاري تحميل المذكرة المحمية...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Embedded Iframe with zoom scaling — no toolbar, no download */}
+        {secureUrl && (
+          <div
+            className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-2xl transition-transform duration-200 origin-top"
+            style={{
+              transform: isFitWidth ? 'none' : `scale(${zoom / 100})`,
+              width: isFitWidth ? '100%' : `${zoom}%`,
+              minHeight: '100%',
+            }}
+          >
+            <iframe
+              src={iframeSrc}
+              className="w-full h-full min-h-[500px] border-0"
+              title={title}
+              sandbox="allow-same-origin allow-scripts"
+              loading="lazy"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Footer Info */}
+      {/* Footer Info — no external link */}
       <div className="bg-slate-900/90 border-t border-slate-800 px-4 py-2 flex items-center justify-between text-[11px] text-chalk-muted">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span>محتوى تعليمي محمي ومخصص لـ: <strong className="text-chalk">{studentName}</strong></span>
         </div>
-        <a
-          href={pdfUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="text-cyan-electric hover:underline flex items-center gap-1 font-semibold"
-        >
-          <span>فتح في نافذة مستقلة</span>
-          <ExternalLink className="w-3 h-3" />
-        </a>
+        <span className="text-amber-400/80 flex items-center gap-1 font-semibold">
+          <Lock className="w-3 h-3" />
+          <span>التحميل والنسخ محظور</span>
+        </span>
       </div>
     </div>
   );

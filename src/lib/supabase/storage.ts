@@ -54,6 +54,17 @@ export async function uploadRealFileWithProgress(
     if (onProgress) onProgress(80);
 
     if (!error && data) {
+      // Use signed URL (private bucket) — expires in 60 minutes
+      const { data: signedData, error: signError } = await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(filePath, 3600); // 3600 seconds = 60 min
+
+      if (!signError && signedData?.signedUrl) {
+        if (onProgress) onProgress(100);
+        return signedData.signedUrl;
+      }
+
+      // Fallback: try public URL if signed fails (backward compat)
       const { data: publicUrlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);

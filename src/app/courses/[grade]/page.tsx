@@ -377,7 +377,7 @@ export default function GradeCoursesPage() {
                   title={activePdfModal.title}
                   studentName={user?.fullName}
                   studentPhone={user?.phone}
-                  allowDownload={isMatchingStudent || isAdmin}
+                  allowDownload={false}
                 />
               </div>
             </div>

@@ -274,7 +274,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                   title={lessonDetails.title}
                   studentName={user?.fullName}
                   studentPhone={user?.phone}
-                  allowDownload={true}
+                  allowDownload={false}
                 />
               )}
 
