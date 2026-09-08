@@ -325,9 +325,6 @@ export async function getLessonDetailsAction(
               grades (id, name, stage)
             )
           )
-        ),
-        quizzes (
-          id, title, description, duration_minutes, pass_score, max_attempts, is_published
         )
       `)
       .eq('id', lessonId)
@@ -340,6 +337,11 @@ export async function getLessonDetailsAction(
       const hierarchy = extractLessonHierarchy(dbLesson as unknown as DbLessonRelation);
       rawVideoPath = dbLesson.video_path || '';
 
+      const { data: dbQuizzes } = await supabaseAdmin
+        .from('quizzes')
+        .select('id, title, description, duration_minutes, pass_score, max_attempts, is_published')
+        .eq('lesson_id', lessonId);
+
       type QuizRelation = {
         id: string;
         title: string;
@@ -350,7 +352,7 @@ export async function getLessonDetailsAction(
         is_published?: boolean | null;
       };
 
-      const rawQuizzes = (Array.isArray(dbLesson.quizzes) ? dbLesson.quizzes : []) as QuizRelation[];
+      const rawQuizzes = (Array.isArray(dbQuizzes) ? dbQuizzes : []) as QuizRelation[];
       const quizzes = rawQuizzes
         .filter((q) => q.is_published !== false)
         .map((q) => ({
