@@ -404,22 +404,11 @@ export function StudentQuestionBankTab({
                           markItemCompleted(item.id);
                           onOpenPdf(item.fileName || 'ملف التمرين', item.fileUrl!);
                         }}
-                        className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
+                        className="w-full py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>فتح ومعاينة الشيت</span>
                       </button>
-
-                      <a
-                        href={item.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        download
-                        className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-chalk transition-colors"
-                        title="تحميل الملف مباشرة"
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
                     </div>
                   ) : !isFile && item.options && item.options.length > 0 ? (
                     <div>

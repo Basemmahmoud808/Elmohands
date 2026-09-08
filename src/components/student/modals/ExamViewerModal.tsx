@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, FileText, UploadCloud, CheckCircle2, Download, AlertCircle, Loader2 } from 'lucide-react';
+import { X, FileText, UploadCloud, CheckCircle2, Eye, AlertCircle, Loader2 } from 'lucide-react';
 import { StudentQuizItemDTO } from '@/lib/types/dashboard';
+import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
 
 interface ExamViewerModalProps {
   quiz: StudentQuizItemDTO | null;
@@ -14,6 +15,7 @@ export function ExamViewerModal({ quiz, onClose, onSubmitPaper }: ExamViewerModa
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   if (!quiz) return null;
 
@@ -74,16 +76,14 @@ export function ExamViewerModal({ quiz, onClose, onSubmitPaper }: ExamViewerModa
                 </span>
               </div>
 
-              <a
-                href={quiz.pdfPath || '/sample-lesson-notes.pdf'}
-                target="_blank"
-                rel="noreferrer"
-                download
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 self-start sm:self-auto"
+              <button
+                type="button"
+                onClick={() => setShowPdfPreview(true)}
+                className="px-4 py-2.5 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow transition-all flex items-center justify-center gap-2 self-start sm:self-auto"
               >
-                <Download className="w-4 h-4" />
-                <span>تحميل / فتح ملف PDF</span>
-              </a>
+                <Eye className="w-4 h-4" />
+                <span>معاينة ورقة الامتحان</span>
+              </button>
             </div>
           </div>
 
@@ -153,6 +153,25 @@ export function ExamViewerModal({ quiz, onClose, onSubmitPaper }: ExamViewerModa
           </div>
         </div>
       </div>
+
+      {/* Secure PDF Document Preview Modal */}
+      {showPdfPreview && quiz.pdfPath && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPdfPreview(false);
+          }}
+        >
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-5xl h-[92vh] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+            <LessonPdfViewer
+              pdfUrl={quiz.pdfPath}
+              title={quiz.title}
+              allowDownload={false}
+              onClose={() => setShowPdfPreview(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { StudentQuestionBankTab } from '@/components/student/StudentQuestionBank
 import { ExamViewerModal } from '@/components/student/modals/ExamViewerModal';
 import { QuizSolveModal } from '@/components/student/modals/QuizSolveModal';
 import { VideoPreviewModal } from '@/components/student/modals/VideoPreviewModal';
+import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
 import { HelpCircle, Play, FileText, Clock, Award, Loader2 } from 'lucide-react';
 
 export default function StudentDashboard() {
@@ -27,6 +28,7 @@ export default function StudentDashboard() {
   // Modals state
   const [activeQuizModal, setActiveQuizModal] = useState<StudentQuizItemDTO | null>(null);
   const [activeExamFileModal, setActiveExamFileModal] = useState<StudentQuizItemDTO | null>(null);
+  const [activePdfModal, setActivePdfModal] = useState<{ title: string; url: string } | null>(null);
   const [activeVideoModal, setActiveVideoModal] = useState<{
     title: string;
     url: string;
@@ -154,22 +156,7 @@ export default function StudentDashboard() {
                   setActiveVideoModal({ title, url, lessonId, lastPosition, watchPercentage, durationMinutes })
                 }
                 onOpenPdf={(title, url) =>
-                  setActiveExamFileModal({
-                    id: 'doc-pdf',
-                    lessonId: 'les-doc',
-                    lessonTitle: title,
-                    branchName: 'مذكرة الدرس',
-                    title,
-                    durationMinutes: 0,
-                    passScore: 0,
-                    maxAttempts: 0,
-                    questionsCount: 0,
-                    attemptsCount: 0,
-                    hasPassed: false,
-                    isLocked: false,
-                    pdfPath: url,
-                    type: 'file',
-                  })
+                  setActivePdfModal({ title, url })
                 }
               />
             </div>
@@ -181,22 +168,7 @@ export default function StudentDashboard() {
               <StudentQuestionBankTab
                 studentGradeName={data.profile.gradeName || undefined}
                 onOpenPdf={(title, url) =>
-                  setActiveExamFileModal({
-                    id: 'qb-pdf',
-                    lessonId: 'qb-les',
-                    lessonTitle: title,
-                    branchName: 'بنك الأسئلة',
-                    title,
-                    durationMinutes: 0,
-                    passScore: 0,
-                    maxAttempts: 0,
-                    questionsCount: 0,
-                    attemptsCount: 0,
-                    hasPassed: false,
-                    isLocked: false,
-                    pdfPath: url,
-                    type: 'file',
-                  })
+                  setActivePdfModal({ title, url })
                 }
               />
             </div>
@@ -325,6 +297,27 @@ export default function StudentDashboard() {
           loadData();
         }}
       />
+
+      {/* Secure PDF Viewer Modal */}
+      {activePdfModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActivePdfModal(null);
+          }}
+        >
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-5xl h-[92vh] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+            <LessonPdfViewer
+              pdfUrl={activePdfModal.url}
+              title={activePdfModal.title}
+              studentName={data?.profile.fullName}
+              studentPhone={data?.profile.phone}
+              allowDownload={false}
+              onClose={() => setActivePdfModal(null)}
+            />
+          </div>
+        </div>
+      )}
     </DarkGradientBg>
   );
 }

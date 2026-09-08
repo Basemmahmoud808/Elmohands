@@ -222,7 +222,11 @@ export function EnrolledCoursesGrid({
                                     </span>
                                   ) : (
                                     <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                      {les.durationMinutes > 0 ? `${les.durationMinutes} دقيقة فيديو` : 'فيديو تعليمي تفاعلي'}
+                                      {les.videoPath
+                                        ? les.durationMinutes > 0
+                                          ? `${les.durationMinutes} دقيقة فيديو`
+                                          : 'فيديو تعليمي تفاعلي'
+                                        : 'مذكرة / شيت تدريبي PDF'}
                                     </span>
                                   )}
                                 </div>
@@ -248,28 +252,46 @@ export function EnrolledCoursesGrid({
                                   </Link>
                                 ) : (
                                   <>
-                                    <Link
-                                      href={`/lessons/${les.id}`}
-                                      onClick={(e) => {
-                                        if (onOpenVideo && les.videoPath) {
-                                          e.preventDefault();
-                                          onOpenVideo(
-                                            les.title,
-                                            les.videoPath,
-                                            les.id,
-                                            les.lastPosition,
-                                            les.watchPercentage,
-                                            les.durationMinutes
-                                          );
-                                        }
-                                      }}
-                                      className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
-                                    >
-                                      <PlayCircle className="w-4 h-4" />
-                                      <span>مشاهدة الفيديو</span>
-                                    </Link>
+                                    {les.videoPath ? (
+                                      <Link
+                                        href={`/lessons/${les.id}`}
+                                        onClick={(e) => {
+                                          if (onOpenVideo && les.videoPath) {
+                                            e.preventDefault();
+                                            onOpenVideo(
+                                              les.title,
+                                              les.videoPath,
+                                              les.id,
+                                              les.lastPosition,
+                                              les.watchPercentage,
+                                              les.durationMinutes
+                                            );
+                                          }
+                                        }}
+                                        className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
+                                      >
+                                        <PlayCircle className="w-4 h-4" />
+                                        <span>مشاهدة الفيديو</span>
+                                      </Link>
+                                    ) : les.pdfPath ? (
+                                      <button
+                                        onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '')}
+                                        className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
+                                      >
+                                        <FileText className="w-4 h-4" />
+                                        <span>قراءة المذكرة</span>
+                                      </button>
+                                    ) : (
+                                      <Link
+                                        href={`/lessons/${les.id}`}
+                                        className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
+                                      >
+                                        <BookOpen className="w-4 h-4" />
+                                        <span>استعراض المحتوى</span>
+                                      </Link>
+                                    )}
 
-                                    {les.pdfPath && (
+                                    {les.videoPath && les.pdfPath && (
                                       <button
                                         onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '')}
                                         className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-chalk/90 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-cyan-electric transition-all flex items-center gap-1.5"
