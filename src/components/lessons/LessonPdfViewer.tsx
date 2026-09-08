@@ -34,15 +34,18 @@ export function LessonPdfViewer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [secureUrl, setSecureUrl] = useState<string | null>(null);
   const [loadingUrl, setLoadingUrl] = useState(true);
+  const [isIframeLoading, setIsIframeLoading] = useState(true);
+  const isBlobUrl = pdfUrl.startsWith('blob:');
 
   // Fetch a signed (time-limited) URL from server for private bucket files
   useEffect(() => {
     let cancelled = false;
+    setIsIframeLoading(true);
 
     async function getSignedUrl() {
       setLoadingUrl(true);
       try {
-        if (!pdfUrl.includes('supabase.co/storage') || pdfUrl.includes('/object/sign/')) {
+        if (isBlobUrl || !pdfUrl.includes('supabase.co/storage') || pdfUrl.includes('/object/sign/')) {
           setSecureUrl(pdfUrl);
           setLoadingUrl(false);
           return;
@@ -73,7 +76,7 @@ export function LessonPdfViewer({
     return () => {
       cancelled = true;
     };
-  }, [pdfUrl]);
+  }, [pdfUrl, isBlobUrl]);
 
   // Block Print (Ctrl+P / Cmd+P) & Save (Ctrl+S / Cmd+S)
   useEffect(() => {
@@ -239,36 +242,56 @@ export function LessonPdfViewer({
           ))}
         </div>
 
-        {/* Loading State with animated spinner and informative text */}
-        {loadingUrl && (
-          <div className="absolute inset-0 flex items-center justify-center z-20 bg-slate-950/90 backdrop-blur-sm">
-            <div className="text-center space-y-3 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl max-w-xs">
-              <Loader2 className="w-8 h-8 text-cyan-electric animate-spin mx-auto" />
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-chalk">جاري تجهيز وعرض صفحات المذكرة...</p>
-                <p className="text-[10px] text-slate-500">قد يستغرق الملفات الكبيرة بضع ثوانٍ</p>
+        {/* Blob URL Alert */}
+        {isBlobUrl ? (
+          <div className="absolute inset-0 flex items-center justify-center z-20 bg-slate-950/90 backdrop-blur-sm p-4">
+            <div className="text-center space-y-3 p-6 rounded-2xl bg-slate-900 border border-amber-500/30 shadow-xl max-w-md">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-xl font-bold">
+                ⚠️
               </div>
+              <h4 className="text-sm font-black text-amber-400">الملف يحتاج لإعادة الرفع</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                تم حفظ هذا الملف سابقاً كرابط محلي مؤقت انتهت صلاحيته. يرجى إعادة رفع ملف الـ PDF من لوحة تحكم المعلم ليتم حفظه دائماً على السيرفر السحابي.
+              </p>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Loading State with animated spinner and informative text */}
+            {(loadingUrl || isIframeLoading) && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 bg-slate-950/80 backdrop-blur-sm">
+                <div className="text-center space-y-3 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl max-w-sm">
+                  <Loader2 className="w-8 h-8 text-cyan-electric animate-spin mx-auto" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-chalk">جاري تجهيز وعرض صفحات المذكرة...</p>
+                    <p className="text-[11px] text-slate-400">
+                      نظراً لدقة الصفحات العالية، يستغرق تنزيل البيانات بضع ثوانٍ
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        {/* Single clean iframe (no duplicate requests, no sandbox blocking) */}
-        {secureUrl && (
-          <div
-            className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-2xl transition-transform duration-200 origin-top"
-            style={{
-              transform: zoom === 100 ? 'none' : `scale(${zoom / 100})`,
-              width: zoom === 100 ? '100%' : `${zoom}%`,
-              minHeight: '100%',
-            }}
-          >
-            <iframe
-              src={iframeSrc}
-              className="w-full h-full min-h-[500px] border-0"
-              title={title}
-              loading="eager"
-            />
-          </div>
+            {/* Single clean iframe */}
+            {secureUrl && (
+              <div
+                className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-2xl transition-transform duration-200 origin-top"
+                style={{
+                  transform: zoom === 100 ? 'none' : `scale(${zoom / 100})`,
+                  width: zoom === 100 ? '100%' : `${zoom}%`,
+                  minHeight: '100%',
+                }}
+              >
+                <iframe
+                  src={iframeSrc}
+                  className="w-full h-full min-h-[500px] border-0"
+                  title={title}
+                  loading="eager"
+                  onLoad={() => setIsIframeLoading(false)}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
