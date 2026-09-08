@@ -157,3 +157,52 @@ export async function getStudentCurriculumProgressAction(): Promise<
     return { success: false, error: msg };
   }
 }
+
+/**
+ * Marks any lesson (video or PDF/reading) as completed or toggles its status.
+ */
+export async function toggleLessonCompletedAction(
+  lessonId: string,
+  completed: boolean = true
+): Promise<ActionResult<{ isCompleted: boolean; completedAt: string | null }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { success: false, error: 'يرجى تسجيل الدخول أولاً' };
+    }
+
+    if (!lessonId) {
+      return { success: false, error: 'معرف الدرس غير صالح' };
+    }
+
+    const nowIso = new Date().toISOString();
+
+    const { error: upsertError } = await supabaseAdmin.from('student_progress').upsert(
+      {
+        student_id: user.id,
+        lesson_id: lessonId,
+        is_completed: completed,
+        watch_percentage: completed ? 100 : 0,
+        completed_at: completed ? nowIso : null,
+        updated_at: nowIso,
+      },
+      { onConflict: 'student_id,lesson_id' }
+    );
+
+    if (upsertError) {
+      console.warn('DB upsert error in student_progress:', upsertError.message);
+      return { success: false, error: upsertError.message };
+    }
+
+    return {
+      success: true,
+      data: {
+        isCompleted: completed,
+        completedAt: completed ? nowIso : null,
+      },
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'فشل تحديث حالة إكمال الدرس';
+    return { success: false, error: msg };
+  }
+}

@@ -216,7 +216,7 @@ export default function CoursesCatalogPage() {
               </div>
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-center">
                 <p className="text-xl sm:text-2xl font-black text-emerald-500">80+</p>
-                <p className="text-[11px] text-slate-500 dark:text-chalk-muted font-bold">درس وشرح فيديو</p>
+                <p className="text-[11px] text-slate-500 dark:text-chalk-muted font-bold">درس ومذكرة تدريبية</p>
               </div>
             </div>
           </div>

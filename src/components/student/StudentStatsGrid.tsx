@@ -22,11 +22,13 @@ export function StudentStatsGrid({ summary }: StudentStatsGridProps) {
           </span>
         </div>
         <div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
-            {summary.completedLessonsCount} / {summary.totalLessonsInGrade}
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk flex items-center gap-1.5" dir="ltr">
+            <span>{summary.completedLessonsCount}</span>
+            <span className="text-slate-400 dark:text-slate-500 text-xl font-light">/</span>
+            <span className="text-slate-500 dark:text-slate-400 text-lg font-bold">{summary.totalLessonsInGrade}</span>
           </div>
           <div className="text-xs font-bold text-slate-500 dark:text-chalk-muted mt-1">
-            درساً مكتمل في المنهج
+            دروس مكتملة في المنهج
           </div>
         </div>
       </div>
@@ -86,8 +88,10 @@ export function StudentStatsGrid({ summary }: StudentStatsGridProps) {
           </span>
         </div>
         <div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk">
-            {summary.passedQuizzesCount} / {summary.totalQuizzesCount}
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-chalk flex items-center gap-1.5" dir="ltr">
+            <span>{summary.passedQuizzesCount}</span>
+            <span className="text-slate-400 dark:text-slate-500 text-xl font-light">/</span>
+            <span className="text-slate-500 dark:text-slate-400 text-lg font-bold">{summary.totalQuizzesCount}</span>
           </div>
           <div className="text-xs font-bold text-slate-500 dark:text-chalk-muted mt-1">
             اختبارات مجتازة بنجاح

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { getCurrentUser, UserSession } from '@/lib/actions/auth';
 import { getLessonDetailsAction } from '@/lib/actions/lessons';
+import { toggleLessonCompletedAction } from '@/lib/actions/progress';
 import { LessonDetailsDTO } from '@/lib/types/dashboard';
 import { VideoPlayer } from '@/components/lessons/VideoPlayer';
 import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
@@ -33,6 +34,7 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
   const [lessonDetails, setLessonDetails] = useState<LessonDetailsDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [toggling, setToggling] = useState(false);
 
   // Active Tab: 'video' | 'pdf' | 'notes' | 'quiz'
   const [activeTab, setActiveTab] = useState<'video' | 'pdf' | 'notes' | 'quiz'>('video');
@@ -40,6 +42,21 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
   // Watch progress state
   const [watchPct, setWatchPct] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
+
+  const handleToggleCompleted = async () => {
+    if (toggling || !lessonDetails) return;
+    setToggling(true);
+    const next = !isCompleted;
+    setIsCompleted(next);
+    setWatchPct(next ? 100 : 0);
+    try {
+      await toggleLessonCompletedAction(lessonDetails.id, next);
+    } catch {
+      setIsCompleted(!next);
+    } finally {
+      setToggling(false);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -172,20 +189,22 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
             <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-end">
               <div className="flex items-center gap-1.5 text-xs text-chalk-muted font-medium bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
                 <Clock className="w-3.5 h-3.5 text-cyan-electric" />
-                <span>{lessonDetails.durationMinutes} دقيقة</span>
+                <span>{lessonDetails.durationMinutes > 0 ? `${lessonDetails.durationMinutes} دقيقة` : 'مذكرة دراسية'}</span>
               </div>
 
-              {isCompleted ? (
-                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>مكتمل ({watchPct}%)</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-electric bg-cyan-electric/10 border border-cyan-electric/25 px-3 py-1.5 rounded-xl">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-electric" />
-                  <span>نسبة المشاهدة: {watchPct}%</span>
-                </div>
-              )}
+              <button
+                onClick={handleToggleCompleted}
+                disabled={toggling}
+                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-sm ${
+                  isCompleted
+                    ? 'text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 hover:bg-emerald-900/50'
+                    : 'text-slate-950 bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-electric/20'
+                }`}
+                title="تحديد إتمام دراسة هذا الدرس"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{isCompleted ? 'تم إكمال الدرس ✓' : 'تحديد كمكتمل'}</span>
+              </button>
             </div>
           </div>
         </header>
@@ -277,9 +296,15 @@ export default function LessonPlayerPage({ params }: { params: { id: string } })
                 <LessonPdfViewer
                   pdfUrl={lessonDetails.pdfPath}
                   title={lessonDetails.title}
+                  lessonId={lessonDetails.id}
+                  isCompleted={isCompleted}
                   studentName={user?.fullName}
                   studentPhone={user?.phone}
                   allowDownload={false}
+                  onToggleCompleted={(comp) => {
+                    setIsCompleted(comp);
+                    setWatchPct(comp ? 100 : 0);
+                  }}
                 />
               )}
 

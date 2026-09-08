@@ -26,7 +26,7 @@ interface EnrolledCoursesGridProps {
     watchPercentage?: number,
     durationMinutes?: number
   ) => void;
-  onOpenPdf?: (title: string, url: string) => void;
+  onOpenPdf?: (title: string, url: string, lessonId?: string, isCompleted?: boolean) => void;
 }
 
 export function EnrolledCoursesGrid({
@@ -275,7 +275,7 @@ export function EnrolledCoursesGrid({
                                       </Link>
                                     ) : les.pdfPath ? (
                                       <button
-                                        onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '')}
+                                        onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '', les.id, les.isCompleted)}
                                         className="px-4 py-2 rounded-xl text-xs font-black text-black bg-cyan-electric hover:bg-cyan-electric-hover transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-electric/10"
                                       >
                                         <FileText className="w-4 h-4" />
@@ -293,7 +293,7 @@ export function EnrolledCoursesGrid({
 
                                     {les.videoPath && les.pdfPath && (
                                       <button
-                                        onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '')}
+                                        onClick={() => onOpenPdf && onOpenPdf(les.title, les.pdfPath || '', les.id, les.isCompleted)}
                                         className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-chalk/90 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-cyan-electric transition-all flex items-center gap-1.5"
                                       >
                                         <FileText className="w-4 h-4 text-cyan-electric" />

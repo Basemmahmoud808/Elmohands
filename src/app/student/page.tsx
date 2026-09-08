@@ -28,7 +28,12 @@ export default function StudentDashboard() {
   // Modals state
   const [activeQuizModal, setActiveQuizModal] = useState<StudentQuizItemDTO | null>(null);
   const [activeExamFileModal, setActiveExamFileModal] = useState<StudentQuizItemDTO | null>(null);
-  const [activePdfModal, setActivePdfModal] = useState<{ title: string; url: string } | null>(null);
+  const [activePdfModal, setActivePdfModal] = useState<{
+    title: string;
+    url: string;
+    lessonId?: string;
+    isCompleted?: boolean;
+  } | null>(null);
   const [activeVideoModal, setActiveVideoModal] = useState<{
     title: string;
     url: string;
@@ -132,7 +137,9 @@ export default function StudentDashboard() {
                 onOpenVideo={(title, url, lessonId, lastPosition, watchPercentage, durationMinutes) =>
                   setActiveVideoModal({ title, url, lessonId, lastPosition, watchPercentage, durationMinutes })
                 }
-                onOpenPdf={(title, url) => setActivePdfModal({ title, url })}
+                onOpenPdf={(title, url, lessonId, isCompleted) =>
+                  setActivePdfModal({ title, url, lessonId, isCompleted })
+                }
               />
 
               <StudentStatsGrid summary={data.progressSummary} />
@@ -156,8 +163,8 @@ export default function StudentDashboard() {
                 onOpenVideo={(title, url, lessonId, lastPosition, watchPercentage, durationMinutes) =>
                   setActiveVideoModal({ title, url, lessonId, lastPosition, watchPercentage, durationMinutes })
                 }
-                onOpenPdf={(title, url) =>
-                  setActivePdfModal({ title, url })
+                onOpenPdf={(title, url, lessonId, isCompleted) =>
+                  setActivePdfModal({ title, url, lessonId, isCompleted })
                 }
               />
             </div>
@@ -311,10 +318,18 @@ export default function StudentDashboard() {
             <LessonPdfViewer
               pdfUrl={activePdfModal.url}
               title={activePdfModal.title}
+              lessonId={activePdfModal.lessonId}
+              isCompleted={activePdfModal.isCompleted}
               studentName={data?.profile.fullName}
               studentPhone={data?.profile.phone}
               allowDownload={false}
-              onClose={() => setActivePdfModal(null)}
+              onClose={() => {
+                setActivePdfModal(null);
+                loadData();
+              }}
+              onToggleCompleted={() => {
+                loadData();
+              }}
             />
           </div>
         </div>

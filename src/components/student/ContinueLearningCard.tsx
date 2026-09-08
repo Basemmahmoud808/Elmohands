@@ -16,7 +16,7 @@ interface ContinueLearningCardProps {
     watchPercentage?: number,
     durationMinutes?: number
   ) => void;
-  onOpenPdf?: (title: string, url: string) => void;
+  onOpenPdf?: (title: string, url: string, lessonId?: string, isCompleted?: boolean) => void;
 }
 
 export function ContinueLearningCard({ lesson, hasActiveSubscription = false, onOpenVideo, onOpenPdf }: ContinueLearningCardProps) {
@@ -77,7 +77,7 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
       );
     } else if (!hasVideo && lesson.pdfPath && onOpenPdf) {
       e.preventDefault();
-      onOpenPdf(lesson.title, lesson.pdfPath);
+      onOpenPdf(lesson.title, lesson.pdfPath, lesson.id, isLessonCompleted);
     }
   };
 

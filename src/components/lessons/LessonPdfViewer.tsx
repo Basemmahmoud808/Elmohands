@@ -10,24 +10,32 @@ import {
   FileText,
   X,
   Loader2,
+  CheckCircle2,
 } from 'lucide-react';
+import { toggleLessonCompletedAction } from '@/lib/actions/progress';
 
 interface LessonPdfViewerProps {
   pdfUrl: string;
   title: string;
+  lessonId?: string;
+  isCompleted?: boolean;
   studentName?: string;
   studentPhone?: string;
   allowDownload?: boolean;
   onClose?: () => void;
+  onToggleCompleted?: (completed: boolean) => void;
 }
 
 export function LessonPdfViewer({
   pdfUrl,
   title,
+  lessonId,
+  isCompleted: initialCompleted = false,
   studentName = 'طالب منصة المهندس',
   studentPhone = '',
   allowDownload = false,
   onClose,
+  onToggleCompleted,
 }: LessonPdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState<number>(100);
@@ -35,7 +43,32 @@ export function LessonPdfViewer({
   const [secureUrl, setSecureUrl] = useState<string | null>(null);
   const [loadingUrl, setLoadingUrl] = useState(true);
   const [isIframeLoading, setIsIframeLoading] = useState(true);
+  const [isCompletedState, setIsCompletedState] = useState(initialCompleted);
+  const [markingComplete, setMarkingComplete] = useState(false);
   const isBlobUrl = pdfUrl.startsWith('blob:');
+
+  useEffect(() => {
+    setIsCompletedState(initialCompleted);
+  }, [initialCompleted]);
+
+  const handleToggleCompleted = async () => {
+    if (!lessonId || markingComplete) return;
+    setMarkingComplete(true);
+    const nextState = !isCompletedState;
+    setIsCompletedState(nextState);
+    try {
+      const res = await toggleLessonCompletedAction(lessonId, nextState);
+      if (res.success) {
+        onToggleCompleted?.(nextState);
+      } else {
+        setIsCompletedState(!nextState);
+      }
+    } catch {
+      setIsCompletedState(!nextState);
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
 
   // Fetch a signed (time-limited) URL from server for private bucket files
   useEffect(() => {
@@ -203,6 +236,23 @@ export function LessonPdfViewer({
               <RotateCcw className="w-3 h-3" />
             </button>
           </div>
+
+          {/* Mark Completed Button */}
+          {lessonId && (
+            <button
+              onClick={handleToggleCompleted}
+              disabled={markingComplete}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-sm ${
+                isCompletedState
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
+                  : 'bg-cyan-electric text-slate-950 hover:bg-cyan-electric-hover shadow-cyan-electric/20'
+              }`}
+              title="تحديد إتمام دراسة هذا المحتوى"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{isCompletedState ? 'تم إتمام المذاكرة ✓' : 'تحديد كمكتمل'}</span>
+            </button>
+          )}
 
           {/* Fullscreen button */}
           <button
