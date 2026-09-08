@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ContinueLearningLessonDTO } from '@/lib/types/dashboard';
-import { PlayCircle, Clock, BookOpen, ChevronLeft, Lock, CheckCircle2 } from 'lucide-react';
+import { PlayCircle, Clock, BookOpen, ChevronLeft, Lock, CheckCircle2, FileText } from 'lucide-react';
 
 interface ContinueLearningCardProps {
   lesson: ContinueLearningLessonDTO | null;
@@ -16,9 +16,10 @@ interface ContinueLearningCardProps {
     watchPercentage?: number,
     durationMinutes?: number
   ) => void;
+  onOpenPdf?: (title: string, url: string) => void;
 }
 
-export function ContinueLearningCard({ lesson, hasActiveSubscription = false, onOpenVideo }: ContinueLearningCardProps) {
+export function ContinueLearningCard({ lesson, hasActiveSubscription = false, onOpenVideo, onOpenPdf }: ContinueLearningCardProps) {
   if (!hasActiveSubscription) {
     return (
       <div className="chalk-card rounded-3xl p-6 lg:p-8 bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-transparent border border-amber-500/30 relative overflow-hidden shadow-lg shadow-amber-500/5">
@@ -50,20 +51,21 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
             جاهز للانطلاق مع م/ رضا خيرت؟
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-chalk-muted max-w-xl">
-            اختر درساً من قائمة المناهج والدروس وابدأ بمشاهدة الفيديو التفاعلي وحل الشيتات.
+            اختر درساً أو مذكرة من قائمة المناهج والدروس وابدأ بالدراسة وحل الشيتات.
           </p>
         </div>
       </div>
     );
   }
 
+  const hasVideo = Boolean(lesson.videoPath && lesson.videoPath.trim() !== '');
   const currentMinutes = Math.floor(lesson.lastPosition / 60);
   const totalMinutes = lesson.durationMinutes || 0;
   const progressPercent = Math.min(100, Math.max(0, lesson.watchPercentage || 0));
   const isLessonCompleted = Boolean(lesson.isCompleted) || progressPercent >= 90;
 
-  const handlePlayClick = (e: React.MouseEvent) => {
-    if (onOpenVideo && lesson.videoPath) {
+  const handleActionClick = (e: React.MouseEvent) => {
+    if (hasVideo && onOpenVideo && lesson.videoPath) {
       e.preventDefault();
       onOpenVideo(
         lesson.title,
@@ -73,6 +75,9 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
         lesson.watchPercentage,
         lesson.durationMinutes
       );
+    } else if (!hasVideo && lesson.pdfPath && onOpenPdf) {
+      e.preventDefault();
+      onOpenPdf(lesson.title, lesson.pdfPath);
     }
   };
 
@@ -88,12 +93,12 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
             {isLessonCompleted ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-extrabold border border-emerald-500/30">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>تم إكمال هذا الدرس بنجاح (100%)</span>
+                <span>تم إكمال هذا المحتوى بنجاح (100%)</span>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-electric/20 text-cyan-electric text-xs font-extrabold border border-cyan-electric/30">
                 <Clock className="w-3.5 h-3.5" />
-                <span>تابع دراستك (الدرس المتاح حالياً)</span>
+                <span>تابع دراستك ({hasVideo ? 'الدرس المتاح حالياً' : 'المذكرة المتاحة حالياً'})</span>
               </div>
             )}
             <span className="text-xs font-bold text-slate-500 dark:text-chalk-muted">
@@ -113,14 +118,18 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
           <div className="space-y-2 pt-1 max-w-xl">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-slate-700 dark:text-chalk/90">
-                {isLessonCompleted
-                  ? 'تمت مشاهدة وإتقان كامل الدرس بنجاح'
-                  : totalMinutes > 0
-                  ? `مستوى الإنجاز: دقيقة ${currentMinutes} من ${totalMinutes} دقيقة`
-                  : `مستوى الإنجاز: ${currentMinutes} دقيقة تم إنجازها`}
+                {hasVideo ? (
+                  isLessonCompleted
+                    ? 'تمت مشاهدة وإتقان كامل الدرس بنجاح'
+                    : totalMinutes > 0
+                    ? `مستوى الإنجاز: دقيقة ${currentMinutes} من ${totalMinutes} دقيقة`
+                    : `مستوى الإنجاز: ${currentMinutes} دقيقة تم إنجازها`
+                ) : (
+                  'مذكرة دراسية وشيت تدريبي PDF متاح للدراسة'
+                )}
               </span>
               <span className={isLessonCompleted ? 'text-emerald-400 font-black' : 'text-cyan-electric font-black'}>
-                {isLessonCompleted ? '100%' : `${progressPercent}%`}
+                {isLessonCompleted ? '100%' : hasVideo ? `${progressPercent}%` : 'متاح'}
               </span>
             </div>
             <div className="w-full bg-slate-200 dark:bg-slate-800/80 rounded-full h-3 overflow-hidden p-0.5 border border-slate-300 dark:border-slate-700">
@@ -130,7 +139,7 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
                     : 'bg-gradient-to-r from-cyan-electric to-blue-ink shadow-cyan-glow'
                 }`}
-                style={{ width: `${isLessonCompleted ? 100 : progressPercent}%` }}
+                style={{ width: `${isLessonCompleted ? 100 : hasVideo ? progressPercent : 100}%` }}
               />
             </div>
           </div>
@@ -139,20 +148,29 @@ export function ContinueLearningCard({ lesson, hasActiveSubscription = false, on
         <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-end items-stretch lg:items-end">
           <Link
             href={`/lessons/${lesson.id}`}
-            onClick={handlePlayClick}
+            onClick={handleActionClick}
             className={`px-6 py-4 rounded-2xl text-sm font-black transition-all flex items-center justify-center gap-2 group ${
               isLessonCompleted
                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-chalk hover:bg-emerald-500 hover:text-black'
                 : 'text-black bg-cyan-electric hover:bg-cyan-electric-hover shadow-cyan-glow'
             }`}
           >
-            <PlayCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
-            <span>{isLessonCompleted ? 'إعادة مشاهدة الدرس' : 'متابعة مشاهدة الدرس'}</span>
+            {hasVideo ? (
+              <>
+                <PlayCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
+                <span>{isLessonCompleted ? 'إعادة مشاهدة الدرس' : 'متابعة مشاهدة الدرس'}</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-5 h-5 transition-transform group-hover:scale-110" />
+                <span>{isLessonCompleted ? 'مراجعة المذكرة الدراسية' : 'قراءة المذكرة الدراسية'}</span>
+              </>
+            )}
             <ChevronLeft className="w-4 h-4 mr-auto sm:mr-0 lg:mr-auto" />
           </Link>
           <span className="text-[11px] text-center text-slate-500 dark:text-chalk-muted font-medium flex items-center justify-center gap-1">
             <Clock className="w-3 h-3 text-cyan-electric" />
-            <span>يتم حفظ نقطة التوقف تلقائياً</span>
+            <span>يتم حفظ تقدمك تلقائياً</span>
           </span>
         </div>
       </div>

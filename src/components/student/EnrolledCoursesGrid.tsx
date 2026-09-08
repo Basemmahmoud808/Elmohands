@@ -218,7 +218,7 @@ export function EnrolledCoursesGrid({
                                     </span>
                                   ) : inProgress ? (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
-                                      <span>قيد المشاهدة {les.watchPercentage}%</span>
+                                      <span>{les.videoPath ? `قيد المشاهدة ${les.watchPercentage}%` : 'قيد الدراسة'}</span>
                                     </span>
                                   ) : (
                                     <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">

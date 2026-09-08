@@ -132,6 +132,7 @@ export default function StudentDashboard() {
                 onOpenVideo={(title, url, lessonId, lastPosition, watchPercentage, durationMinutes) =>
                   setActiveVideoModal({ title, url, lessonId, lastPosition, watchPercentage, durationMinutes })
                 }
+                onOpenPdf={(title, url) => setActivePdfModal({ title, url })}
               />
 
               <StudentStatsGrid summary={data.progressSummary} />
