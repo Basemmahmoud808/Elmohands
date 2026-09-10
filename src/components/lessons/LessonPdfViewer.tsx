@@ -62,6 +62,7 @@ export function LessonPdfViewer({
   // Loading & status
   const [secureUrl, setSecureUrl] = useState<string | null>(null);
   const [loadingDoc, setLoadingDoc] = useState<boolean>(true);
+  const [downloadPercent, setDownloadPercent] = useState<number>(0);
   const [renderingPage, setRenderingPage] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [fallbackMode, setFallbackMode] = useState<boolean>(false);
@@ -158,6 +159,7 @@ export function LessonPdfViewer({
     async function loadPdf() {
       setLoadingDoc(true);
       setErrorMsg(null);
+      setDownloadPercent(0);
 
       try {
         const pdfjsLib = await import('pdfjs-dist');
@@ -167,9 +169,21 @@ export function LessonPdfViewer({
         loadingTask = pdfjsLib.getDocument({
           url: targetUrl,
           withCredentials: false,
-          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+          cMapUrl: '/cmaps/',
           cMapPacked: true,
+          standardFontDataUrl: '/standard_fonts/',
+          disableAutoFetch: true, // Stream only current page bytes via range requests
+          disableRange: false,    // Enable HTTP range requests
+          disableStream: false,
+          rangeChunkSize: 131072, // 128 KB chunk streaming for instant display
         });
+
+        loadingTask.onProgress = ({ loaded, total }: { loaded: number; total: number }) => {
+          if (total > 0) {
+            const pct = Math.min(100, Math.round((loaded / total) * 100));
+            setDownloadPercent(pct);
+          }
+        };
 
         const doc = await loadingTask.promise;
         if (!cancelled) {
@@ -178,6 +192,18 @@ export function LessonPdfViewer({
           setCurrentPage(1);
           setPageInput('1');
           setLoadingDoc(false);
+
+          // Auto fit-width on mobile screens upon initial document load
+          if (typeof window !== 'undefined' && window.innerWidth < 768 && containerRef.current) {
+            doc.getPage(1).then((firstPage: any) => {
+              const unscaled = firstPage.getViewport({ scale: 1, rotation: 0 });
+              const availableWidth = containerRef.current!.clientWidth - 32;
+              if (unscaled.width > 0) {
+                const computed = +(availableWidth / unscaled.width).toFixed(2);
+                setScale(Math.max(0.6, Math.min(2.0, computed)));
+              }
+            }).catch(() => {});
+          }
         }
       } catch (err: any) {
         if (cancelled) return;
@@ -611,12 +637,22 @@ export function LessonPdfViewer({
 
         {/* Loading Spinner */}
         {!isBlobUrl && loadingDoc && (
-          <div className="m-auto text-center space-y-3 p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl max-w-sm">
+          <div className="m-auto text-center space-y-3 p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl max-w-sm w-full mx-4">
             <Loader2 className="w-9 h-9 text-cyan-electric animate-spin mx-auto" />
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-900 dark:text-chalk">جاري قراءة صفحات المذكرة...</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">العرض فوري عبر محرك الكانفاس المتطور</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-chalk">
+                {downloadPercent > 0 ? `جاري تحميل المذكرة (${downloadPercent}%)` : 'جاري فتح صفحات المذكرة فوراً...'}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">محرك البث السريع — عرض مباشر بدون انتظار</p>
             </div>
+            {downloadPercent > 0 && downloadPercent < 100 && (
+              <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-cyan-electric h-full rounded-full transition-all duration-150"
+                  style={{ width: `${downloadPercent}%` }}
+                />
+              </div>
+            )}
           </div>
         )}
 
