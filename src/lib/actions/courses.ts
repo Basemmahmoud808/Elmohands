@@ -346,17 +346,38 @@ export async function deleteLessonAction(lessonId: string): Promise<ActionResult
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== 'ADMIN') {
-      return { success: false, error: 'غير مصرح بحذف الدروس' };
+      return { success: false, error: 'غير مصرح بحذف الدروس — يرجى تسجيل الدخول كمعلم/مشرف' };
     }
 
-    await supabaseAdmin.from('lessons').delete().eq('id', lessonId);
+    if (!lessonId) {
+      return { success: false, error: 'معرف الدرس مطلوب' };
+    }
 
-    await supabaseAdmin.from('audit_logs').insert({
-      user_id: user.id,
-      action: 'LESSON_DELETED',
-      entity_type: 'lessons',
-      entity_id: lessonId,
-    });
+    // 1. Delete dependent progress records first
+    try {
+      await supabaseAdmin.from('student_progress').delete().eq('lesson_id', lessonId);
+    } catch {
+      // non-critical
+    }
+
+    // 2. Delete the lesson record
+    const { error: deleteError } = await supabaseAdmin.from('lessons').delete().eq('id', lessonId);
+    if (deleteError) {
+      console.error('Delete lesson error:', deleteError);
+      return { success: false, error: `فشل حذف الدرس: ${deleteError.message}` };
+    }
+
+    // 3. Non-blocking audit log
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'LESSON_DELETED',
+        entity_type: 'lessons',
+        entity_id: lessonId,
+      });
+    } catch {
+      // non-blocking
+    }
 
     return { success: true, data: { deletedId: lessonId }, message: 'تم حذف الدرس بنجاح' };
   } catch (err: unknown) {
@@ -598,7 +619,16 @@ export async function deleteUnitAction(unitId: string): Promise<ActionResult<{ d
       return { success: false, error: 'غير مصرح بحذف الوحدة' };
     }
 
-    await supabaseAdmin.from('units').delete().eq('id', unitId);
+    if (!unitId) {
+      return { success: false, error: 'معرف الوحدة مطلوب' };
+    }
+
+    const { error: deleteError } = await supabaseAdmin.from('units').delete().eq('id', unitId);
+    if (deleteError) {
+      console.error('Delete unit error:', deleteError);
+      return { success: false, error: `فشل حذف الوحدة: ${deleteError.message}` };
+    }
+
     return { success: true, data: { deletedId: unitId }, message: 'تم حذف الوحدة بنجاح' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'فشل حذف الوحدة';

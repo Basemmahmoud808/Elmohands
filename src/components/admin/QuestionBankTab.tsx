@@ -59,6 +59,7 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
 
   // Form State (Add or Edit)
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [entryMode, setEntryMode] = useState<'QUESTION' | 'FILE'>('QUESTION');
 
@@ -318,12 +319,19 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
   const handleDelete = async (questionId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا البند نهائياً من بنك الأسئلة؟')) return;
 
-    setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+    setDeletingQuestionId(questionId);
     try {
-      await deleteQuestionAction(questionId);
-      if (onRefresh) onRefresh();
-    } catch {
-      // ignore
+      const res = await deleteQuestionAction(questionId);
+      if (!res.success) {
+        alert(res.error || 'حدث خطأ أثناء محاولة حذف السؤال');
+        return;
+      }
+      setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+      if (onRefresh) await onRefresh();
+    } catch (err: any) {
+      alert(err?.message || 'فشل الاتصال بالسيرفر أثناء حذف السؤال');
+    } finally {
+      setDeletingQuestionId(null);
     }
   };
 
@@ -1158,11 +1166,16 @@ export function QuestionBankTab({ initialQuestions, curriculum = [], onRefresh }
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
+                        disabled={deletingQuestionId === q.id}
                         onClick={() => handleDelete(q.id)}
-                        className="p-2 rounded-xl text-slate-500 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="p-2 rounded-xl text-slate-500 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
                         title="حذف"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {deletingQuestionId === q.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>

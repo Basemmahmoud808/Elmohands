@@ -52,6 +52,7 @@ export function LessonsManagementTab({
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [sortOrder, setSortOrder] = useState(1);
   const [isLocked, setIsLocked] = useState(false);
+  const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
 
   // Video Duration Auto-detection State
   const [isDetectingDuration, setIsDetectingDuration] = useState(false);
@@ -421,11 +422,20 @@ export function LessonsManagementTab({
   const handleDeleteLesson = async (lessonId: string) => {
     if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الدرس نهائياً؟')) return;
 
+    setDeletingLessonId(lessonId);
     try {
-      await deleteLessonAction(lessonId);
-      if (onRefresh) onRefresh();
-    } catch {
-      // ignore
+      const res = await deleteLessonAction(lessonId);
+      if (!res.success) {
+        alert(res.error || 'حدث خطأ أثناء محاولة حذف الدرس');
+        return;
+      }
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (err: any) {
+      alert(err?.message || 'فشل الاتصال بالسيرفر أثناء حذف الدرس');
+    } finally {
+      setDeletingLessonId(null);
     }
   };
 
@@ -982,11 +992,16 @@ export function LessonsManagementTab({
 
                 <button
                   type="button"
+                  disabled={deletingLessonId === les.id}
                   onClick={() => handleDeleteLesson(les.id)}
-                  className="p-2.5 rounded-xl text-xs font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all"
+                  className="p-2.5 rounded-xl text-xs font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 disabled:opacity-50 transition-all"
                   title="حذف الدرس"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {deletingLessonId === les.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>

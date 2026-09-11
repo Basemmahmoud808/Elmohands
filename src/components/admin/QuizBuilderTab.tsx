@@ -53,6 +53,7 @@ export function QuizBuilderTab({
   // Form State (Add / Edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
 
   // Exam Mode: 'file' (Paper / PDF / Image) | 'mcq' (Interactive Question Bank)
   const [examMode, setExamMode] = useState<'file' | 'mcq'>('file');
@@ -296,12 +297,19 @@ export function QuizBuilderTab({
   const handleDeleteQuiz = async (quizId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الاختبار/الشيت نهائياً؟')) return;
 
-    setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
+    setDeletingQuizId(quizId);
     try {
-      await deleteQuizAction(quizId);
-      if (onRefresh) onRefresh();
-    } catch {
-      // ignore
+      const res = await deleteQuizAction(quizId);
+      if (!res.success) {
+        alert(res.error || 'حدث خطأ أثناء محاولة حذف الاختبار');
+        return;
+      }
+      setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
+      if (onRefresh) await onRefresh();
+    } catch (err: any) {
+      alert(err?.message || 'فشل الاتصال بالسيرفر أثناء حذف الاختبار');
+    } finally {
+      setDeletingQuizId(null);
     }
   };
 
@@ -791,11 +799,16 @@ export function QuizBuilderTab({
                 <span>تعديل</span>
               </button>
               <button
+                disabled={deletingQuizId === quiz.id}
                 onClick={() => handleDeleteQuiz(quiz.id)}
-                className="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold transition-colors"
+                className="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold disabled:opacity-50 transition-colors"
                 title="حذف الاختبار"
               >
-                <Trash2 className="w-4 h-4" />
+                {deletingQuizId === quiz.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>

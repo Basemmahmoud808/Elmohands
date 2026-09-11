@@ -7,7 +7,7 @@ import {
   QuestionItemDTO,
   QuizDetailsDTO,
 } from '@/lib/types/dashboard';
-import { createUnitAction } from '@/lib/actions/courses';
+import { createUnitAction, deleteLessonAction } from '@/lib/actions/courses';
 import katex from 'katex';
 import {
   BookOpen,
@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   X,
   AlertCircle,
+  Trash2,
 } from 'lucide-react';
 
 interface CoursesManagementTabProps {
@@ -398,6 +399,28 @@ export function CoursesManagementTab({
     }
   };
 
+  const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
+
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الدرس نهائياً؟')) return;
+
+    setDeletingLessonId(lessonId);
+    try {
+      const res = await deleteLessonAction(lessonId);
+      if (!res.success) {
+        alert(res.error || 'حدث خطأ أثناء محاولة حذف الدرس');
+        return;
+      }
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (err: any) {
+      alert(err?.message || 'فشل الاتصال بالسيرفر أثناء حذف الدرس');
+    } finally {
+      setDeletingLessonId(null);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Header */}
@@ -728,6 +751,19 @@ export function CoursesManagementTab({
                           <FileText className="w-4 h-4" />
                         </button>
                       )}
+
+                      <button
+                        disabled={deletingLessonId === lesson.id}
+                        onClick={() => handleDeleteLesson(lesson.id)}
+                        className="p-2 rounded-xl text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 disabled:opacity-50 transition-colors"
+                        title="حذف هذا الدرس"
+                      >
+                        {deletingLessonId === lesson.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -780,6 +816,19 @@ export function CoursesManagementTab({
                       >
                         <FileText className="w-3.5 h-3.5" />
                         <span>معاينة المذكرة</span>
+                      </button>
+
+                      <button
+                        disabled={deletingLessonId === l.id}
+                        onClick={() => handleDeleteLesson(l.id)}
+                        className="p-2 rounded-xl text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 disabled:opacity-50 transition-colors shrink-0"
+                        title="حذف هذه المذكرة/الدرس"
+                      >
+                        {deletingLessonId === l.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   ))}

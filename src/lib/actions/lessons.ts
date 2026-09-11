@@ -962,17 +962,38 @@ export async function deleteLessonAction(lessonId: string): Promise<ActionResult
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== 'ADMIN') {
-      return { success: false, error: 'غير مصرح بحذف الدرس' };
+      return { success: false, error: 'غير مصرح بحذف الدرس — يرجى تسجيل الدخول كمعلم/مشرف' };
     }
 
-    await supabaseAdmin.from('lessons').delete().eq('id', lessonId);
+    if (!lessonId) {
+      return { success: false, error: 'معرف الدرس مطلوب' };
+    }
 
-    await supabaseAdmin.from('audit_logs').insert({
-      user_id: user.id,
-      action: 'LESSON_DELETED',
-      entity_type: 'lessons',
-      entity_id: lessonId,
-    });
+    // 1. Delete dependent progress records first
+    try {
+      await supabaseAdmin.from('student_progress').delete().eq('lesson_id', lessonId);
+    } catch {
+      // non-critical
+    }
+
+    // 2. Delete the lesson record
+    const { error: deleteError } = await supabaseAdmin.from('lessons').delete().eq('id', lessonId);
+    if (deleteError) {
+      console.error('Delete lesson error:', deleteError);
+      return { success: false, error: `فشل حذف الدرس: ${deleteError.message}` };
+    }
+
+    // 3. Non-blocking audit log
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'LESSON_DELETED',
+        entity_type: 'lessons',
+        entity_id: lessonId,
+      });
+    } catch {
+      // non-blocking
+    }
 
     return { success: true, data: { deletedId: lessonId }, message: 'تم حذف الدرس بنجاح' };
   } catch (err: unknown) {

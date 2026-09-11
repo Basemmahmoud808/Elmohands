@@ -133,8 +133,48 @@ export async function getRefreshTokenFromCookies(): Promise<string | null> {
  */
 export async function getCurrentUser(): Promise<TokenPayload | null> {
   const token = await getAuthTokenFromCookies();
-  if (!token) return null;
-  return verifyAccessToken(token);
+  if (token) {
+    const payload = await verifyAccessToken(token);
+    if (payload) return payload;
+  }
+
+  // Seamless auto-refresh from refresh_token if auth_token is expired or missing
+  try {
+    const refreshToken = await getRefreshTokenFromCookies();
+    if (refreshToken) {
+      const refreshPayload = await verifyRefreshToken(refreshToken);
+      if (refreshPayload?.userId) {
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('id, phone, role, full_name')
+          .eq('id', refreshPayload.userId)
+          .maybeSingle();
+
+        if (profile) {
+          const newPayload: TokenPayload = {
+            userId: profile.id,
+            phone: profile.phone,
+            role: profile.role as 'ADMIN' | 'STUDENT',
+            fullName: profile.full_name,
+          };
+          const newAccessToken = await createAccessToken(newPayload);
+          const cookieStore = cookies();
+          cookieStore.set('auth_token', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 30 * 60,
+          });
+          return newPayload;
+        }
+      }
+    }
+  } catch (refreshErr) {
+    console.error('Session refresh exception in getCurrentUser:', refreshErr);
+  }
+
+  return null;
 }
 
 /**

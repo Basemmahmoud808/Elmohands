@@ -655,17 +655,48 @@ export async function deleteQuizAction(quizId: string): Promise<ActionResult<{ d
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== 'ADMIN') {
-      return { success: false, error: 'غير مصرح بحذف الاختبارات' };
+      return { success: false, error: 'غير مصرح بحذف الاختبارات — يرجى تسجيل الدخول كمعلم/مشرف' };
     }
 
-    await supabaseAdmin.from('quizzes').delete().eq('id', quizId);
+    if (!quizId) {
+      return { success: false, error: 'معرف الاختبار مطلوب' };
+    }
 
-    await supabaseAdmin.from('audit_logs').insert({
-      user_id: user.id,
-      action: 'QUIZ_DELETED',
-      entity_type: 'quizzes',
-      entity_id: quizId,
-    });
+    // 1. Delete dependent student attempts and answers first
+    try {
+      const { data: attempts } = await supabaseAdmin
+        .from('exam_attempts')
+        .select('id')
+        .eq('quiz_id', quizId);
+
+      if (attempts && attempts.length > 0) {
+        const attemptIds = attempts.map((a) => a.id);
+        await supabaseAdmin.from('student_answers').delete().in('attempt_id', attemptIds);
+        await supabaseAdmin.from('exam_attempts').delete().eq('quiz_id', quizId);
+      }
+      await supabaseAdmin.from('quiz_questions').delete().eq('quiz_id', quizId);
+    } catch (depErr) {
+      console.error('Quiz dependencies deletion error:', depErr);
+    }
+
+    // 2. Delete the quiz record
+    const { error: deleteError } = await supabaseAdmin.from('quizzes').delete().eq('id', quizId);
+    if (deleteError) {
+      console.error('Delete quiz error:', deleteError);
+      return { success: false, error: `فشل حذف الاختبار: ${deleteError.message}` };
+    }
+
+    // 3. Non-blocking audit log
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'QUIZ_DELETED',
+        entity_type: 'quizzes',
+        entity_id: quizId,
+      });
+    } catch {
+      // non-blocking
+    }
 
     return { success: true, data: { deletedId: quizId }, message: 'تم حذف الاختبار بنجاح' };
   } catch (err: unknown) {

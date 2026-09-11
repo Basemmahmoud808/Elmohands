@@ -375,20 +375,38 @@ export async function deleteQuestionAction(questionId: string): Promise<ActionRe
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== 'ADMIN') {
-      return { success: false, error: 'غير مصرح بحذف الأسئلة' };
+      return { success: false, error: 'غير مصرح بحذف الأسئلة — يرجى تسجيل الدخول كمعلم/مشرف' };
     }
 
+    if (!questionId) {
+      return { success: false, error: 'معرف السؤال مطلوب' };
+    }
+
+    // 1. Delete dependent relations first
+    try {
+      await supabaseAdmin.from('quiz_questions').delete().eq('question_id', questionId);
+      await supabaseAdmin.from('student_answers').delete().eq('question_id', questionId);
+    } catch {
+      // non-critical
+    }
+
+    // 2. Delete question
     const { error } = await supabaseAdmin.from('questions').delete().eq('id', questionId);
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: `فشل حذف السؤال: ${error.message}` };
     }
 
-    await supabaseAdmin.from('audit_logs').insert({
-      user_id: user.id,
-      action: 'QUESTION_DELETED',
-      entity_type: 'questions',
-      entity_id: questionId,
-    });
+    // 3. Non-blocking audit log
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'QUESTION_DELETED',
+        entity_type: 'questions',
+        entity_id: questionId,
+      });
+    } catch {
+      // non-blocking
+    }
 
     return { success: true, data: { deletedId: questionId }, message: 'تم حذف السؤال بنجاح' };
   } catch (err: unknown) {
