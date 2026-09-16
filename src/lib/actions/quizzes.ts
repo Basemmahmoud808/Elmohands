@@ -138,8 +138,52 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
       .from('quizzes')
       .select(`
         id, title, description, duration_minutes, pass_score, max_attempts, is_published, created_at, lesson_id, pdf_path, type,
-        lessons (
-          title, unit_id,
+        quiz_questions (id)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // Safely retrieve lessons information without relying on a PostgREST FK relation
+    const lessonIds = Array.from(new Set(data.map((q) => q.lesson_id).filter(Boolean))) as string[];
+    const lessonsMap = new Map<string, {
+      title?: string | null;
+      units?: {
+        title?: string | null;
+        branches?: {
+          name?: string | null;
+          terms?: {
+            grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
+          } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
+        } | Array<{
+          name?: string | null;
+          terms?: {
+            grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
+          } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
+        }> | null;
+      } | Array<{
+        title?: string | null;
+        branches?: {
+          name?: string | null;
+          terms?: {
+            grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
+          } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
+        } | Array<{
+          name?: string | null;
+          terms?: {
+            grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
+          } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
+        }> | null;
+      }> | null;
+    }>();
+
+    if (lessonIds.length > 0) {
+      const { data: lessonsData } = await supabaseAdmin
+        .from('lessons')
+        .select(`
+          id, title, unit_id,
           units (
             title,
             branches (
@@ -149,10 +193,13 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
               )
             )
           )
-        ),
-        quiz_questions (id)
-      `)
-      .order('created_at', { ascending: false });
+        `)
+        .in('id', lessonIds);
+
+      if (lessonsData) {
+        lessonsData.forEach((l) => lessonsMap.set(l.id, l));
+      }
+    }
 
     interface DbAdminQuizRow {
       id: string;
@@ -167,76 +214,11 @@ export async function getAdminQuizzesListAction(): Promise<ActionResult<QuizDeta
       pdf_path?: string | null;
       type?: 'mcq' | 'file' | null;
       quiz_questions?: Array<{ id: string }> | null;
-      lessons?: {
-        title?: string | null;
-        unit_id?: string | null;
-        units?: {
-          title?: string | null;
-          branches?: {
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          } | Array<{
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          }> | null;
-        } | Array<{
-          title?: string | null;
-          branches?: {
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          } | Array<{
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          }> | null;
-        }> | null;
-      } | Array<{
-        title?: string | null;
-        unit_id?: string | null;
-        units?: {
-          title?: string | null;
-          branches?: {
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          } | Array<{
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          }> | null;
-        } | Array<{
-          title?: string | null;
-          branches?: {
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          } | Array<{
-            name?: string | null;
-            terms?: {
-              grades?: { name?: string | null } | Array<{ name?: string | null }> | null;
-            } | Array<{ grades?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          }> | null;
-        }> | null;
-      }> | null;
-    }
-
-    if (error || !data || data.length === 0) {
-      return { success: true, data: [] };
     }
 
     const typedQuizzes = data as unknown as DbAdminQuizRow[];
     const quizzes: QuizDetailsDTO[] = typedQuizzes.map((q) => {
-      const lessonObj = Array.isArray(q.lessons) ? q.lessons[0] : q.lessons;
+      const lessonObj = q.lesson_id ? lessonsMap.get(q.lesson_id) : null;
       const unitObj = lessonObj?.units ? (Array.isArray(lessonObj.units) ? lessonObj.units[0] : lessonObj.units) : null;
       const branchObj = unitObj?.branches ? (Array.isArray(unitObj.branches) ? unitObj.branches[0] : unitObj.branches) : null;
       const termObj = branchObj?.terms ? (Array.isArray(branchObj.terms) ? branchObj.terms[0] : branchObj.terms) : null;
@@ -298,38 +280,56 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
       const { data: dbQuiz } = await supabaseAdmin
         .from('quizzes')
         .select(`
-          id, title, description, duration_minutes, pass_score, max_attempts, lesson_id,
-          lessons (
-            title, unit_id, is_locked,
-            units (
-              title,
-              branches (
-                name,
-                terms (
-                  grade_id,
-                  grades (id, name)
-                )
-              )
-            )
-          )
+          id, title, description, duration_minutes, pass_score, max_attempts, lesson_id
         `)
         .eq('id', quizId)
         .maybeSingle();
 
       if (dbQuiz) {
-        const lObj = (Array.isArray(dbQuiz.lessons) ? dbQuiz.lessons[0] : dbQuiz.lessons) as Record<string, unknown> | undefined;
-        const uObj = (Array.isArray(lObj?.units) ? lObj?.units[0] : lObj?.units) as Record<string, unknown> | undefined;
-        const bObj = (Array.isArray(uObj?.branches) ? uObj?.branches[0] : uObj?.branches) as Record<string, unknown> | undefined;
-        const tObj = (Array.isArray(bObj?.terms) ? bObj?.terms[0] : bObj?.terms) as Record<string, unknown> | undefined;
-        const gObj = (Array.isArray(tObj?.grades) ? tObj?.grades[0] : tObj?.grades) as Record<string, unknown> | undefined;
+        let lessonTitle = 'درس منصة المهندس';
+        let branchName = 'فرع الجبر والإحصاء';
+        let gradeName = 'الصف الأول الإعدادي';
+        let gradeId: string | undefined = undefined;
+
+        if (dbQuiz.lesson_id) {
+          const { data: lData } = await supabaseAdmin
+            .from('lessons')
+            .select(`
+              title, unit_id, is_locked,
+              units (
+                title,
+                branches (
+                  name,
+                  terms (
+                    grade_id,
+                    grades (id, name)
+                  )
+                )
+              )
+            `)
+            .eq('id', dbQuiz.lesson_id)
+            .maybeSingle();
+
+          if (lData) {
+            const uObj = (Array.isArray(lData.units) ? lData.units[0] : lData.units) as Record<string, unknown> | undefined;
+            const bObj = (Array.isArray(uObj?.branches) ? uObj?.branches[0] : uObj?.branches) as Record<string, unknown> | undefined;
+            const tObj = (Array.isArray(bObj?.terms) ? bObj?.terms[0] : bObj?.terms) as Record<string, unknown> | undefined;
+            const gObj = (Array.isArray(tObj?.grades) ? tObj?.grades[0] : tObj?.grades) as Record<string, unknown> | undefined;
+
+            if (typeof lData.title === 'string') lessonTitle = lData.title;
+            if (typeof bObj?.name === 'string') branchName = bObj.name;
+            if (typeof gObj?.name === 'string') gradeName = gObj.name;
+            gradeId = (typeof gObj?.id === 'string' ? gObj.id : (typeof tObj?.grade_id === 'string' ? tObj.grade_id : undefined));
+          }
+        }
 
         quizMeta = {
           id: dbQuiz.id,
           lessonId: dbQuiz.lesson_id,
-          lessonTitle: typeof lObj?.title === 'string' ? lObj.title : 'درس منصة المهندس',
-          branchName: typeof bObj?.name === 'string' ? bObj.name : 'فرع الجبر والإحصاء',
-          gradeName: typeof gObj?.name === 'string' ? gObj.name : 'الصف الأول الإعدادي',
-          gradeId: typeof gObj?.id === 'string' ? gObj.id : (typeof tObj?.grade_id === 'string' ? tObj.grade_id : undefined),
+          lessonTitle,
+          branchName,
+          gradeName,
+          gradeId,
           title: dbQuiz.title,
           description: dbQuiz.description,
           durationMinutes: dbQuiz.duration_minutes || 20,

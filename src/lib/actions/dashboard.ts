@@ -261,12 +261,32 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
         .from('quizzes')
         .select(`
           id, lesson_id, title, description, duration_minutes, pass_score, max_attempts, is_published, pdf_path, type,
-          lessons (title, units (branches (name))),
           quiz_questions (id)
         `)
         .eq('is_published', true);
 
       if (dbQuizzes && dbQuizzes.length > 0) {
+        const lessonIds = Array.from(new Set(dbQuizzes.map((q) => q.lesson_id).filter(Boolean))) as string[];
+        const lessonsMap = new Map<string, {
+          title?: string | null;
+          units?: {
+            branches?: {
+              name?: string | null;
+            } | Array<{ name?: string | null }> | null;
+          } | Array<{ branches?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
+        }>();
+
+        if (lessonIds.length > 0) {
+          const { data: lessonsData } = await supabaseAdmin
+            .from('lessons')
+            .select('id, title, units (branches (name))')
+            .in('id', lessonIds);
+
+          if (lessonsData) {
+            lessonsData.forEach((l) => lessonsMap.set(l.id, l));
+          }
+        }
+
         availableQuizzes = (dbQuizzes as unknown as Array<{
           id: string;
           lesson_id: string;
@@ -277,17 +297,9 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
           max_attempts?: number | null;
           pdf_path?: string | null;
           type?: 'mcq' | 'file' | null;
-          lessons?: {
-            title?: string | null;
-            units?: {
-              branches?: {
-                name?: string | null;
-              } | Array<{ name?: string | null }> | null;
-            } | Array<{ branches?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
-          } | null;
           quiz_questions?: Array<{ id: string }> | null;
         }>).map((q) => {
-          const lessonObj = q.lessons;
+          const lessonObj = q.lesson_id ? lessonsMap.get(q.lesson_id) : null;
           const unitObj = lessonObj?.units ? (Array.isArray(lessonObj.units) ? lessonObj.units[0] : lessonObj.units) : null;
           const branchObj = unitObj?.branches ? (Array.isArray(unitObj.branches) ? unitObj.branches[0] : unitObj.branches) : null;
           const qCount = Array.isArray(q.quiz_questions) ? q.quiz_questions.length : (q.pdf_path ? 1 : 0);
@@ -311,13 +323,13 @@ export async function getStudentDashboardData(): Promise<ActionResult<StudentDas
             bestScorePercentage: bestScore,
             hasPassed,
             isLocked: false,
-            type: q.type || (q.pdf_path ? 'file' : 'mcq'),
+            type: (q.type as 'mcq' | 'file') || (q.pdf_path ? 'file' : 'mcq'),
             pdfPath: q.pdf_path || undefined,
           };
         });
       }
     } catch (e) {
-      console.warn('Error fetching quizzes:', e);
+      console.warn('Error fetching available quizzes from Supabase:', e);
     }
 
     // 9. Stats Calculation
