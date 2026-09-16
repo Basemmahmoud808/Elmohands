@@ -6,6 +6,7 @@ import { X, HelpCircle, CheckCircle2, XCircle, Award, Sparkles, Loader2, Maximiz
 import { StudentQuizItemDTO } from '@/lib/types/dashboard';
 import { getQuizForStudentAction, submitQuizAttemptAction, QuizAttemptResultDTO, StudentExamSessionDTO } from '@/lib/actions/quizzes';
 import { ExamSolver } from '@/components/exam/ExamSolver';
+import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
 
 interface QuizSolveModalProps {
   quiz: StudentQuizItemDTO | null;
@@ -110,6 +111,16 @@ export function QuizSolveModal({ quiz, onClose, onQuizCompleted }: QuizSolveModa
               >
                 إغلاق
               </button>
+            </div>
+          ) : session.quiz.type === 'file' || (Boolean(session.quiz.pdfPath) && session.questions.length === 0) ? (
+            <div className="w-full h-[75vh] flex flex-col p-2">
+              <LessonPdfViewer
+                pdfUrl={session.quiz.pdfPath || ''}
+                title={session.quiz.title}
+                studentName={session.student.fullName}
+                studentPhone={session.student.phone}
+                allowDownload={false}
+              />
             </div>
           ) : (
             <ExamSolver

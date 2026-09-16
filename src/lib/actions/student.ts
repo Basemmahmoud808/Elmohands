@@ -287,7 +287,7 @@ export async function getStudentDashboardDataAction(): Promise<ActionResult<Stud
       const { data: dbQuizzes } = await supabaseAdmin
         .from('quizzes')
         .select(`
-          id, lesson_id, title, description, duration_minutes, pass_score, max_attempts, is_published,
+          id, lesson_id, title, description, duration_minutes, pass_score, max_attempts, is_published, pdf_path, type,
           quiz_questions (id)
         `)
         .eq('is_published', true);
@@ -322,12 +322,14 @@ export async function getStudentDashboardDataAction(): Promise<ActionResult<Stud
           duration_minutes?: number | null;
           pass_score?: number | null;
           max_attempts?: number | null;
+          pdf_path?: string | null;
+          type?: 'mcq' | 'file' | null;
           quiz_questions?: Array<{ id: string }> | null;
         }>).map((q) => {
           const lessonObj = q.lesson_id ? lessonsMap.get(q.lesson_id) : null;
           const unitObj = lessonObj?.units ? (Array.isArray(lessonObj.units) ? lessonObj.units[0] : lessonObj.units) : null;
           const branchObj = unitObj?.branches ? (Array.isArray(unitObj.branches) ? unitObj.branches[0] : unitObj.branches) : null;
-          const qCount = Array.isArray(q.quiz_questions) ? q.quiz_questions.length : 0;
+          const qCount = Array.isArray(q.quiz_questions) ? q.quiz_questions.length : (q.pdf_path ? 1 : 0);
 
           const studentAttempts = recentResults.filter((r) => r.quizId === q.id);
           const hasPassed = studentAttempts.some((r) => r.passed);
@@ -348,7 +350,8 @@ export async function getStudentDashboardDataAction(): Promise<ActionResult<Stud
             bestScorePercentage: bestScore,
             hasPassed,
             isLocked: false,
-            type: 'mcq' as const,
+            pdfPath: q.pdf_path || undefined,
+            type: (q.type as 'mcq' | 'file') || (q.pdf_path ? 'file' : 'mcq'),
           };
         });
       }

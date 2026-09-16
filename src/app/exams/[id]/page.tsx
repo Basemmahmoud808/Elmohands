@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { DarkGradientBg } from '@/components/ui/elegant-dark-pattern';
 import { getQuizForStudentAction, StudentExamSessionDTO } from '@/lib/actions/quizzes';
 import { ExamSolver } from '@/components/exam/ExamSolver';
+import { LessonPdfViewer } from '@/components/lessons/LessonPdfViewer';
 import {
   ArrowRight,
   AlertCircle,
@@ -14,6 +15,9 @@ import {
   Lock,
   RotateCcw,
   Sparkles,
+  Clock,
+  Award,
+  FileText,
 } from 'lucide-react';
 
 export default function DedicatedExamPage({ params }: { params: { id: string } }) {
@@ -101,6 +105,67 @@ export default function DedicatedExamPage({ params }: { params: { id: string } }
           </div>
         </div>
       </DarkGradientBg>
+    );
+  }
+
+  // Handle File / PDF Exams
+  if (session.quiz.type === 'file' || (Boolean(session.quiz.pdfPath) && session.questions.length === 0)) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-chalk flex flex-col font-arabic">
+        {/* Header */}
+        <header className="bg-slate-900/90 border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/student"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span className="hidden sm:inline">لوحة التحكم</span>
+            </Link>
+            <div>
+              <h1 className="text-sm sm:text-base font-black text-chalk flex items-center gap-2">
+                <span>{session.quiz.title}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-electric/15 text-cyan-electric border border-cyan-electric/30">
+                  ورقة امتحان PDF
+                </span>
+              </h1>
+              <p className="text-[11px] text-chalk-muted font-bold">
+                {session.quiz.gradeName} • {session.quiz.branchName}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs font-bold text-chalk-muted">
+            <div className="hidden sm:flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              <span>{session.quiz.durationMinutes} دقيقة</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+              <Award className="w-3.5 h-3.5 text-emerald-500" />
+              <span>النجاح: {session.quiz.passScore}%</span>
+            </div>
+          </div>
+        </header>
+
+        {/* PDF Viewer Body */}
+        <main className="flex-1 flex flex-col p-2 sm:p-4 min-h-0">
+          <div className="flex-1 w-full h-[calc(100vh-80px)] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+            {session.quiz.pdfPath ? (
+              <LessonPdfViewer
+                pdfUrl={session.quiz.pdfPath}
+                title={session.quiz.title}
+                studentName={session.student.fullName}
+                studentPhone={session.student.phone}
+                allowDownload={false}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-center p-6 text-chalk-muted">
+                <p>لا يتوفر ملف PDF لهذا الامتحان حالياً.</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     );
   }
 

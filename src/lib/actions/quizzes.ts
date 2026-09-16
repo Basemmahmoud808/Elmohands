@@ -70,6 +70,8 @@ export interface StudentExamSessionDTO {
     passScore: number;
     maxAttempts: number;
     questionsCount: number;
+    pdfPath?: string | null;
+    type?: 'mcq' | 'file';
   };
   questions: StudentQuizQuestionDTO[];
   currentAttemptNumber: number;
@@ -274,13 +276,15 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
       durationMinutes: number;
       passScore: number;
       maxAttempts: number;
+      pdfPath?: string | null;
+      type?: 'mcq' | 'file';
     } | null = null;
 
     try {
       const { data: dbQuiz } = await supabaseAdmin
         .from('quizzes')
         .select(`
-          id, title, description, duration_minutes, pass_score, max_attempts, lesson_id
+          id, title, description, duration_minutes, pass_score, max_attempts, lesson_id, pdf_path, type
         `)
         .eq('id', quizId)
         .maybeSingle();
@@ -335,6 +339,8 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
           durationMinutes: dbQuiz.duration_minutes || 20,
           passScore: dbQuiz.pass_score || 50,
           maxAttempts: dbQuiz.max_attempts || 3,
+          pdfPath: dbQuiz.pdf_path || null,
+          type: (dbQuiz.type as 'mcq' | 'file') || (dbQuiz.pdf_path ? 'file' : 'mcq'),
         };
       }
     } catch {
@@ -455,7 +461,9 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
       // Fallback
     }
 
-    if (questionsForStudent.length === 0) {
+    const isFileExam = quizMeta.type === 'file' || Boolean(quizMeta.pdfPath);
+
+    if (questionsForStudent.length === 0 && !isFileExam) {
       return { success: false, error: 'لا توجد أسئلة مضافة لهذا الاختبار بعد.' };
     }
 
@@ -473,7 +481,9 @@ export async function getQuizForStudentAction(quizId: string): Promise<ActionRes
         durationMinutes: quizMeta.durationMinutes,
         passScore: quizMeta.passScore,
         maxAttempts: quizMeta.maxAttempts,
-        questionsCount: questionsForStudent.length,
+        questionsCount: questionsForStudent.length || (quizMeta.pdfPath ? 1 : 0),
+        pdfPath: quizMeta.pdfPath,
+        type: quizMeta.type,
       },
       questions: questionsForStudent,
       currentAttemptNumber: attemptNumber,
