@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   ExternalLink,
   Layers,
+  AlertCircle,
 } from 'lucide-react';
 import { toggleLessonCompletedAction } from '@/lib/actions/progress';
 
@@ -48,6 +49,9 @@ export function LessonPdfViewer({
   const [markingComplete, setMarkingComplete] = useState(false);
   const [useGoogleViewer, setUseGoogleViewer] = useState(false);
 
+  const [resolveError, setResolveError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
+
   const isBlobUrl = pdfUrl?.startsWith('blob:');
 
   useEffect(() => {
@@ -77,6 +81,7 @@ export function LessonPdfViewer({
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setResolveError(null);
 
     async function resolveUrl() {
       try {
@@ -85,11 +90,10 @@ export function LessonPdfViewer({
           return;
         }
 
-        // Direct URLs (blobs, already signed, or public)
-        if (isBlobUrl || !pdfUrl.includes('supabase.co/storage') || pdfUrl.includes('/object/sign/')) {
+        // Direct local blob URLs or non-Supabase URLs (e.g. external hosting)
+        if (isBlobUrl || !pdfUrl.includes('supabase.co/storage')) {
           if (!cancelled) {
             setSecureUrl(pdfUrl);
-            // Brief 300ms transition so iframe mounts cleanly
             setTimeout(() => {
               if (!cancelled) setLoading(false);
             }, 300);
@@ -97,6 +101,8 @@ export function LessonPdfViewer({
           return;
         }
 
+        // Always request a fresh signed URL from backend for Supabase Storage objects
+        // to prevent expired JWT tokens ("exp" claim timestamp check failed)
         const res = await fetch('/api/media/signed-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -108,13 +114,18 @@ export function LessonPdfViewer({
           if (!cancelled && data.signedUrl) {
             setSecureUrl(data.signedUrl);
           } else if (!cancelled) {
-            setSecureUrl(pdfUrl);
+            setResolveError('تعذر تجهيز رابط الورقة المؤمن، يرجى المحاولة لاحقاً');
           }
         } else {
-          if (!cancelled) setSecureUrl(pdfUrl);
+          const errData = await res.json().catch(() => null);
+          if (!cancelled) {
+            setResolveError(errData?.error || 'تعذر تحميل ورقة الـ PDF، يرجى إعادة المحاولة.');
+          }
         }
       } catch {
-        if (!cancelled) setSecureUrl(pdfUrl);
+        if (!cancelled) {
+          setResolveError('حدث خطأ في الاتصال أثناء تحميل ورقة الـ PDF');
+        }
       } finally {
         // Unblock spinner quickly - DO NOT hang waiting for iframe onload!
         setTimeout(() => {
@@ -127,7 +138,7 @@ export function LessonPdfViewer({
     return () => {
       cancelled = true;
     };
-  }, [pdfUrl, isBlobUrl]);
+  }, [pdfUrl, isBlobUrl, retryCount]);
 
   // Block Print (Ctrl+P / Cmd+P) & Save (Ctrl+S / Cmd+S)
   useEffect(() => {
@@ -337,6 +348,25 @@ export function LessonPdfViewer({
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               تم حفظ هذا الملف سابقاً كرابط محلي مؤقت انتهت صلاحيته. يرجى إعادة رفع ملف الـ PDF من لوحة تحكم المعلم.
             </p>
+          </div>
+        ) : resolveError ? (
+          <div className="m-auto text-center space-y-4 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-red-500/30 shadow-xl max-w-md z-20">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto text-xl font-bold">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-black text-slate-900 dark:text-chalk">تعذر فتح ملف الـ PDF</h4>
+              <p className="text-xs text-slate-600 dark:text-red-400 leading-relaxed font-bold">
+                {resolveError}
+              </p>
+            </div>
+            <button
+              onClick={() => setRetryCount((c) => c + 1)}
+              className="px-5 py-2.5 rounded-xl bg-cyan-electric hover:bg-cyan-electric-hover text-slate-950 font-black text-xs shadow-cyan-glow transition-all flex items-center justify-center gap-2 mx-auto"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>إعادة المحاولة الآن</span>
+            </button>
           </div>
         ) : (
           <>
