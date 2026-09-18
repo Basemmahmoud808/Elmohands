@@ -12,8 +12,9 @@ import {
   Loader2,
   CheckCircle2,
   ExternalLink,
-  Layers,
   AlertCircle,
+  Lock,
+  ShieldAlert,
 } from 'lucide-react';
 import { toggleLessonCompletedAction } from '@/lib/actions/progress';
 
@@ -47,7 +48,6 @@ export function LessonPdfViewer({
   const [loading, setLoading] = useState(true);
   const [isCompletedState, setIsCompletedState] = useState(initialCompleted);
   const [markingComplete, setMarkingComplete] = useState(false);
-  const [useGoogleViewer, setUseGoogleViewer] = useState(false);
 
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
@@ -140,20 +140,42 @@ export function LessonPdfViewer({
     };
   }, [pdfUrl, isBlobUrl, retryCount]);
 
-  // Block Print (Ctrl+P / Cmd+P) & Save (Ctrl+S / Cmd+S)
+  // Block Print (Ctrl+P), Save (Ctrl+S), Inspect DevTools (F12, Ctrl+Shift+I), View Source (Ctrl+U)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+      const isCtrlOrMeta = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      // Block Print
+      if (isCtrlOrMeta && key === 'p') {
         e.preventDefault();
-        alert('طباعة المحتوى محظورة لحماية حقوق النشر الخاصة بـ م/ رضا خيرت.');
+        e.stopPropagation();
+        alert('طباعة وتحميل هذا المحتوى محظور لحماية حقوق الملكية والنشر الخاصة بـ م/ رضا خيرت.');
+        return false;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+
+      // Block Save (Ctrl+S)
+      if (isCtrlOrMeta && key === 's') {
         e.preventDefault();
-        alert('حفظ المحتوى محظور لحماية حقوق النشر الخاصة بـ م/ رضا خيرت.');
+        e.stopPropagation();
+        alert('تنزيل وحفظ هذا الملف محظور لحماية حقوق الملكية الخاصة بالمنصة.');
+        return false;
+      }
+
+      // Block Inspect / DevTools
+      if (
+        (isCtrlOrMeta && e.shiftKey && (key === 'i' || key === 'c' || key === 'j')) ||
+        e.key === 'F12' ||
+        (isCtrlOrMeta && key === 'u')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, []);
 
   // Block window.print()
@@ -186,21 +208,20 @@ export function LessonPdfViewer({
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
-  // Build iframe source
-  const nativeSrc = secureUrl
+  // Build iframe source - Native protected vector viewer with toolbars hidden
+  const activeSrc = secureUrl
     ? `${secureUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`
     : '';
-
-  const googleViewerSrc = secureUrl
-    ? `https://docs.google.com/viewer?url=${encodeURIComponent(secureUrl)}&embedded=true`
-    : '';
-
-  const activeSrc = useGoogleViewer ? googleViewerSrc : nativeSrc;
 
   return (
     <div
       ref={containerRef}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }}
+      onDragStart={(e) => e.preventDefault()}
       className="relative rounded-3xl overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col w-full h-full min-h-[550px]"
       style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     >
@@ -209,7 +230,7 @@ export function LessonPdfViewer({
         @media print {
           * { display: none !important; visibility: hidden !important; }
           body::after {
-            content: 'طباعة المحتوى محظورة — م/ رضا خيرت';
+            content: 'طباعة وتحميل هذا المحتوى محظور — م/ رضا خيرت';
             display: block !important;
             visibility: visible !important;
             font-size: 24px;
@@ -229,24 +250,18 @@ export function LessonPdfViewer({
           <div className="truncate">
             <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-chalk truncate">{title}</h4>
             <span className="text-[10px] text-cyan-600 dark:text-cyan-electric font-bold block">
-              {useGoogleViewer ? 'عارض الطوارئ التوافقي' : 'العارض الأصلي فائق الدقة (Vector HD)'}
+              العارض الأصلي فائق الدقة (Vector HD)
             </span>
           </div>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          {/* Viewer Mode Toggle (Native vs Google) */}
-          <button
-            onClick={() => setUseGoogleViewer((v) => !v)}
-            className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1"
-            title="التبديل بين عارض المتصفح الأصلي وعارض Google المتوافق"
-          >
-            <Layers className="w-3.5 h-3.5 text-cyan-500" />
-            <span className="hidden sm:inline">
-              {useGoogleViewer ? 'العارض الأصلي' : 'عارض بديل'}
-            </span>
-          </button>
+          {/* Security Protection Badge */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[11px] font-bold">
+            <Lock className="w-3.5 h-3.5" />
+            <span>محتوى محمي • غير مسموح بالتحميل</span>
+          </div>
 
           {/* Zoom controls */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700">
