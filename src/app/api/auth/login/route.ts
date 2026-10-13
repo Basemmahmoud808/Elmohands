@@ -125,8 +125,18 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Login API error:', error);
+    const isConnErr =
+      error?.message?.includes('ENOTFOUND') ||
+      error?.message?.includes('fetch failed') ||
+      error?.cause?.message?.includes('ENOTFOUND') ||
+      error?.code === 'ENOTFOUND';
+
+    const errorMessage = isConnErr
+      ? 'تعذر الاتصال بقاعدة البيانات (مشروع Supabase متوقف مؤقتاً لحفظ الموارد). يرجى الضغط على Restore في لوحة تحكم Supabase.'
+      : 'حدث خطأ غير متوقع أثناء تسجيل الدخول';
+
     return NextResponse.json(
-      { error: 'حدث خطأ غير متوقع أثناء تسجيل الدخول' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
